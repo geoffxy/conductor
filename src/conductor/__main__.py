@@ -15,6 +15,11 @@ def main():
         action="store_true",
         help="Print conductor's version and exit.",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Run in debug mode (used mainly during Conductor development).",
+    )
     subparsers = parser.add_subparsers(title="Commands")
     conductor.cli.run.register_command(subparsers)
     args = parser.parse_args()
