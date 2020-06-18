@@ -2,7 +2,7 @@ import argparse
 import sys
 
 import conductor
-import conductor.commands.run
+import conductor.cli.run
 
 
 def main():
@@ -16,7 +16,7 @@ def main():
         help="Print conductor's version and exit.",
     )
     subparsers = parser.add_subparsers(title="Commands")
-    conductor.commands.run.register_command(subparsers)
+    conductor.cli.run.register_command(subparsers)
     args = parser.parse_args()
 
     if args.version:
