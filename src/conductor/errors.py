@@ -1,10 +1,17 @@
 
 
-class InvalidRuleArguments(RuntimeError):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class ConductorError(RuntimeError):
+    def __init__(self, *args):
+        super().__init__(*args)
 
 
-class InvalidTargetName(RuntimeError):
-    def __init__(self, target_name):
-        super().__init__("Invalid target name '{}'.".format(target_name))
+class InvalidTaskArguments(ConductorError):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class InvalidTaskIdentifier(ConductorError):
+    def __init__(self, task_identifier):
+        super().__init__(
+            "Invalid task identifier '{}'.".format(task_identifier),
+        )

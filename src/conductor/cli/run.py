@@ -3,7 +3,9 @@ import pathlib
 import itertools
 import sys
 import traceback
-from conductor.target_name import TargetName
+from conductor.parsing.parser import Parser
+from conductor.task_identifier import TaskIdentifier
+from conductor.errors import ConductorError
 
 CONFIG_FILE_NAME = ".condconfig"
 
@@ -14,9 +16,9 @@ def register_command(subparsers):
         help="Run a specific Conductor target.",
     )
     parser.add_argument(
-        "target",
+        "task_identifier",
         type=str,
-        help="The target that Conductor should run.",
+        help="The task that Conductor should run.",
     )
     parser.set_defaults(func=main)
 
@@ -27,7 +29,7 @@ def find_project_root():
         maybe_config_path = path / CONFIG_FILE_NAME
         if maybe_config_path.is_file():
             return path
-    raise RuntimeError(
+    raise ConductorError(
         "Could not locate your project's root. Did you add a {} file?"
         .format(CONFIG_FILE_NAME),
     )
@@ -36,11 +38,18 @@ def find_project_root():
 def main(args):
     try:
         project_root = find_project_root()
-        target_name = TargetName.from_str(args.target, require_prefix=False)
+        task_identifier = TaskIdentifier.from_str(
+            args.task_identifier,
+            require_prefix=False,
+        )
         print("Project root:", project_root)
-        print("Target name:", target_name)
+        print("Task identifier:", task_identifier)
 
-    except RuntimeError as ex:
+        parser = Parser(project_root)
+        tasks = parser.parse_cond_file(task_identifier)
+
+    except ConductorError as ex:
         if args.debug:
             print(traceback.format_exc(), file=sys.stderr)
         print("ERROR:", ex, file=sys.stderr)
+        sys.exit(1)

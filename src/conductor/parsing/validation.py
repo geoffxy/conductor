@@ -1,25 +1,25 @@
-from conductor.errors import InvalidRuleArguments
+from conductor.errors import InvalidTaskArguments
 
 
 def generate_type_validator(rule_name, schema):
     def validate(arguments):
         for parameter, type in schema.items():
             if parameter not in arguments:
-                raise InvalidRuleArguments(
+                raise InvalidTaskArguments(
                     "Missing '{}' argument in {}.".format(
                         parameter,
                         rule_name,
                     ),
                 )
             if not isinstance(arguments[parameter], type):
-                raise InvalidRuleArguments(
+                raise InvalidTaskArguments(
                     "Invalid type for argument '{}' (expected {}).".format(
                         parameter,
                         type.__name__,
                     ),
                 )
         if len(arguments) != len(schema):
-            raise InvalidRuleArguments(
+            raise InvalidTaskArguments(
                 "Extraneous arguments passed to {}.".format(rule_name),
             )
     return validate
