@@ -47,6 +47,7 @@ def main(args):
 
         parser = Parser(project_root)
         tasks = parser.parse_cond_file(task_identifier)
+        print(tasks)
 
     except ConductorError as ex:
         if args.debug:

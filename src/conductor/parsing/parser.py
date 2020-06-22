@@ -2,7 +2,7 @@ import contextlib
 import os
 import sys
 
-import conductor.task_types as task_types
+from conductor.task_types import raw_task_types
 
 
 class Parser:
@@ -10,10 +10,9 @@ class Parser:
         self._project_root = project_root
         self._tasks = None
         self._rule_constructors = {}
-        for task_type_name in task_types.__all__:
-            task_type = getattr(task_types, task_type_name)
-            self._rule_constructors[task_type.TypeName] = (
-                self._wrap_task_function(task_type.from_cond_file)
+        for raw_task_type in raw_task_types.values():
+            self._rule_constructors[raw_task_type.name] = (
+                self._wrap_task_function(raw_task_type.load_from_cond_file)
             )
 
     def parse_cond_file(self, task_identifier):
