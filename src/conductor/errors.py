@@ -5,6 +5,16 @@ class ConductorError(RuntimeError):
         super().__init__(*args)
 
 
+class TaskNotFound(ConductorError):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
+class DuplicateTask(ConductorError):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+
 class InvalidTaskArguments(ConductorError):
     def __init__(self, *args):
         super().__init__(*args)

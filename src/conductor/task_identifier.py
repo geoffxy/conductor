@@ -1,4 +1,7 @@
+import os
 import re
+
+from conductor.config import COND_FILE_NAME
 from conductor.errors import InvalidTaskIdentifier
 
 _IDENTIFIER_GROUP = "[a-zA-Z0-9_-]+"
@@ -26,6 +29,19 @@ class TaskIdentifier:
     @property
     def name(self):
         return self._name
+
+    def path_to_cond_file(self, project_root=None):
+        """
+        Returns a path to the COND file where this task should be declared.
+
+        If a project root is specified, this method will return an absolute
+        path to the COND file. Otherwise this method returns a path relative to
+        the project root.
+        """
+        if project_root is not None:
+            return os.path.join(project_root, *self._path, COND_FILE_NAME)
+        else:
+            return os.path.join(*self._path, COND_FILE_NAME)
 
     @classmethod
     def from_str(cls, candidate, require_prefix=True):
