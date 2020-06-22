@@ -1,1 +1,1 @@
-echo "Hello world!" > hello.txt
+echo "Hello world!" > ${COND_OUT}/hello.txt

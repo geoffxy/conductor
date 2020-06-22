@@ -1,3 +1,8 @@
+import itertools
+import os
+import pathlib
+
+from conductor.config import OUTPUT_DIR
 
 
 class TaskType:
@@ -22,5 +27,15 @@ class TaskType:
     def identifier(self):
         return self._identifier
 
-    def execute(self):
+    def execute(self, project_root):
         raise NotImplementedError
+
+    def _get_and_prepare_output_path(self, project_root):
+        out_path = pathlib.Path(project_root)
+        for component in itertools.chain([OUTPUT_DIR], self._identifier.path):
+            out_path = out_path / component
+            out_path.mkdir(exist_ok=True)
+        return str(out_path)
+
+    def _get_working_path(self, project_root):
+        return os.path.join(project_root, *self._identifier.path)

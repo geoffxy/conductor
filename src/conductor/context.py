@@ -53,4 +53,4 @@ class Context:
             task_identifier,
             raw_tasks[task_identifier.name],
         )
-        print(task)
+        task.execute(project_root=self._project_root)
