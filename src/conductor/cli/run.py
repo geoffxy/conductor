@@ -26,5 +26,5 @@ def main(args):
     except ConductorError as ex:
         if args.debug:
             print(traceback.format_exc(), file=sys.stderr)
-        print("ERROR:", ex, file=sys.stderr)
+        print("ERROR:", ex.printable_message(), file=sys.stderr)
         sys.exit(1)

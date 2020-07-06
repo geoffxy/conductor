@@ -1,5 +1,10 @@
 from conductor.task_types import raw_task_types
-from conductor.errors import ConductorError, DuplicateTask
+from conductor.errors import (
+    ConductorError,
+    DuplicateTaskName,
+    ParsingUnknownNameError,
+    TaskSyntaxError,
+)
 
 
 class TaskLoader:
@@ -24,12 +29,20 @@ class TaskLoader:
                 code = file.read()
             exec(code, self._task_constructors, self._task_constructors)
             return tasks
-        except ConductorError:
-            # TODO: Add file context to conductor parse errors
-            raise
-        except SyntaxError:
-            # TODO: Implement syntax error handling
-            raise
+        except ConductorError as error:
+            error.add_file_context(file_path=cond_file_path)
+            raise error
+        except SyntaxError as ex:
+            error = TaskSyntaxError()
+            error.add_file_context(
+                file_path=cond_file_path,
+                line_number=ex.lineno,
+            )
+            raise error
+        except NameError as ex:
+            error = ParsingUnknownNameError(error_message=str(ex))
+            error.add_file_context(file_path=cond_file_path)
+            raise error
         finally:
             self._tasks = None
             self._current_cond_file_path = None
@@ -39,9 +52,6 @@ class TaskLoader:
             raw_task = task_constructor(**kwargs)
             raw_task["cond_file_path"] = self._current_cond_file_path
             if raw_task["name"] in self._tasks:
-                raise DuplicateTask(
-                    "Task name '{}' was used more than once."
-                    .format(raw_task["name"]),
-                )
+                raise DuplicateTaskName(task_name=raw_task["name"])
             self._tasks[raw_task["name"]] = raw_task
         return shim

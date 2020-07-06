@@ -47,9 +47,9 @@ class TaskIdentifier:
     def from_str(cls, candidate, require_prefix=True):
         match = _TARGET_IDENTIFIER_REGEX.match(candidate)
         if match is None:
-            raise InvalidTaskIdentifier(candidate)
+            raise InvalidTaskIdentifier(task_identifier=candidate)
         if require_prefix and not candidate.startswith("//"):
-            raise InvalidTaskIdentifier(candidate)
+            raise InvalidTaskIdentifier(task_identifier=candidate)
 
         path = match.group("path")
         if path is None:

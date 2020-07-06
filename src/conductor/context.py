@@ -3,7 +3,7 @@ import os
 import pathlib
 
 from conductor.config import CONFIG_FILE_NAME
-from conductor.errors import ConductorError, TaskNotFound
+from conductor.errors import MissingProjectRoot, TaskNotFound
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
@@ -26,10 +26,7 @@ class Context:
             maybe_config_path = path / CONFIG_FILE_NAME
             if maybe_config_path.is_file():
                 return cls(project_root=path)
-        raise ConductorError(
-            "Could not locate your project's root. Did you add a {} file?"
-            .format(CONFIG_FILE_NAME),
-        )
+        raise MissingProjectRoot()
 
     def run_tasks(self, task_selector):
         """
@@ -48,9 +45,7 @@ class Context:
                 ),
             )
         if task_identifier.name not in raw_tasks:
-            raise TaskNotFound(
-                "Task '{}' not found.".format(str(task_identifier)),
-            )
+            raise TaskNotFound(task_identifier=str(task_identifier))
         task = TaskType.from_raw_task(
             task_identifier,
             raw_tasks[task_identifier.name],

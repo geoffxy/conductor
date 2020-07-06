@@ -1,0 +1,46 @@
+# Task parsing errors (error code 1xxx)
+1000:
+  name: TaskParseError
+  message: "An unknown error occurred when parsing a COND file."
+
+1001:
+  name: MissingTaskParameter
+  message: "Missing parameter '{parameter_name}' for task type '{task_type_name}'."
+
+1002:
+  name: InvalidTaskParameterType
+  message: "Invalid type for parameter '{parameter_name}' in task type '{task_type_name}' (expected {type_name})."
+
+1003:
+  name: UnrecognizedTaskParameters
+  message: "Unrecognized parameter(s) passed to task type '{task_type_name}'."
+
+1004:
+  name: DuplicateTaskName
+  message: "Task name '{task_name}' was used more than once."
+
+1005:
+  name: InvalidTaskIdentifier
+  message: "Invalid task identifier '{task_identifier}'."
+
+1006:
+  name: InvalidTaskName
+  message: "Invalid task name '{task_name}'."
+
+1007:
+  name: TaskSyntaxError
+  message: "Encountered a syntax error when parsing a COND file."
+
+1008:
+  name: ParsingUnknownNameError
+  message: "Encountered an unknown name when parsing a COND file: {error_message}."
+
+
+# Task graph loading errors (error code 2xxx)
+2001:
+  name: TaskNotFound
+  message: "Task '{task_identifier}' could not be found."
+
+2002:
+  name: MissingProjectRoot
+  message: "Could not locate your project's root. Did you add a .condconfig file?"

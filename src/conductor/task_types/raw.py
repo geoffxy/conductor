@@ -1,6 +1,6 @@
 from conductor.parsing.validation import generate_type_validator
 from conductor.task_identifier import TaskIdentifier
-from conductor.errors import InvalidTaskArguments
+from conductor.errors import InvalidTaskName
 
 
 class RawTaskType:
@@ -20,9 +20,7 @@ class RawTaskType:
     def load_from_cond_file(self, **kwargs):
         self._validator(kwargs)
         if not TaskIdentifier.is_name_valid(kwargs["name"]):
-            raise InvalidTaskArguments(
-                "Invalid task name '{}'.".format(kwargs["name"]),
-            )
+            raise InvalidTaskName(task_name=kwargs["name"])
         return {
             **kwargs,
             "_full_type": self._full_type,
