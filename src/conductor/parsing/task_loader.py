@@ -1,10 +1,11 @@
 from conductor.task_types import raw_task_types
-from conductor.errors import DuplicateTask
+from conductor.errors import ConductorError, DuplicateTask
 
 
 class TaskLoader:
     def __init__(self):
         self._tasks = None
+        self._current_cond_file_path = None
         self._task_constructors = {}
         for raw_task_type in raw_task_types.values():
             self._task_constructors[raw_task_type.name] = (
@@ -17,17 +18,26 @@ class TaskLoader:
         """
         tasks = {}
         self._tasks = tasks
+        self._current_cond_file_path = cond_file_path
         try:
             with open(cond_file_path) as file:
                 code = file.read()
             exec(code, self._task_constructors, self._task_constructors)
             return tasks
+        except ConductorError:
+            # TODO: Add file context to conductor parse errors
+            raise
+        except SyntaxError:
+            # TODO: Implement syntax error handling
+            raise
         finally:
             self._tasks = None
+            self._current_cond_file_path = None
 
     def _wrap_task_function(self, task_constructor):
         def shim(**kwargs):
             raw_task = task_constructor(**kwargs)
+            raw_task["cond_file_path"] = self._current_cond_file_path
             if raw_task["name"] in self._tasks:
                 raise DuplicateTask(
                     "Task name '{}' was used more than once."

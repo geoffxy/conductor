@@ -5,8 +5,8 @@ from conductor.config import OUTPUT_ENV_VARIABLE_NAME
 
 
 class RunExperiment(TaskType):
-    def __init__(self, identifier, run):
-        super().__init__(identifier=identifier)
+    def __init__(self, identifier, cond_file_path, run):
+        super().__init__(identifier=identifier, cond_file_path=cond_file_path)
         self._run = run
 
     def __repr__(self):

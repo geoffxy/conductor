@@ -43,7 +43,9 @@ class Context:
         )
         with prevent_module_caching():
             raw_tasks = self._task_loader.parse_cond_file(
-                task_identifier.path_to_cond_file(),
+                task_identifier.path_to_cond_file(
+                    project_root=self._project_root,
+                ),
             )
         if task_identifier.name not in raw_tasks:
             raise TaskNotFound(

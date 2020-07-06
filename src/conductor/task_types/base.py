@@ -6,8 +6,9 @@ from conductor.config import OUTPUT_DIR
 
 
 class TaskType:
-    def __init__(self, identifier):
+    def __init__(self, identifier, cond_file_path):
         self._identifier = identifier
+        self._cond_file_path = cond_file_path
 
     def __repr__(self):
         return "".join([
