@@ -3,17 +3,16 @@ import os
 import pathlib
 
 from conductor.config import CONFIG_FILE_NAME
-from conductor.errors import MissingProjectRoot, TaskNotFound
-from conductor.parsing.task_loader import TaskLoader
+from conductor.errors import MissingProjectRoot
+from conductor.parsing.task_index import TaskIndex
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
-from conductor.user_code_utils import prevent_module_caching
 
 
 class Context:
     def __init__(self, project_root):
         self._project_root = project_root
-        self._task_loader = TaskLoader()
+        self._task_index = TaskIndex(self._project_root)
 
     @classmethod
     def from_cwd(cls):
@@ -38,16 +37,7 @@ class Context:
             task_selector,
             require_prefix=False,
         )
-        with prevent_module_caching():
-            raw_tasks = self._task_loader.parse_cond_file(
-                task_identifier.path_to_cond_file(
-                    project_root=self._project_root,
-                ),
-            )
-        if task_identifier.name not in raw_tasks:
-            raise TaskNotFound(task_identifier=str(task_identifier))
-        task = TaskType.from_raw_task(
-            task_identifier,
-            raw_tasks[task_identifier.name],
-        )
+        self._task_index.load_transitive_closure(task_identifier)
+        raw_task = self._task_index.get_task(task_identifier)
+        task = TaskType.from_raw_task(task_identifier, raw_task)
         task.execute(project_root=self._project_root)

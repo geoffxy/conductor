@@ -22,6 +22,19 @@ class TaskIdentifier:
             ["//", "/".join(self._path), ":", self._name],
         )
 
+    def __eq__(self, other):
+        return (
+            len(self.path) == len(other.path) and
+            all(map(
+                lambda segments: segments[0] == segments[1],
+                zip(self.path, other.path),
+            )) and
+            self.name == other.name
+        )
+
+    def __hash__(self):
+        return hash(self.__repr__())
+
     @property
     def path(self):
         return self._path
@@ -42,6 +55,9 @@ class TaskIdentifier:
             return os.path.join(project_root, *self._path, COND_FILE_NAME)
         else:
             return os.path.join(*self._path, COND_FILE_NAME)
+
+    def relative_with_name(self, name):
+        return TaskIdentifier(self._path, name)
 
     @classmethod
     def from_str(cls, candidate, require_prefix=True):
