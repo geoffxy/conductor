@@ -3,12 +3,10 @@ from .raw import RawTaskType
 
 _raw_task_types = [
     RawTaskType(
-        "run_experiment",
-        {
-            "name": str,
-            "run": str,
-        },
-        RunExperiment,
+        name="run_experiment",
+        schema={"name": str, "run": str, "deps": [str], "out": [str]},
+        defaults={"deps": [], "out": []},
+        full_type=RunExperiment,
     ),
 ]
 

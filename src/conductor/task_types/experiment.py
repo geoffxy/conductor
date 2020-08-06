@@ -5,12 +5,20 @@ from conductor.config import OUTPUT_ENV_VARIABLE_NAME
 
 
 class RunExperiment(TaskType):
-    def __init__(self, identifier, cond_file_path, run):
+    def __init__(self, identifier, cond_file_path, run, out):
         super().__init__(identifier=identifier, cond_file_path=cond_file_path)
         self._run = run
+        self._out = out
 
     def __repr__(self):
-        return "".join([super().__repr__(), ", run=", self._run, ")"])
+        return "".join([
+            super().__repr__(),
+            ", run=",
+            self._run,
+            ", out=",
+            str(self._out),
+            ")",
+        ])
 
     def execute(self, project_root):
         process = subprocess.Popen(

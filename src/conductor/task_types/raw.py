@@ -4,9 +4,10 @@ from conductor.errors import InvalidTaskName
 
 
 class RawTaskType:
-    def __init__(self, name, schema, full_type):
+    def __init__(self, name, schema, defaults, full_type):
         self._name = name
         self._schema = schema
+        self._defaults = defaults
         self._full_type = full_type
         self._validator = generate_type_validator(name, schema)
 
@@ -18,10 +19,8 @@ class RawTaskType:
         return self._name
 
     def load_from_cond_file(self, **kwargs):
-        self._validator(kwargs)
-        if not TaskIdentifier.is_name_valid(kwargs["name"]):
-            raise InvalidTaskName(task_name=kwargs["name"])
-        return {
-            **kwargs,
-            "_full_type": self._full_type,
-        }
+        args = {**self._defaults, **kwargs}
+        self._validator(args)
+        if not TaskIdentifier.is_name_valid(args["name"]):
+            raise InvalidTaskName(task_name=args["name"])
+        return {**args, "_full_type": self._full_type }

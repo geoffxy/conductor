@@ -22,6 +22,8 @@ class TaskType:
         constructor = raw_task["_full_type"]
         del raw_task["name"]
         del raw_task["_full_type"]
+        # TODO: Handle dependencies properly
+        del raw_task["deps"]
         return constructor(identifier=identifier, **raw_task)
 
     @property
