@@ -17,8 +17,10 @@ class TaskIndex:
         has been loaded.
         """
         rel_path = identifier.path_to_cond_file()
-        if (rel_path not in self._loaded_tasks or
-                identifier.name not in self._loaded_tasks[rel_path]):
+        if (
+            rel_path not in self._loaded_tasks
+            or identifier.name not in self._loaded_tasks[rel_path]
+        ):
             raise TaskNotFound(task_identifier=str(identifier))
         return self._loaded_tasks[rel_path][identifier.name]
 
@@ -39,10 +41,8 @@ class TaskIndex:
                 visited_identifiers.add(identifier)
                 rel_path = identifier.path_to_cond_file()
                 if rel_path not in self._loaded_tasks:
-                    self._loaded_tasks[rel_path] = (
-                        self._task_loader.parse_cond_file(
-                            identifier.path_to_cond_file(self._project_root),
-                        )
+                    self._loaded_tasks[rel_path] = self._task_loader.parse_cond_file(
+                        identifier.path_to_cond_file(self._project_root),
                     )
 
                 if identifier.name not in self._loaded_tasks[rel_path]:

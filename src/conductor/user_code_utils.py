@@ -13,7 +13,8 @@ def prevent_module_caching():
         yield
     finally:
         newly_added = {
-            module_name for module_name in sys.modules.keys()
+            module_name
+            for module_name in sys.modules.keys()
             if module_name not in original_modules
         }
         for module_name in newly_added:

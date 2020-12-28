@@ -11,14 +11,16 @@ class RunExperiment(TaskType):
         self._out = out
 
     def __repr__(self):
-        return "".join([
-            super().__repr__(),
-            ", run=",
-            self._run,
-            ", out=",
-            str(self._out),
-            ")",
-        ])
+        return "".join(
+            [
+                super().__repr__(),
+                ", run=",
+                self._run,
+                ", out=",
+                str(self._out),
+                ")",
+            ]
+        )
 
     def execute(self, project_root):
         process = subprocess.Popen(
@@ -26,8 +28,9 @@ class RunExperiment(TaskType):
             shell=True,
             cwd=self._get_working_path(project_root),
             env={
-                OUTPUT_ENV_VARIABLE_NAME:
-                    self._get_and_prepare_output_path(project_root),
+                OUTPUT_ENV_VARIABLE_NAME: self._get_and_prepare_output_path(
+                    project_root
+                ),
             },
         )
         process.wait()

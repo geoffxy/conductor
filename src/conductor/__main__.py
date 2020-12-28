@@ -8,10 +8,11 @@ import conductor.cli.run
 def main():
     parser = argparse.ArgumentParser(
         description="Conductor: A simple, elegant, and opinionated tool that "
-                    "orchestrates your research computing.",
+        "orchestrates your research computing.",
     )
     parser.add_argument(
-        "-v", "--version",
+        "-v",
+        "--version",
         action="store_true",
         help="Print conductor's version and exit.",
     )

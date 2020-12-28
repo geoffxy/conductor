@@ -23,4 +23,4 @@ class RawTaskType:
         self._validator(args)
         if not TaskIdentifier.is_name_valid(args["name"]):
             raise InvalidTaskName(task_name=args["name"])
-        return {**args, "_full_type": self._full_type }
+        return {**args, "_full_type": self._full_type}

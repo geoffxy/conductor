@@ -11,11 +11,13 @@ class TaskType:
         self._cond_file_path = cond_file_path
 
     def __repr__(self):
-        return "".join([
-            self.__class__.__name__,
-            "(identifier=",
-            str(self._identifier),
-        ])
+        return "".join(
+            [
+                self.__class__.__name__,
+                "(identifier=",
+                str(self._identifier),
+            ]
+        )
 
     @staticmethod
     def from_raw_task(identifier, raw_task):

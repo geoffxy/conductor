@@ -25,20 +25,24 @@ class ConductorError(RuntimeError):
         if self.file_context is None:
             return self._message()
         elif self.file_context.line_number is None:
-            return "".join([
-                self._message(),
-                os.linesep,
-                os.linesep,
-                "-> Relevant file: ",
-                self.file_context.file_path,
-            ])
+            return "".join(
+                [
+                    self._message(),
+                    os.linesep,
+                    os.linesep,
+                    "-> Relevant file: ",
+                    self.file_context.file_path,
+                ]
+            )
         else:
-            return "".join([
-                self._message(),
-                os.linesep,
-                os.linesep,
-                "-> Line ",
-                str(self.file_context.line_number),
-                " in file: ",
-                self.file_context.file_path,
-            ])
+            return "".join(
+                [
+                    self._message(),
+                    os.linesep,
+                    os.linesep,
+                    "-> Line ",
+                    str(self.file_context.line_number),
+                    " in file: ",
+                    self.file_context.file_path,
+                ]
+            )

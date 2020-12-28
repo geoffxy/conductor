@@ -7,8 +7,9 @@ from conductor.errors import InvalidTaskIdentifier
 _IDENTIFIER_GROUP = "[a-zA-Z0-9_-]+"
 _NAME_REGEX = re.compile("^{}$".format(_IDENTIFIER_GROUP))
 _TARGET_IDENTIFIER_REGEX = re.compile(
-    "^(//)?(?P<path>({}/)*({})?):(?P<name>{})$"
-        .format(_IDENTIFIER_GROUP, _IDENTIFIER_GROUP, _IDENTIFIER_GROUP),
+    "^(//)?(?P<path>({}/)*({})?):(?P<name>{})$".format(
+        _IDENTIFIER_GROUP, _IDENTIFIER_GROUP, _IDENTIFIER_GROUP
+    ),
 )
 
 
@@ -24,12 +25,14 @@ class TaskIdentifier:
 
     def __eq__(self, other):
         return (
-            len(self.path) == len(other.path) and
-            all(map(
-                lambda segments: segments[0] == segments[1],
-                zip(self.path, other.path),
-            )) and
-            self.name == other.name
+            len(self.path) == len(other.path)
+            and all(
+                map(
+                    lambda segments: segments[0] == segments[1],
+                    zip(self.path, other.path),
+                )
+            )
+            and self.name == other.name
         )
 
     def __hash__(self):
