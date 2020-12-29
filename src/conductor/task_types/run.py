@@ -25,17 +25,15 @@ class RunCommand(TaskType):
             ]
         )
 
-    def execute(self, project_root, task_index):
+    def execute(self, ctx):
         process = subprocess.Popen(
             [self._run],
             shell=True,
-            cwd=self._get_working_path(project_root),
+            cwd=self._get_working_path(ctx),
             env={
-                OUTPUT_ENV_VARIABLE_NAME: self.get_and_prepare_output_path(
-                    project_root
-                ),
+                OUTPUT_ENV_VARIABLE_NAME: self.get_and_prepare_output_path(ctx),
                 DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
-                    map(str, self.get_deps_output_paths(project_root, task_index))
+                    map(str, self.get_deps_output_paths(ctx))
                 ),
             },
         )

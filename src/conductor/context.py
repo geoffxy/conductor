@@ -4,13 +4,15 @@ import pathlib
 
 from conductor.config import CONFIG_FILE_NAME
 from conductor.errors import MissingProjectRoot
-from conductor.execution.plan import ExecutionPlan
 from conductor.parsing.task_index import TaskIndex
-from conductor.task_identifier import TaskIdentifier
-from conductor.task_types.base import TaskType
 
 
 class Context:
+    """
+    Represents an execution context, storing all the relevant state needed to
+    carry out Conductor's functionality.
+    """
+
     def __init__(self, project_root):
         self._project_root = project_root
         self._task_index = TaskIndex(self._project_root)
@@ -18,7 +20,7 @@ class Context:
     @classmethod
     def from_cwd(cls):
         """
-        Creates a new Context by searching for the project root from the
+        Creates a new `Context` by searching for the project root from the
         current working directory.
         """
         here = pathlib.Path(os.getcwd())
@@ -28,16 +30,10 @@ class Context:
                 return cls(project_root=path)
         raise MissingProjectRoot()
 
-    def run_tasks(self, task_selector):
-        """
-        Runs the task(s) specified by the given task selector.
-        """
-        # NOTE: Currently, we only consider task identifiers as valid task
-        #       selectors.
-        task_identifier = TaskIdentifier.from_str(
-            task_selector,
-            require_prefix=False,
-        )
-        self._task_index.load_transitive_closure(task_identifier)
-        plan = ExecutionPlan(task_identifier, self._task_index)
-        plan.execute(self._project_root)
+    @property
+    def project_root(self):
+        return self._project_root
+
+    @property
+    def task_index(self):
+        return self._task_index

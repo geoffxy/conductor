@@ -3,6 +3,8 @@ import traceback
 
 from conductor.context import Context
 from conductor.errors import ConductorError
+from conductor.task_identifier import TaskIdentifier
+from conductor.execution.plan import ExecutionPlan
 
 
 def register_command(subparsers):
@@ -20,8 +22,14 @@ def register_command(subparsers):
 
 def main(args):
     try:
-        context = Context.from_cwd()
-        context.run_tasks(args.task_identifier)
+        ctx = Context.from_cwd()
+        task_identifier = TaskIdentifier.from_str(
+            args.task_identifier,
+            require_prefix=False,
+        )
+        ctx.task_index.load_transitive_closure(task_identifier)
+        plan = ExecutionPlan(task_identifier)
+        plan.execute(ctx)
 
     except ConductorError as ex:
         if args.debug:

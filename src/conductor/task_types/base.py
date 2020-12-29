@@ -42,30 +42,28 @@ class TaskType:
     def deps(self):
         return self._deps
 
-    def execute(self, project_root):
+    def execute(self, ctx):
         raise NotImplementedError
 
-    def get_and_prepare_output_path(self, project_root):
+    def get_and_prepare_output_path(self, ctx):
         """
         Returns a `pathlib.Path` object representing the absolute path to
         this task's outputs directory. If the output directory does not
         exist, this method will create it.
         """
-        full_output_path = pathlib.Path(project_root) / self._output_path
+        full_output_path = pathlib.Path(ctx.project_root) / self._output_path
         full_output_path.mkdir(parents=True, exist_ok=True)
         return full_output_path
 
-    def get_deps_output_paths(self, project_root, task_index):
+    def get_deps_output_paths(self, ctx):
         """
         Returns a list of `pathlib.Path` objects that represent the output
         paths of this task's dependencies.
         """
         return [
-            task_index.get_task(dep_identifier).get_and_prepare_output_path(
-                project_root
-            )
+            ctx.task_index.get_task(dep_identifier).get_and_prepare_output_path(ctx)
             for dep_identifier in self.deps
         ]
 
-    def _get_working_path(self, project_root):
-        return os.path.join(project_root, *self._identifier.path)
+    def _get_working_path(self, ctx):
+        return os.path.join(ctx.project_root, *self._identifier.path)
