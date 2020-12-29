@@ -1,7 +1,11 @@
 import subprocess
 
 from conductor.task_types.base import TaskType
-from conductor.config import OUTPUT_ENV_VARIABLE_NAME
+from conductor.config import (
+    OUTPUT_ENV_VARIABLE_NAME,
+    DEPS_ENV_VARIABLE_NAME,
+    DEPS_ENV_PATH_SEPARATOR,
+)
 
 
 class RunCommand(TaskType):
@@ -21,14 +25,17 @@ class RunCommand(TaskType):
             ]
         )
 
-    def execute(self, project_root):
+    def execute(self, project_root, task_index):
         process = subprocess.Popen(
             [self._run],
             shell=True,
             cwd=self._get_working_path(project_root),
             env={
-                OUTPUT_ENV_VARIABLE_NAME: self._get_and_prepare_output_path(
+                OUTPUT_ENV_VARIABLE_NAME: self.get_and_prepare_output_path(
                     project_root
+                ),
+                DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
+                    map(str, self.get_deps_output_paths(project_root, task_index))
                 ),
             },
         )

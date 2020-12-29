@@ -22,7 +22,7 @@ class ExecutionPlan:
                 if visit_count > 0:
                     # All dependencies have finished running, can run now
                     print("Running '{}'".format(str(next_task.identifier)))
-                    next_task.execute(project_root)
+                    next_task.execute(project_root, self._task_index)
                     continue
 
                 # visit_count == 0, so we need to run the dependencies first
