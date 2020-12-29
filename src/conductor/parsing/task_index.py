@@ -1,4 +1,4 @@
-from conductor.errors import InvalidTaskIdentifier, TaskNotFound
+from conductor.errors import CyclicDependency, InvalidTaskIdentifier, TaskNotFound
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
 from conductor.user_code_utils import prevent_module_caching
@@ -40,17 +40,33 @@ class TaskIndex:
         """
         Ensures all tasks in the transitive closure of the specified
         `task_identifier` are loaded.
+
+        This method will raise the appropriate errors if there are problems
+        loading the needed tasks. This method will also check to ensure there
+        are no cycles in the dependency graph.
         """
-        identifiers_to_load = [task_identifier]
+        identifiers_to_load = [(task_identifier, 0)]
         visited_identifiers = set()
+        curr_path = set()
 
         with prevent_module_caching():
             while len(identifiers_to_load) > 0:
-                identifier = identifiers_to_load.pop()
-                if identifier in visited_identifiers:
+                identifier, visit_count = identifiers_to_load.pop()
+
+                if visit_count > 0:
+                    # We've finished processing this task's children
+                    curr_path.remove(identifier)
+                    visited_identifiers.add(identifier)
                     continue
 
-                visited_identifiers.add(identifier)
+                if identifier in curr_path:
+                    # The user's dependency graph contains a cycle
+                    raise CyclicDependency(
+                        task_identifier=task_identifier
+                    ).add_file_context(
+                        task_identifier.path_to_cond_file(self._project_root)
+                    )
+
                 rel_path = identifier.path_to_cond_file()
                 if rel_path not in self._loaded_raw_tasks:
                     self._loaded_raw_tasks[
@@ -75,8 +91,13 @@ class TaskIndex:
                     identifier, raw_task
                 )
 
+                identifiers_to_load.append((identifier, 1))
+                curr_path.add(identifier)
+
                 for dep in self._loaded_tasks[identifier].deps:
-                    identifiers_to_load.append(dep)
+                    if dep in visited_identifiers:
+                        continue
+                    identifiers_to_load.append((dep, 0))
 
     def _materialize_raw_task(self, identifier, raw_task):
         try:

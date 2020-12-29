@@ -4,6 +4,7 @@ import pathlib
 
 from conductor.config import CONFIG_FILE_NAME
 from conductor.errors import MissingProjectRoot
+from conductor.execution.plan import ExecutionPlan
 from conductor.parsing.task_index import TaskIndex
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
@@ -38,5 +39,5 @@ class Context:
             require_prefix=False,
         )
         self._task_index.load_transitive_closure(task_identifier)
-        task = self._task_index.get_task(task_identifier)
-        task.execute(project_root=self._project_root)
+        plan = ExecutionPlan(task_identifier, self._task_index)
+        plan.execute(self._project_root)

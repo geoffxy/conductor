@@ -153,6 +153,19 @@ class MissingProjectRoot(ConductorError):
         )
 
 
+class CyclicDependency(ConductorError):
+    error_code = 2003
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_identifier = kwargs["task_identifier"]
+    
+    def _message(self):
+        return "Encountered a cyclic dependency when loading the transitive closure of '{task_identifier}'.".format(
+            task_identifier=self.task_identifier,
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -165,4 +178,5 @@ __all__ = [
     "ParsingUnknownNameError",
     "TaskNotFound",
     "MissingProjectRoot",
+    "CyclicDependency",
 ]

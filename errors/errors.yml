@@ -44,3 +44,7 @@
 2002:
   name: MissingProjectRoot
   message: "Could not locate your project's root. Did you add a .condconfig file?"
+
+2003:
+  name: CyclicDependency
+  message: "Encountered a cyclic dependency when loading the transitive closure of '{task_identifier}'."
