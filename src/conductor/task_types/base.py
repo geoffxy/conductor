@@ -6,9 +6,11 @@ from conductor.config import OUTPUT_DIR
 
 
 class TaskType:
-    def __init__(self, identifier, cond_file_path):
+    def __init__(self, identifier, cond_file_path, deps):
         self._identifier = identifier
         self._cond_file_path = cond_file_path
+        # Ensure that the list of deps is immutable by making it a tuple)
+        self._deps = tuple(deps)
 
     def __repr__(self):
         return "".join(
@@ -20,17 +22,19 @@ class TaskType:
         )
 
     @staticmethod
-    def from_raw_task(identifier, raw_task):
+    def from_raw_task(identifier, raw_task, deps=[]):
         constructor = raw_task["_full_type"]
         del raw_task["name"]
         del raw_task["_full_type"]
-        # TODO: Handle dependencies properly
-        del raw_task["deps"]
-        return constructor(identifier=identifier, **raw_task)
+        return constructor(identifier=identifier, deps=deps, **raw_task)
 
     @property
     def identifier(self):
         return self._identifier
+
+    @property
+    def deps(self):
+        return self._deps
 
     def execute(self, project_root):
         raise NotImplementedError

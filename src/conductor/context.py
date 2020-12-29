@@ -38,6 +38,5 @@ class Context:
             require_prefix=False,
         )
         self._task_index.load_transitive_closure(task_identifier)
-        raw_task = self._task_index.get_task(task_identifier)
-        task = TaskType.from_raw_task(task_identifier, raw_task)
+        task = self._task_index.get_task(task_identifier)
         task.execute(project_root=self._project_root)
