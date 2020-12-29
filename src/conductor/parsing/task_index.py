@@ -1,3 +1,6 @@
+import pathlib
+from typing import Dict, Set
+
 from conductor.errors import CyclicDependency, InvalidTaskIdentifier, TaskNotFound
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
@@ -6,15 +9,15 @@ from conductor.task_types.base import TaskType
 
 
 class TaskIndex:
-    def __init__(self, project_root):
+    def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
         self._task_loader = TaskLoader()
         # Keyed by the relative path to the COND file
-        self._loaded_raw_tasks = {}
+        self._loaded_raw_tasks: Dict[pathlib.Path, Dict[str, Dict]] = {}
         # Keyed by task identifier
-        self._loaded_tasks = {}
+        self._loaded_tasks: Dict[TaskIdentifier, TaskType] = {}
 
-    def get_task(self, identifier):
+    def get_task(self, identifier: TaskIdentifier) -> TaskType:
         """
         Returns the task associated with the specified identifier, if it
         has been loaded.
@@ -26,8 +29,8 @@ class TaskIndex:
         # return it
         rel_path = identifier.path_to_cond_file()
         if (
-            rel_path not in self._loaded_tasks
-            or identifier.name not in self._loaded_tasks[rel_path]
+            rel_path not in self._loaded_raw_tasks
+            or identifier.name not in self._loaded_raw_tasks[rel_path]
         ):
             raise TaskNotFound(task_identifier=str(identifier))
 
@@ -36,7 +39,7 @@ class TaskIndex:
         )
         return self._loaded_tasks[identifier]
 
-    def load_transitive_closure(self, task_identifier):
+    def load_transitive_closure(self, task_identifier: TaskIdentifier):
         """
         Ensures all tasks in the transitive closure of the specified
         `task_identifier` are loaded.
@@ -47,7 +50,7 @@ class TaskIndex:
         """
         identifiers_to_load = [(task_identifier, 0)]
         visited_identifiers = set()
-        curr_path = set()
+        curr_path: Set[TaskIdentifier] = set()
 
         with prevent_module_caching():
             while len(identifiers_to_load) > 0:
@@ -99,7 +102,9 @@ class TaskIndex:
                         continue
                     identifiers_to_load.append((dep, 0))
 
-    def _materialize_raw_task(self, identifier, raw_task):
+    def _materialize_raw_task(
+        self, identifier: TaskIdentifier, raw_task: Dict
+    ) -> TaskType:
         try:
             raw_task = raw_task.copy()
             task_deps = []

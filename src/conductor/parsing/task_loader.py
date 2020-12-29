@@ -29,20 +29,20 @@ class TaskLoader:
                 code = file.read()
             exec(code, self._task_constructors, self._task_constructors)
             return tasks
-        except ConductorError as error:
-            error.add_file_context(file_path=cond_file_path)
-            raise error
+        except ConductorError as ex:
+            ex.add_file_context(file_path=cond_file_path)
+            raise ex
         except SyntaxError as ex:
-            error = TaskSyntaxError()
-            error.add_file_context(
+            syntax_err = TaskSyntaxError()
+            syntax_err.add_file_context(
                 file_path=cond_file_path,
                 line_number=ex.lineno,
             )
-            raise error
+            raise syntax_err
         except NameError as ex:
-            error = ParsingUnknownNameError(error_message=str(ex))
-            error.add_file_context(file_path=cond_file_path)
-            raise error
+            name_err = ParsingUnknownNameError(error_message=str(ex))
+            name_err.add_file_context(file_path=cond_file_path)
+            raise name_error
         finally:
             self._tasks = None
             self._current_cond_file_path = None

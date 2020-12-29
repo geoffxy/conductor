@@ -1,3 +1,5 @@
+from typing import Any, Callable, Dict
+
 from conductor.errors import (
     InvalidTaskParameterType,
     MissingTaskParameter,
@@ -5,8 +7,8 @@ from conductor.errors import (
 )
 
 
-def generate_type_validator(task_type_name, schema):
-    def validate(arguments):
+def generate_type_validator(task_type_name: str, schema: Dict) -> Callable[[Dict[str, Any]], None]:
+    def validate(arguments: Dict[str, Any]) -> None:
         for parameter, type_class in schema.items():
             # 1. If we do not find the parameter, it's an error
             if parameter not in arguments:

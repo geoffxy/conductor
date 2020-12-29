@@ -1,4 +1,5 @@
 import os
+import pathlib
 import re
 
 from conductor.config import COND_FILE_NAME
@@ -14,39 +15,33 @@ _TARGET_IDENTIFIER_REGEX = re.compile(
 
 
 class TaskIdentifier:
-    def __init__(self, path, name):
+    def __init__(self, path: pathlib.Path, name: str):
         self._path = path
         self._name = name
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "".join(
-            ["//", "/".join(self._path), ":", self._name],
+            ["//", "/".join(self._path.parts), ":", self._name],
         )
 
-    def __eq__(self, other):
-        return (
-            len(self.path) == len(other.path)
-            and all(
-                map(
-                    lambda segments: segments[0] == segments[1],
-                    zip(self.path, other.path),
-                )
-            )
-            and self.name == other.name
-        )
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TaskIdentifier):
+            raise NotImplementedError
+
+        return self.path == other.path and self.name == other.name
 
     def __hash__(self):
         return hash(self.__repr__())
 
     @property
-    def path(self):
+    def path(self) -> pathlib.Path:
         return self._path
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
-    def path_to_cond_file(self, project_root=None):
+    def path_to_cond_file(self, project_root=None) -> pathlib.Path:
         """
         Returns a path to the COND file where this task should be declared.
 
@@ -55,29 +50,29 @@ class TaskIdentifier:
         the project root.
         """
         if project_root is not None:
-            return os.path.join(project_root, *self._path, COND_FILE_NAME)
+            return pathlib.Path(project_root, self._path, COND_FILE_NAME)
         else:
-            return os.path.join(*self._path, COND_FILE_NAME)
+            return pathlib.Path(self._path, COND_FILE_NAME)
 
-    def relative_with_name(self, name):
+    def relative_with_name(self, name: str) -> "TaskIdentifier":
         return TaskIdentifier(self._path, name)
 
     @classmethod
-    def from_str(cls, candidate, require_prefix=True):
+    def from_str(cls, candidate: str, require_prefix: bool = True):
         match = _TARGET_IDENTIFIER_REGEX.match(candidate)
         if match is None:
             raise InvalidTaskIdentifier(task_identifier=candidate)
         if require_prefix and not candidate.startswith("//"):
             raise InvalidTaskIdentifier(task_identifier=candidate)
 
-        path = match.group("path")
-        if path is None:
-            path = []
+        path_str = match.group("path")
+        if path_str is None:
+            path = pathlib.Path()
         else:
-            path = list(filter(lambda s: len(s) > 0, path.split("/")))
+            path = pathlib.Path(*filter(lambda s: len(s) > 0, path_str.split("/")))
 
         return cls(path=path, name=match.group("name"))
 
     @staticmethod
-    def is_name_valid(candidate):
+    def is_name_valid(candidate: str) -> bool:
         return _NAME_REGEX.match(candidate) is not None

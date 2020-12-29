@@ -13,12 +13,12 @@ class Context:
     carry out Conductor's functionality.
     """
 
-    def __init__(self, project_root):
+    def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
         self._task_index = TaskIndex(self._project_root)
 
     @classmethod
-    def from_cwd(cls):
+    def from_cwd(cls) -> "Context":
         """
         Creates a new `Context` by searching for the project root from the
         current working directory.
@@ -31,9 +31,9 @@ class Context:
         raise MissingProjectRoot()
 
     @property
-    def project_root(self):
+    def project_root(self) -> pathlib.Path:
         return self._project_root
 
     @property
-    def task_index(self):
+    def task_index(self) -> TaskIndex:
         return self._task_index

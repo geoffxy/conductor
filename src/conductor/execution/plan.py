@@ -1,12 +1,14 @@
+from conductor.context import Context
 from conductor.errors import TaskNotFound
+from conductor.task_identifier import TaskIdentifier
 
 
 class ExecutionPlan:
-    def __init__(self, task_identifier):
+    def __init__(self, task_identifier: TaskIdentifier):
         # The identifier of the task to run
         self._task_identifier = task_identifier
 
-    def execute(self, ctx):
+    def execute(self, ctx: Context):
         """
         Run the execution plan.
         """

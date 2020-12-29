@@ -1,3 +1,5 @@
+from typing import Dict
+
 from .raw import RawTaskType
 from .run import RunCommand, RunExperiment
 
@@ -16,4 +18,6 @@ _raw_task_types = [
     ),
 ]
 
-raw_task_types = {task_type.name: task_type for task_type in _raw_task_types}
+raw_task_types: Dict[str, RawTaskType] = {
+    task_type.name: task_type for task_type in _raw_task_types
+}
