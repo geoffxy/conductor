@@ -7,7 +7,9 @@ from conductor.errors import (
 )
 
 
-def generate_type_validator(task_type_name: str, schema: Dict) -> Callable[[Dict[str, Any]], None]:
+def generate_type_validator(
+    task_type_name: str, schema: Dict
+) -> Callable[[Dict[str, Any]], None]:
     def validate(arguments: Dict[str, Any]) -> None:
         for parameter, type_class in schema.items():
             # 1. If we do not find the parameter, it's an error

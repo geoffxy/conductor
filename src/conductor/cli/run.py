@@ -22,8 +22,8 @@ def register_command(subparsers):
         "--again",
         action="store_true",
         help="Run all the relevant tasks again. Conductor by default will use cached "
-             "results for certain tasks, if they exist. Setting this flag will make "
-             "Conductor run all the relevant tasks again, regardless of the cache.",
+        "results for certain tasks, if they exist. Setting this flag will make "
+        "Conductor run all the relevant tasks again, regardless of the cache.",
     )
     parser.set_defaults(func=main)
 
