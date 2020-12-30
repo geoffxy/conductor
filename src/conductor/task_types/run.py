@@ -3,6 +3,7 @@ import pathlib
 from typing import Iterable
 
 import conductor.context as c
+from conductor.errors import TaskFailed, TaskNonZeroExit
 from conductor.task_identifier import TaskIdentifier
 from conductor.config import (
     OUTPUT_ENV_VARIABLE_NAME,
@@ -35,19 +36,29 @@ class RunCommand(TaskType):
             ]
         )
 
-    def execute(self, ctx: "c.Context"):
-        process = subprocess.Popen(
-            [self._run],
-            shell=True,
-            cwd=self._get_working_path(ctx),
-            env={
-                OUTPUT_ENV_VARIABLE_NAME: str(self.get_and_prepare_output_path(ctx)),
-                DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
-                    map(str, self.get_deps_output_paths(ctx))
-                ),
-            },
-        )
-        process.wait()
+    def execute(self, ctx: "c.Context") -> None:
+        try:
+            process = subprocess.Popen(
+                [self._run],
+                shell=True,
+                cwd=self._get_working_path(ctx),
+                env={
+                    OUTPUT_ENV_VARIABLE_NAME: str(
+                        self.get_and_prepare_output_path(ctx)
+                    ),
+                    DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
+                        map(str, self.get_deps_output_paths(ctx))
+                    ),
+                },
+            )
+            process.wait()
+            if process.returncode != 0:
+                raise TaskNonZeroExit(
+                    task_identifier=self.identifier, code=process.returncode
+                )
+
+        except OSError as ex:
+            raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
 
 
 class RunExperiment(RunCommand):

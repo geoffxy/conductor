@@ -48,3 +48,13 @@
 2003:
   name: CyclicDependency
   message: "Encountered a cyclic dependency when loading the transitive closure of '{task_identifier}'."
+
+
+# Execution errors (error code 3xxx)
+3001:
+  name: TaskNonZeroExit
+  message: "Task '{task_identifier}' terminated with a non-zero error code ({code})."
+
+3002:
+  name: TaskFailed
+  message: "Task '{task_identifier}' could not be executed."

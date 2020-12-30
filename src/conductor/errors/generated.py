@@ -166,6 +166,34 @@ class CyclicDependency(ConductorError):
         )
 
 
+class TaskNonZeroExit(ConductorError):
+    error_code = 3001
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_identifier = kwargs["task_identifier"]
+        self.code = kwargs["code"]
+    
+    def _message(self):
+        return "Task '{task_identifier}' terminated with a non-zero error code ({code}).".format(
+            task_identifier=self.task_identifier,
+            code=self.code,
+        )
+
+
+class TaskFailed(ConductorError):
+    error_code = 3002
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_identifier = kwargs["task_identifier"]
+    
+    def _message(self):
+        return "Task '{task_identifier}' could not be executed.".format(
+            task_identifier=self.task_identifier,
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -179,4 +207,6 @@ __all__ = [
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",
+    "TaskNonZeroExit",
+    "TaskFailed",
 ]

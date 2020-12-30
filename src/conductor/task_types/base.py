@@ -60,7 +60,10 @@ class TaskType:
         """
         return True
 
-    def execute(self, ctx: "c.Context"):
+    def execute(self, ctx: "c.Context") -> None:
+        """
+        Run this task. This method throws an exception if the task fails.
+        """
         raise NotImplementedError
 
     def get_and_prepare_output_path(self, ctx: "c.Context") -> pathlib.Path:
