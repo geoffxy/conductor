@@ -16,6 +16,7 @@ class Context:
     def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
         self._task_index = TaskIndex(self._project_root)
+        self._run_again = False
 
     @classmethod
     def from_cwd(cls) -> "Context":
@@ -30,6 +31,10 @@ class Context:
                 return cls(project_root=path)
         raise MissingProjectRoot()
 
+    def set_run_again(self, again: bool) -> "Context":
+        self._run_again = again
+        return self
+
     @property
     def project_root(self) -> pathlib.Path:
         return self._project_root
@@ -37,3 +42,7 @@ class Context:
     @property
     def task_index(self) -> TaskIndex:
         return self._task_index
+
+    @property
+    def run_again(self) -> bool:
+        return self._run_again

@@ -61,3 +61,12 @@ class RunExperiment(RunCommand):
         super().__init__(
             identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
         )
+
+    def should_run(self, ctx: "c.Context") -> bool:
+        """
+        We use the presence of files in the output directory to determine
+        whether or not we should run the experiment again.
+        """
+        output_path = self.get_and_prepare_output_path(ctx)
+        # Returns false iff there is at least one file in the directory
+        return not any(True for _ in output_path.iterdir())

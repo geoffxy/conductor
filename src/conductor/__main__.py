@@ -14,7 +14,7 @@ def main():
         "-v",
         "--version",
         action="store_true",
-        help="Print conductor's version and exit.",
+        help="Print Conductor's version and exit.",
     )
     parser.add_argument(
         "--debug",

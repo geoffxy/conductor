@@ -52,6 +52,14 @@ class TaskType:
     def deps(self) -> Iterable[TaskIdentifier]:
         return self._deps
 
+    def should_run(self, ctx: "c.Context") -> bool:
+        """
+        Returns whether or not this task should be executed. If the task
+        supports result caching, this method may return `False` to indicate
+        that the task does not need to be executed again.
+        """
+        return True
+
     def execute(self, ctx: "c.Context"):
         raise NotImplementedError
 

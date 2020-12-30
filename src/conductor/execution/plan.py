@@ -1,3 +1,5 @@
+import time
+
 from conductor.context import Context
 from conductor.errors import TaskNotFound
 from conductor.task_identifier import TaskIdentifier
@@ -16,21 +18,33 @@ class ExecutionPlan:
             stack = [(ctx.task_index.get_task(self._task_identifier), 0)]
             visited = set()
 
+            start = time.time()
             while len(stack) > 0:
                 next_task, visit_count = stack.pop()
                 if visit_count > 0:
                     # All dependencies have finished running, can run now
-                    print("Running '{}'".format(str(next_task.identifier)))
+                    print("Running '{}'...".format(str(next_task.identifier)))
                     next_task.execute(ctx)
                     continue
 
-                # visit_count == 0, so we need to run the dependencies first
                 visited.add(next_task.identifier)
+
+                # If we do not need to run the task, we do not need to consider
+                # its dependencies.
+                if not ctx.run_again and not next_task.should_run(ctx):
+                    print("Using cached results for '{}'.".format(str(next_task.identifier)))
+                    continue
+
+                # Process dependencies and then come back to run this task
                 stack.append((next_task, 1))
                 for dep in next_task.deps:
                     if dep in visited:
                         continue
                     stack.append((ctx.task_index.get_task(dep), 0))
+            elapsed = time.time() - start
+
+            # TODO: More robust time formatting
+            print("✨ Done! (in {:.2f} seconds)".format(elapsed))
 
         except TaskNotFound:
             raise AssertionError
