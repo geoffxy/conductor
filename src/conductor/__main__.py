@@ -3,6 +3,7 @@ import sys
 
 import conductor
 import conductor.cli.run
+import conductor.cli.clean
 
 
 def main():
@@ -23,6 +24,7 @@ def main():
     )
     subparsers = parser.add_subparsers(title="Commands")
     conductor.cli.run.register_command(subparsers)
+    conductor.cli.clean.register_command(subparsers)
     args = parser.parse_args()
 
     if args.version:
