@@ -6,6 +6,7 @@ import traceback
 from conductor.config import OUTPUT_DIR
 from conductor.context import Context
 from conductor.errors import ConductorError
+from conductor.user_code_utils import cli_command
 
 
 def register_command(subparsers):
@@ -22,31 +23,25 @@ def register_command(subparsers):
     parser.set_defaults(func=main)
 
 
+@cli_command
 def main(args):
-    try:
-        ctx = Context.from_cwd()
-        generated_files_path = ctx.project_root / OUTPUT_DIR
+    ctx = Context.from_cwd()
+    generated_files_path = ctx.project_root / OUTPUT_DIR
 
-        if args.interactive:
-            try:
-                confirm = input(
-                    "Remove {}? This cannot be undone. [y/N] ".format(
-                        str(generated_files_path)
-                    )
+    if args.interactive:
+        try:
+            confirm = input(
+                "Remove {}? This cannot be undone. [y/N] ".format(
+                    str(generated_files_path)
                 )
-                if confirm.strip().lower() != "y":
-                    print("Aborting!")
-                    sys.exit(1)
-
-            except EOFError:
-                print()
+            )
+            if confirm.strip().lower() != "y":
                 print("Aborting!")
                 sys.exit(1)
 
-        shutil.rmtree(generated_files_path, ignore_errors=True)
+        except EOFError:
+            print()
+            print("Aborting!")
+            sys.exit(1)
 
-    except ConductorError as ex:
-        if args.debug:
-            print(traceback.format_exc(), file=sys.stderr)
-        print("ERROR:", ex.printable_message(), file=sys.stderr)
-        sys.exit(1)
+    shutil.rmtree(generated_files_path, ignore_errors=True)

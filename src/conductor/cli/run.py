@@ -1,10 +1,10 @@
 import sys
-import traceback
 
 from conductor.context import Context
 from conductor.errors import ConductorError
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.plan import ExecutionPlan
+from conductor.user_code_utils import cli_command
 
 
 def register_command(subparsers):
@@ -28,19 +28,13 @@ def register_command(subparsers):
     parser.set_defaults(func=main)
 
 
+@cli_command
 def main(args):
-    try:
-        ctx = Context.from_cwd()
-        task_identifier = TaskIdentifier.from_str(
-            args.task_identifier,
-            require_prefix=False,
-        )
-        ctx.task_index.load_transitive_closure(task_identifier)
-        plan = ExecutionPlan(task_identifier, run_again=args.again)
-        plan.execute(ctx)
-
-    except ConductorError as ex:
-        if args.debug:
-            print(traceback.format_exc(), file=sys.stderr)
-        print("ERROR:", ex.printable_message(), file=sys.stderr)
-        sys.exit(1)
+    ctx = Context.from_cwd()
+    task_identifier = TaskIdentifier.from_str(
+        args.task_identifier,
+        require_prefix=False,
+    )
+    ctx.task_index.load_transitive_closure(task_identifier)
+    plan = ExecutionPlan(task_identifier, run_again=args.again)
+    plan.execute(ctx)
