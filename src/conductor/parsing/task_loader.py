@@ -42,7 +42,7 @@ class TaskLoader:
         except NameError as ex:
             name_err = ParsingUnknownNameError(error_message=str(ex))
             name_err.add_file_context(file_path=cond_file_path)
-            raise name_error
+            raise name_err
         finally:
             self._tasks = None
             self._current_cond_file_path = None
