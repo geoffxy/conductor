@@ -194,6 +194,19 @@ class TaskFailed(ConductorError):
         )
 
 
+class OutputDirTaken(ConductorError):
+    error_code = 3003
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.output_dir = kwargs["output_dir"]
+    
+    def _message(self):
+        return "Conductor cannot create its output directory '{output_dir}' because it already exists as a file.".format(
+            output_dir=self.output_dir,
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -261,6 +274,7 @@ __all__ = [
     "CyclicDependency",
     "TaskNonZeroExit",
     "TaskFailed",
+    "OutputDirTaken",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",

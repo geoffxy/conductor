@@ -59,6 +59,10 @@
   name: TaskFailed
   message: "Task '{task_identifier}' could not be executed."
 
+3003:
+  name: OutputDirTaken
+  message: "Conductor cannot create its output directory '{output_dir}' because it already exists as a file."
+
 
 # Archive and restore errors (error code 4xxx)
 4001:

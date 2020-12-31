@@ -41,7 +41,7 @@ class ConductorError(RuntimeError):
                     os.linesep,
                     os.linesep,
                     "-> Relevant file: ",
-                    self.file_context.file_path,
+                    str(self.file_context.file_path),
                 ]
             )
         else:
@@ -53,6 +53,6 @@ class ConductorError(RuntimeError):
                     "-> Line ",
                     str(self.file_context.line_number),
                     " in file: ",
-                    self.file_context.file_path,
+                    str(self.file_context.file_path),
                 ]
             )

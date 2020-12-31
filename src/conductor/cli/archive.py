@@ -5,7 +5,6 @@ import subprocess
 from typing import List, Optional
 
 from conductor.config import (
-    OUTPUT_DIR,
     ARCHIVE_FILE_NAME_TEMPLATE,
     ARCHIVE_VERSION_INDEX,
     TASK_OUTPUT_DIR_SUFFIX,
@@ -64,11 +63,9 @@ def generate_archive_name() -> str:
 def handle_output_path(ctx: Context, raw_output_path: Optional[str]) -> pathlib.Path:
     if raw_output_path is None:
         output_path = pathlib.Path(
-            ctx.project_root,
-            OUTPUT_DIR,
+            ctx.output_path,
             generate_archive_name(),
         )
-        output_path.parent.mkdir(exist_ok=True)
         return output_path
 
     # Validate the output path. It can either be a path to a directory (which
@@ -123,8 +120,6 @@ def create_archive(
     output_dirs_str = []
     for task_id, version in archive_index.get_all_versions():
         path_to_output = pathlib.Path(
-            ctx.project_root,
-            OUTPUT_DIR,
             task_id.path,
             "{}{}.{}".format(task_id.name, TASK_OUTPUT_DIR_SUFFIX, str(version)),
         )
@@ -134,9 +129,11 @@ def create_archive(
         process = subprocess.Popen(
             [
                 "tar",
-                "czf",
+                "czf",  # Create a new archive and use gzip to compress
                 str(output_archive_path),
-                str(archive_index_path),
+                "-C",  # Files to put in the archive are relative to `ctx.output_path`
+                str(ctx.output_path),
+                str(archive_index_path.relative_to(ctx.output_path)),
                 *output_dirs_str,
             ],
             shell=False,
@@ -162,9 +159,7 @@ def main(args):
         raise NoTaskOutputsToArchive()
 
     try:
-        archive_index_path = pathlib.Path(
-            ctx.project_root, OUTPUT_DIR, ARCHIVE_VERSION_INDEX
-        )
+        archive_index_path = pathlib.Path(ctx.output_path, ARCHIVE_VERSION_INDEX)
         archive_index_path.unlink(missing_ok=True)
         archive_index = VersionIndex.create_or_load(archive_index_path)
         total_entry_count = ctx.version_index.copy_entries_to(
@@ -175,7 +170,13 @@ def main(args):
 
         archive_index.commit_changes()
         create_archive(ctx, archive_index, output_archive_path, archive_index_path)
-        print("✨ Done! Archived saved at", str(output_archive_path))
+
+        # Compute a relative path to the current working directory, if possible
+        try:
+            relative_output_path = output_archive_path.relative_to(pathlib.Path.cwd())
+        except ValueError:
+            relative_output_path = output_archive_path
+        print("✨ Done! Archive saved as", str(relative_output_path))
 
     except:
         output_archive_path.unlink(missing_ok=True)
