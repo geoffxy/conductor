@@ -20,7 +20,6 @@ class Context:
         self._version_index = VersionIndex.create_or_load(
             pathlib.Path(self._project_root, OUTPUT_DIR, VERSION_INDEX_NAME)
         )
-        self._run_again = False
 
     @classmethod
     def from_cwd(cls) -> "Context":
@@ -35,10 +34,6 @@ class Context:
                 return cls(project_root=path)
         raise MissingProjectRoot()
 
-    def set_run_again(self, again: bool) -> "Context":
-        self._run_again = again
-        return self
-
     @property
     def project_root(self) -> pathlib.Path:
         return self._project_root
@@ -50,7 +45,3 @@ class Context:
     @property
     def version_index(self) -> VersionIndex:
         return self._version_index
-
-    @property
-    def run_again(self) -> bool:
-        return self._run_again

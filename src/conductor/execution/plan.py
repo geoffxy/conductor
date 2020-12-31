@@ -6,9 +6,12 @@ from conductor.task_identifier import TaskIdentifier
 
 
 class ExecutionPlan:
-    def __init__(self, task_identifier: TaskIdentifier):
+    def __init__(self, task_identifier: TaskIdentifier, run_again: bool = False):
         # The identifier of the task to run
         self._task_identifier = task_identifier
+        # If true, we will always run cached tasks again (even if
+        # `TaskType.should_run()` returns `False`)
+        self._run_again = run_again
 
     def execute(self, ctx: Context):
         """
@@ -31,7 +34,7 @@ class ExecutionPlan:
 
                 # If we do not need to run the task, we do not need to consider
                 # its dependencies.
-                if not ctx.run_again and not next_task.should_run(ctx):
+                if not self._run_again and not next_task.should_run(ctx):
                     print(
                         "Using cached results for '{}'.".format(
                             str(next_task.identifier)

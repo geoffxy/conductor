@@ -31,13 +31,12 @@ def register_command(subparsers):
 def main(args):
     try:
         ctx = Context.from_cwd()
-        ctx.set_run_again(args.again)
         task_identifier = TaskIdentifier.from_str(
             args.task_identifier,
             require_prefix=False,
         )
         ctx.task_index.load_transitive_closure(task_identifier)
-        plan = ExecutionPlan(task_identifier)
+        plan = ExecutionPlan(task_identifier, run_again=args.again)
         plan.execute(ctx)
 
     except ConductorError as ex:
