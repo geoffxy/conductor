@@ -2,8 +2,9 @@ import itertools
 import os
 import pathlib
 
-from conductor.config import CONFIG_FILE_NAME
+from conductor.config import CONFIG_FILE_NAME, OUTPUT_DIR, VERSION_INDEX_NAME
 from conductor.errors import MissingProjectRoot
+from conductor.execution.version_index import VersionIndex
 from conductor.parsing.task_index import TaskIndex
 
 
@@ -16,6 +17,9 @@ class Context:
     def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
         self._task_index = TaskIndex(self._project_root)
+        self._version_index = VersionIndex.create_or_load(
+            pathlib.Path(self._project_root, OUTPUT_DIR, VERSION_INDEX_NAME)
+        )
         self._run_again = False
 
     @classmethod
@@ -42,6 +46,10 @@ class Context:
     @property
     def task_index(self) -> TaskIndex:
         return self._task_index
+
+    @property
+    def version_index(self) -> VersionIndex:
+        return self._version_index
 
     @property
     def run_again(self) -> bool:

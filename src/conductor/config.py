@@ -10,7 +10,10 @@ OUTPUT_DIR = "cond-out"
 
 # The suffix to use when creating an output directory for a task. We append
 # this suffix to the task's name to ensure uniqueness.
-TARGET_OUTPUT_DIR_SUFFIX = "-out"
+TASK_OUTPUT_DIR_SUFFIX = ".task"
+
+# The file name of the on-disk version index.
+VERSION_INDEX_NAME = "version_index.sqlite"
 
 # The environment variable that stores the absolute path to the task's output
 # directory. Tasks are supposed to use this variable to determine where to

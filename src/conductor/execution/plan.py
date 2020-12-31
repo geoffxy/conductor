@@ -45,15 +45,19 @@ class ExecutionPlan:
                     if dep in visited:
                         continue
                     stack.append((ctx.task_index.get_task(dep), 0))
+
+            ctx.version_index.commit_changes()
             elapsed = time.time() - start
 
             # TODO: More robust time formatting
             print("✨ Done! (in {:.2f} seconds)".format(elapsed))
 
         except TaskNotFound:
+            ctx.version_index.rollback_changes()
             raise AssertionError
 
         except ConductorError:
+            ctx.version_index.rollback_changes()
             elapsed = time.time() - start
             print("🔴 Task failed. (in {:.2f} seconds)".format(elapsed))
             print()

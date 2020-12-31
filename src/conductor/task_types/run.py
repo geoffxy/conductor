@@ -1,9 +1,10 @@
 import subprocess
 import pathlib
-from typing import Iterable
+from typing import Iterable, Optional
 
 import conductor.context as c
 from conductor.errors import TaskFailed, TaskNonZeroExit
+from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
 from conductor.config import (
     OUTPUT_ENV_VARIABLE_NAME,
@@ -38,14 +39,15 @@ class RunCommand(TaskType):
 
     def execute(self, ctx: "c.Context") -> None:
         try:
+            output_path = self.get_output_path(ctx, create_new=True)
+            assert output_path is not None
+            output_path.mkdir(parents=True, exist_ok=True)
             process = subprocess.Popen(
                 [self._run],
                 shell=True,
                 cwd=self._get_working_path(ctx),
                 env={
-                    OUTPUT_ENV_VARIABLE_NAME: str(
-                        self.get_and_prepare_output_path(ctx)
-                    ),
+                    OUTPUT_ENV_VARIABLE_NAME: str(output_path),
                     DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
                         map(str, self.get_deps_output_paths(ctx))
                     ),
@@ -73,11 +75,31 @@ class RunExperiment(RunCommand):
             identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
         )
 
+    def get_output_path(
+        self, ctx: "c.Context", create_new: bool = False
+    ) -> Optional[pathlib.Path]:
+        unversioned_path = super().get_output_path(ctx, create_new)
+        assert unversioned_path is not None
+
+        if not create_new:
+            latest = ctx.version_index.get_latest_output_version(self.identifier)
+            if latest is None:
+                return None
+            return self._append_version(unversioned_path, version=latest)
+
+        return self._append_version(
+            unversioned_path,
+            version=ctx.version_index.generate_new_output_version(self.identifier),
+        )
+
     def should_run(self, ctx: "c.Context") -> bool:
         """
         We use the presence of files in the output directory to determine
         whether or not we should run the experiment again.
         """
-        output_path = self.get_and_prepare_output_path(ctx)
-        # Returns false iff there is at least one file in the directory
-        return not any(True for _ in output_path.iterdir())
+        output_path = self.get_output_path(ctx)
+        # Returns true iff the output directory does not exist or it is empty
+        return output_path is None or not any(True for _ in output_path.iterdir())
+
+    def _append_version(self, path: pathlib.Path, version: Version) -> pathlib.Path:
+        return path.with_name("{}.v{}".format(path.name, str(version)))
