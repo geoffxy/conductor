@@ -1,5 +1,6 @@
 from typing import Dict
 
+from .group import Group
 from .raw import RawTaskType
 from .run import RunCommand, RunExperiment
 
@@ -15,6 +16,12 @@ _raw_task_types = [
         schema={"name": str, "run": str, "deps": [str]},
         defaults={"deps": []},
         full_type=RunExperiment,
+    ),
+    RawTaskType(
+        name="group",
+        schema={"name": str, "deps": [str]},
+        defaults={"deps": []},
+        full_type=Group,
     ),
 ]
 
