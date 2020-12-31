@@ -1,5 +1,6 @@
 import sqlite3
 import pathlib
+import time
 from typing import Optional
 
 from conductor.task_identifier import TaskIdentifier
@@ -32,6 +33,7 @@ class VersionIndex:
 
     def __init__(self, conn: sqlite3.Connection):
         self._conn = conn
+        self._last_timestamp = 0
 
     @classmethod
     def create_or_load(cls, path: pathlib.Path) -> "VersionIndex":
@@ -43,7 +45,6 @@ class VersionIndex:
         conn = sqlite3.connect(path)
         conn.execute(q.set_format_version.format(version=cls.FormatVersion))
         conn.execute(q.create_table)
-        conn.execute(q.create_index)
         conn.commit()
         return VersionIndex(conn)
 
@@ -51,16 +52,25 @@ class VersionIndex:
         self, task_identifier: TaskIdentifier
     ) -> Optional[Version]:
         cursor = self._conn.cursor()
-        cursor.execute(q.latest_id_for_task, (str(task_identifier),))
+        cursor.execute(q.latest_task_timestamp, (str(task_identifier),))
         row = cursor.fetchone()
         if row is None:
             return None
         return Version(row[0])
 
     def generate_new_output_version(self, task_identifier: TaskIdentifier) -> Version:
+        timestamp = int(time.time())
+        if timestamp == self._last_timestamp:
+            timestamp += 1
+        elif timestamp < self._last_timestamp:
+            timestamp = self._last_timestamp + 1
+        self._last_timestamp = timestamp
+
         cursor = self._conn.cursor()
-        cursor.execute(q.insert_new_version, (str(task_identifier), "unknown"))
-        return Version(cursor.lastrowid)
+        cursor.execute(
+            q.insert_new_version, (str(task_identifier), timestamp, "unknown")
+        )
+        return Version(timestamp)
 
     def commit_changes(self):
         if not self._conn.in_transaction:

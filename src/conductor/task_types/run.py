@@ -102,4 +102,4 @@ class RunExperiment(RunCommand):
         return output_path is None or not any(True for _ in output_path.iterdir())
 
     def _append_version(self, path: pathlib.Path, version: Version) -> pathlib.Path:
-        return path.with_name("{}.v{}".format(path.name, str(version)))
+        return path.with_name("{}.{}".format(path.name, str(version)))
