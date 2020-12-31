@@ -58,3 +58,23 @@
 3002:
   name: TaskFailed
   message: "Task '{task_identifier}' could not be executed."
+
+
+# Archive and restore errors (error code 4xxx)
+4001:
+  name: OutputFileExists
+  message: "The provided output path points to an existing file. Conductor will not overwrite existing files."
+
+4002:
+  name: OutputPathDoesNotExist
+  message: "The provided output path does not exist. Make sure to create any missing directories."
+
+4003:
+  name: NoTaskOutputsToArchive
+  message: >-
+    There are no task outputs to archive. Make sure that you have `cond run` your task
+    at least once and that it (or its dependencies) are archivable.
+
+4004:
+  name: CreateArchiveFailed
+  message: "Conductor failed to create an archive."

@@ -1,7 +1,7 @@
 import sqlite3
 import pathlib
 import time
-from typing import Optional
+from typing import Iterable, List, Optional, Tuple
 
 from conductor.task_identifier import TaskIdentifier
 import conductor.execution.version_index_queries as q
@@ -71,6 +71,42 @@ class VersionIndex:
             q.insert_new_version, (str(task_identifier), timestamp, "unknown")
         )
         return Version(timestamp)
+
+    def get_all_versions(self) -> List[Tuple[TaskIdentifier, Version]]:
+        cursor = self._conn.cursor()
+        cursor.execute(q.all_versions)
+        return [(TaskIdentifier.from_str(row[0]), Version(row[1])) for row in cursor]
+
+    def copy_entries_to(
+        self,
+        dest: "VersionIndex",
+        tasks: Optional[List[TaskIdentifier]],
+        latest_only: bool,
+    ) -> int:
+        cursor = self._conn.cursor()
+        if tasks is None:
+            if latest_only:
+                cursor.execute(q.all_entries_latest)
+            else:
+                cursor.execute(q.all_entries)
+            return dest.bulk_load(cursor)
+
+        insert_count = 0
+        for task_id in tasks:
+            if latest_only:
+                cursor.execute(q.latest_entry_for_task, (str(task_id),))
+            else:
+                cursor.execute(q.all_entries_for_task, (str(task_id),))
+            insert_count += dest.bulk_load(cursor)
+        return insert_count
+
+    def bulk_load(self, rows: Iterable) -> int:
+        """
+        Load the rows into the index and return the number loaded
+        """
+        cursor = self._conn.cursor()
+        cursor.executemany(q.insert_new_version, rows)
+        return cursor.rowcount
 
     def commit_changes(self):
         if not self._conn.in_transaction:

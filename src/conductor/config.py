@@ -29,3 +29,9 @@ DEPS_ENV_VARIABLE_NAME = "COND_DEPS"
 # The separator used to separate multiple paths in the `DEPS_ENV_VARIABLE_NAME`
 # environment variable.
 DEPS_ENV_PATH_SEPARATOR = ":"
+
+# A template for the default name of a Conductor archive.
+ARCHIVE_FILE_NAME_TEMPLATE = "cond-archive+{timestamp}.tar.gz"
+
+# The file name of the version index used in a Conductor archive.
+ARCHIVE_VERSION_INDEX = "version_index_archive.sqlite"

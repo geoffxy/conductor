@@ -194,6 +194,58 @@ class TaskFailed(ConductorError):
         )
 
 
+class OutputFileExists(ConductorError):
+    error_code = 4001
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The provided output path points to an existing file. Conductor will not overwrite existing files.".format(
+
+        )
+
+
+class OutputPathDoesNotExist(ConductorError):
+    error_code = 4002
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The provided output path does not exist. Make sure to create any missing directories.".format(
+
+        )
+
+
+class NoTaskOutputsToArchive(ConductorError):
+    error_code = 4003
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "There are no task outputs to archive. Make sure that you have `cond run` your task at least once and that it (or its dependencies) are archivable.".format(
+
+        )
+
+
+class CreateArchiveFailed(ConductorError):
+    error_code = 4004
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Conductor failed to create an archive.".format(
+
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -209,4 +261,8 @@ __all__ = [
     "CyclicDependency",
     "TaskNonZeroExit",
     "TaskFailed",
+    "OutputFileExists",
+    "OutputPathDoesNotExist",
+    "NoTaskOutputsToArchive",
+    "CreateArchiveFailed",
 ]

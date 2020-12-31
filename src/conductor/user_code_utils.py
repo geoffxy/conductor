@@ -29,6 +29,7 @@ def cli_command(main):
     A decorator used for CLI command entry point methods. This decorator
     takes care of reporting errors that occur when running a command.
     """
+
     def command_main(args):
         try:
             main(args)
@@ -37,4 +38,5 @@ def cli_command(main):
                 print(traceback.format_exc(), file=sys.stderr)
             print("ERROR:", ex.printable_message(), file=sys.stderr)
             sys.exit(1)
+
     return command_main

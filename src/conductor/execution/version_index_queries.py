@@ -21,3 +21,29 @@ latest_task_timestamp = """
     ORDER BY timestamp DESC
     LIMIT 1
 """
+
+all_entries = "SELECT task_identifier, timestamp, git_commit FROM version_index"
+
+all_entries_latest = """
+  WITH latest_entries AS (
+    SELECT task_identifier, MAX(timestamp) AS timestamp
+    FROM version_index GROUP BY task_identifier
+  )
+  SELECT c.task_identifier, c.timestamp, c.git_commit
+    FROM version_index AS c INNER JOIN latest_entries AS l
+    ON c.task_identifier = l.task_identifier AND c.timestamp = l.timestamp
+"""
+
+all_entries_for_task = """
+  SELECT task_identifier, timestamp, git_commit FROM version_index
+    WHERE task_identifier = ?
+"""
+
+latest_entry_for_task = """
+  SELECT task_identifier, timestamp, git_commit FROM version_index
+    WHERE task_identifier = ?
+    ORDER BY timestamp DESC
+    LIMIT 1
+"""
+
+all_versions = "SELECT task_identifier, timestamp FROM version_index"
