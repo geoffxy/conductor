@@ -1,7 +1,7 @@
 import itertools
 import os
 import pathlib
-from typing import Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional
 
 import conductor.context as c
 from conductor.config import OUTPUT_DIR, TASK_OUTPUT_DIR_SUFFIX
@@ -50,6 +50,28 @@ class TaskType:
     @property
     def deps(self) -> Iterable[TaskIdentifier]:
         return self._deps
+
+    @property
+    def archivable(self) -> bool:
+        return False
+
+    def traverse(self, ctx: "c.Context", visitor: Callable[["TaskType"], None]) -> None:
+        """
+        Performs a pre-order traversal of the dependency graph starting at
+        this task.
+        """
+        stack = [self.identifier]
+        visited = set()
+
+        while len(stack) > 0:
+            curr_identifier = stack.pop()
+            visited.add(curr_identifier)
+            task = ctx.task_index.get_task(curr_identifier)
+            visitor(task)
+            for dep in task.deps:
+                if dep in visited:
+                    continue
+                stack.append(dep)
 
     def should_run(self, ctx: "c.Context") -> bool:
         """

@@ -75,6 +75,10 @@ class RunExperiment(RunCommand):
             identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
         )
 
+    @property
+    def archivable(self) -> bool:
+        return True
+
     def get_output_path(
         self, ctx: "c.Context", create_new: bool = False
     ) -> Optional[pathlib.Path]:
