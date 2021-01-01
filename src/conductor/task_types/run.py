@@ -3,6 +3,7 @@ import pathlib
 from typing import Iterable, Optional
 
 import conductor.context as c
+import conductor.filename as f
 from conductor.errors import TaskFailed, TaskNonZeroExit
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
@@ -89,11 +90,15 @@ class RunExperiment(RunCommand):
             latest = ctx.version_index.get_latest_output_version(self.identifier)
             if latest is None:
                 return None
-            return self._append_version(unversioned_path, version=latest)
+            return unversioned_path.with_name(
+                f.task_output_dir(self.identifier, version=latest)
+            )
 
-        return self._append_version(
-            unversioned_path,
-            version=ctx.version_index.generate_new_output_version(self.identifier),
+        return unversioned_path.with_name(
+            f.task_output_dir(
+                self.identifier,
+                version=ctx.version_index.generate_new_output_version(self.identifier),
+            )
         )
 
     def should_run(self, ctx: "c.Context") -> bool:
@@ -104,6 +109,3 @@ class RunExperiment(RunCommand):
         output_path = self.get_output_path(ctx)
         # Returns true iff the output directory does not exist or it is empty
         return output_path is None or not any(True for _ in output_path.iterdir())
-
-    def _append_version(self, path: pathlib.Path, version: Version) -> pathlib.Path:
-        return path.with_name("{}.{}".format(path.name, str(version)))

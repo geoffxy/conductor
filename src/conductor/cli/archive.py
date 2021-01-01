@@ -4,6 +4,7 @@ import datetime
 import subprocess
 from typing import List, Optional
 
+import conductor.filename as f
 from conductor.config import (
     ARCHIVE_FILE_NAME_TEMPLATE,
     ARCHIVE_VERSION_INDEX,
@@ -57,7 +58,7 @@ def register_command(subparsers):
 
 def generate_archive_name() -> str:
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d+%H-%M-%S")
-    return ARCHIVE_FILE_NAME_TEMPLATE.format(timestamp=timestamp)
+    return f.archive(timestamp=timestamp)
 
 
 def handle_output_path(ctx: Context, raw_output_path: Optional[str]) -> pathlib.Path:
@@ -117,13 +118,15 @@ def create_archive(
     output_archive_path: pathlib.Path,
     archive_index_path: pathlib.Path,
 ) -> None:
-    output_dirs_str = []
-    for task_id, version in archive_index.get_all_versions():
-        path_to_output = pathlib.Path(
-            task_id.path,
-            "{}{}.{}".format(task_id.name, TASK_OUTPUT_DIR_SUFFIX, str(version)),
+    output_dirs_str = [
+        str(
+            pathlib.Path(
+                task_id.path,
+                f.task_output_dir(task_id, version),
+            )
         )
-        output_dirs_str.append(str(path_to_output))
+        for task_id, version in archive_index.get_all_versions()
+    ]
 
     try:
         process = subprocess.Popen(

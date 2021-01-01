@@ -4,7 +4,8 @@ import pathlib
 from typing import Callable, Dict, Iterable, Optional
 
 import conductor.context as c
-from conductor.config import OUTPUT_DIR, TASK_OUTPUT_DIR_SUFFIX
+import conductor.filename as f
+from conductor.config import OUTPUT_DIR
 from conductor.task_identifier import TaskIdentifier
 
 
@@ -20,9 +21,7 @@ class TaskType:
         # Ensure that the list of deps is immutable by making it a tuple)
         self._deps = tuple(deps)
         self._output_path_suffix = pathlib.Path(
-            OUTPUT_DIR,
-            self._identifier.path,
-            self._identifier.name + TASK_OUTPUT_DIR_SUFFIX,
+            self.identifier.path, f.task_output_dir(self.identifier)
         )
 
     def __repr__(self) -> str:
@@ -103,7 +102,7 @@ class TaskType:
         output versions to indicate that a new output version directory
         should be created. For all other tasks, `create_new` is ignored.
         """
-        return ctx.project_root / self._output_path_suffix
+        return ctx.output_path / self._output_path_suffix
 
     def get_deps_output_paths(self, ctx: "c.Context") -> Iterable[pathlib.Path]:
         """

@@ -1,4 +1,4 @@
-# The name of the file where targets are defined.
+# The name of the file where tasks are defined.
 COND_FILE_NAME = "COND"
 
 # The name of the Conductor configuration file (it marks the project root).
