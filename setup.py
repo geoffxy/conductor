@@ -14,7 +14,7 @@ NAME = "conductor-cli"
 PACKAGES = find_packages(where="src")
 META_PATH = os.path.join("src", "conductor", "__init__.py")
 README_PATH = "README.md"
-PYTHON_REQUIRES = ">=3.6"
+PYTHON_REQUIRES = ">=3.8"
 
 PACKAGE_DATA = {}
 PACKAGE_DIR = {"": "src"}
