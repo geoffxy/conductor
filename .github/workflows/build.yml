@@ -18,15 +18,26 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install Conductor (development mode)
       run: ./tools/install-dev.sh --ci
+
     - name: Check Formatting (black)
       run: ./tools/check-code.sh format
+      continue-on-error: true
+
     - name: Lint (pylint)
       run: ./tools/check-code.sh lint
+      # pylint does not support Python 3.9 yet (results in false positives)
+      # See issue #3882 in PyCQA/pylint on GitHub.
+      if: matrix.python-version != "3.9"
+      continue-on-error: true
+
     - name: Type Check (mypy)
       run: ./tools/check-code.sh types
+      continue-on-error: true
