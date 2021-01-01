@@ -82,3 +82,13 @@
 4004:
   name: CreateArchiveFailed
   message: "Conductor failed to create an archive."
+
+4005:
+  name: ArchiveFileInvalid
+  message: "The provided archive file does not exist or is corrupted."
+
+4006:
+  name: DuplicateTaskOutput
+  message: >-
+    The provided archive contains task output(s) that already exist in the output
+    directory '{output_dir}'.

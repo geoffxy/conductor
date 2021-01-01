@@ -35,3 +35,6 @@ ARCHIVE_FILE_NAME_TEMPLATE = "cond-archive+{timestamp}.tar.gz"
 
 # The file name of the version index used in a Conductor archive.
 ARCHIVE_VERSION_INDEX = "version_index_archive.sqlite"
+
+# The name of the staging directory where archived files are temporarily extracted.
+ARCHIVE_STAGING = "archive-tmp"

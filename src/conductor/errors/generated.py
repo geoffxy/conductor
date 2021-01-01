@@ -259,6 +259,32 @@ class CreateArchiveFailed(ConductorError):
         )
 
 
+class ArchiveFileInvalid(ConductorError):
+    error_code = 4005
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The provided archive file does not exist or is corrupted.".format(
+
+        )
+
+
+class DuplicateTaskOutput(ConductorError):
+    error_code = 4006
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.output_dir = kwargs["output_dir"]
+    
+    def _message(self):
+        return "The provided archive contains task output(s) that already exist in the output directory '{output_dir}'.".format(
+            output_dir=self.output_dir,
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -279,4 +305,6 @@ __all__ = [
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",
     "CreateArchiveFailed",
+    "ArchiveFileInvalid",
+    "DuplicateTaskOutput",
 ]

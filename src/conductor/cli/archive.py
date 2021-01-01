@@ -28,7 +28,7 @@ from conductor.user_code_utils import cli_command
 def register_command(subparsers):
     parser = subparsers.add_parser(
         "archive",
-        help="Create an archive of task outputs (e.g., for backup purposes).",
+        help="Create an archive of task outputs.",
     )
     parser.add_argument(
         "task_identifier",

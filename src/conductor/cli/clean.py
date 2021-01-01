@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-import traceback
 
 from conductor.config import OUTPUT_DIR
 from conductor.context import Context

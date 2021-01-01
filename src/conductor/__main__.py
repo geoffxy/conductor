@@ -4,6 +4,7 @@ import sys
 import conductor
 import conductor.cli.run
 import conductor.cli.archive
+import conductor.cli.restore
 import conductor.cli.clean
 
 
@@ -26,6 +27,7 @@ def main():
     subparsers = parser.add_subparsers(title="Commands")
     conductor.cli.run.register_command(subparsers)
     conductor.cli.archive.register_command(subparsers)
+    conductor.cli.restore.register_command(subparsers)
     conductor.cli.clean.register_command(subparsers)
     args = parser.parse_args()
 
