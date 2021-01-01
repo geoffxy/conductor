@@ -15,10 +15,11 @@ def register_command(subparsers):
         help="Remove all Conductor generated files.",
     )
     parser.add_argument(
-        "-i",
-        "--interactive",
+        "-f",
+        "--force",
         action="store_true",
-        help="Prompt for confirmation before performing the clean operation.",
+        help="Do not prompt for confirmation before performing the clean operation. "
+        "Use with caution! The clean operation cannot be undone.",
     )
     parser.set_defaults(func=main)
 
@@ -26,14 +27,11 @@ def register_command(subparsers):
 @cli_command
 def main(args):
     ctx = Context.from_cwd()
-    generated_files_path = ctx.project_root / OUTPUT_DIR
 
-    if args.interactive:
+    if not args.force:
         try:
             confirm = input(
-                "Remove {}? This cannot be undone. [y/N] ".format(
-                    str(generated_files_path)
-                )
+                "Remove {}? This cannot be undone. [y/N] ".format(str(ctx.output_path))
             )
             if confirm.strip().lower() != "y":
                 print("Aborting!")
@@ -44,4 +42,4 @@ def main(args):
             print("Aborting!")
             sys.exit(1)
 
-    shutil.rmtree(generated_files_path, ignore_errors=True)
+    shutil.rmtree(ctx.output_path, ignore_errors=True)
