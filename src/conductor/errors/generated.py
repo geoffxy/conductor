@@ -129,6 +129,19 @@ class ParsingUnknownNameError(ConductorError):
         )
 
 
+class MissingCondFile(ConductorError):
+    error_code = 1009
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Could not find a required COND file. Please ensure that you have defined all the tasks that you use.".format(
+
+        )
+
+
 class TaskNotFound(ConductorError):
     error_code = 2001
 
@@ -297,6 +310,7 @@ __all__ = [
     "InvalidTaskName",
     "TaskSyntaxError",
     "ParsingUnknownNameError",
+    "MissingCondFile",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",

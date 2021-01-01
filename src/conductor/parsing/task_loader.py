@@ -2,6 +2,7 @@ from conductor.task_types import raw_task_types
 from conductor.errors import (
     ConductorError,
     DuplicateTaskName,
+    MissingCondFile,
     ParsingUnknownNameError,
     TaskSyntaxError,
 )
@@ -44,6 +45,10 @@ class TaskLoader:
             name_err = ParsingUnknownNameError(error_message=str(ex))
             name_err.add_file_context(file_path=cond_file_path)
             raise name_err from ex
+        except FileNotFoundError as ex:
+            missing_file_err = MissingCondFile()
+            missing_file_err.add_file_context(file_path=cond_file_path)
+            raise missing_file_err from ex
         finally:
             self._tasks = None
             self._current_cond_file_path = None
