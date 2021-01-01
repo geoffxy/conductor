@@ -1,11 +1,8 @@
-import itertools
-import os
 import pathlib
 from typing import Callable, Dict, Iterable, Optional
 
-import conductor.context as c
+import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
-from conductor.config import OUTPUT_DIR
 from conductor.task_identifier import TaskIdentifier
 
 
@@ -35,7 +32,7 @@ class TaskType:
 
     @staticmethod
     def from_raw_task(
-        identifier: TaskIdentifier, raw_task: Dict, deps=[]
+        identifier: TaskIdentifier, raw_task: Dict, deps: Iterable[TaskIdentifier]
     ) -> "TaskType":
         constructor = raw_task["_full_type"]
         del raw_task["name"]
@@ -72,6 +69,7 @@ class TaskType:
                     continue
                 stack.append(dep)
 
+    # pylint: disable=unused-argument
     def should_run(self, ctx: "c.Context") -> bool:
         """
         Returns whether or not this task should be executed. If the task
@@ -87,7 +85,9 @@ class TaskType:
         raise NotImplementedError
 
     def get_output_path(
-        self, ctx: "c.Context", create_new: bool = False
+        self,
+        ctx: "c.Context",
+        create_new: bool = False,  # pylint: disable=unused-argument
     ) -> Optional[pathlib.Path]:
         """
         Returns the absolute path to this task's outputs directory. Note that

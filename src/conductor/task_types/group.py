@@ -1,7 +1,7 @@
 import pathlib
 from typing import Iterable
 
-import conductor.context as c
+import conductor.context as c  # pylint: disable=unused-import
 from conductor.task_identifier import TaskIdentifier
 from .base import TaskType
 

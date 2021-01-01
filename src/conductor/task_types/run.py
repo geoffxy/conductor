@@ -2,10 +2,9 @@ import subprocess
 import pathlib
 from typing import Iterable, Optional
 
-import conductor.context as c
+import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.errors import TaskFailed, TaskNonZeroExit
-from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
 from conductor.config import (
     OUTPUT_ENV_VARIABLE_NAME,

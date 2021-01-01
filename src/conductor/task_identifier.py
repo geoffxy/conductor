@@ -1,4 +1,3 @@
-import os
 import pathlib
 import re
 
@@ -8,8 +7,8 @@ from conductor.errors import InvalidTaskIdentifier
 _IDENTIFIER_GROUP = "[a-zA-Z0-9_-]+"
 _NAME_REGEX = re.compile("^{}$".format(_IDENTIFIER_GROUP))
 _TARGET_IDENTIFIER_REGEX = re.compile(
-    "^(//)?(?P<path>({}/)*({})?):(?P<name>{})$".format(
-        _IDENTIFIER_GROUP, _IDENTIFIER_GROUP, _IDENTIFIER_GROUP
+    "^(//)?(?P<path>({ident}/)*({ident})?):(?P<name>{ident})$".format(
+        ident=_IDENTIFIER_GROUP,
     ),
 )
 

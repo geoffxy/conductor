@@ -51,13 +51,11 @@ class ExecutionPlan:
 
             ctx.version_index.commit_changes()
             elapsed = time.time() - start
-
-            # TODO: More robust time formatting
             print("✨ Done! (in {:.2f} seconds)".format(elapsed))
 
         except TaskNotFound:
             ctx.version_index.rollback_changes()
-            raise AssertionError
+            assert False
 
         except ConductorError:
             ctx.version_index.rollback_changes()

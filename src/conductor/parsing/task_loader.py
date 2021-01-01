@@ -27,6 +27,7 @@ class TaskLoader:
         try:
             with open(cond_file_path) as file:
                 code = file.read()
+            # pylint: disable=exec-used
             exec(code, self._task_constructors, self._task_constructors)
             return tasks
         except ConductorError as ex:
@@ -38,11 +39,11 @@ class TaskLoader:
                 file_path=cond_file_path,
                 line_number=ex.lineno,
             )
-            raise syntax_err
+            raise syntax_err from ex
         except NameError as ex:
             name_err = ParsingUnknownNameError(error_message=str(ex))
             name_err.add_file_context(file_path=cond_file_path)
-            raise name_err
+            raise name_err from ex
         finally:
             self._tasks = None
             self._current_cond_file_path = None

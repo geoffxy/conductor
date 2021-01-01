@@ -1,5 +1,4 @@
 import itertools
-import os
 import pathlib
 
 from conductor.config import CONFIG_FILE_NAME, OUTPUT_DIR, VERSION_INDEX_NAME

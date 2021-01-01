@@ -30,6 +30,7 @@ INSTALL_REQUIRES = []
 DEV_REQUIRES = [
     "black",
     "mypy",
+    "pylint",
     "pyyaml",
 ]
 

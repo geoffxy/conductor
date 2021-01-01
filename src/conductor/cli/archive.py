@@ -1,18 +1,12 @@
 import pathlib
-import sys
 import datetime
 import subprocess
 from typing import List, Optional
 
 import conductor.filename as f
-from conductor.config import (
-    ARCHIVE_FILE_NAME_TEMPLATE,
-    ARCHIVE_VERSION_INDEX,
-    TASK_OUTPUT_DIR_SUFFIX,
-)
+from conductor.config import ARCHIVE_VERSION_INDEX
 from conductor.context import Context
 from conductor.errors import (
-    ConductorError,
     CreateArchiveFailed,
     OutputFileExists,
     OutputPathDoesNotExist,
@@ -20,7 +14,6 @@ from conductor.errors import (
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
-from conductor.execution.plan import ExecutionPlan
 from conductor.execution.version_index import VersionIndex
 from conductor.user_code_utils import cli_command
 

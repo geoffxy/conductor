@@ -8,8 +8,8 @@ import conductor.execution.version_index_queries as q
 
 
 class Version:
-    def __init__(self, id: int):
-        self._id = id
+    def __init__(self, ident: int):
+        self._id = ident
 
     def __repr__(self) -> str:
         return "Version(id={})".format(self._id)

@@ -30,6 +30,7 @@ def generate_type_validator(
                     )
 
                 item_valid = map(
+                    # pylint: disable=cell-var-from-loop
                     lambda el: isinstance(el, type_class[0]),
                     arguments[parameter],
                 )

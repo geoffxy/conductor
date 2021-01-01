@@ -1,9 +1,7 @@
 import pathlib
-import os
 import subprocess
 import shutil
 import sqlite3
-import sys
 
 import conductor.filename as f
 from conductor.config import ARCHIVE_STAGING, ARCHIVE_VERSION_INDEX
@@ -26,9 +24,7 @@ def register_command(subparsers):
     parser.set_defaults(func=main)
 
 
-def extract_archive(
-    ctx: Context, archive_file: pathlib.Path, staging_path: pathlib.Path
-):
+def extract_archive(archive_file: pathlib.Path, staging_path: pathlib.Path):
     try:
         process = subprocess.Popen(
             ["tar", "xzf", str(archive_file), "-C", str(staging_path)],
@@ -55,7 +51,7 @@ def main(args):
     try:
         staging_path = ctx.output_path / ARCHIVE_STAGING
         staging_path.mkdir(exist_ok=True)
-        extract_archive(ctx, archive_file, staging_path)
+        extract_archive(archive_file, staging_path)
 
         archive_version_index_path = staging_path / ARCHIVE_VERSION_INDEX
         if not archive_version_index_path.is_file():
@@ -68,8 +64,8 @@ def main(args):
             archive_version_index.copy_entries_to(
                 dest=ctx.version_index, tasks=None, latest_only=False
             )
-        except sqlite3.IntegrityError:
-            raise DuplicateTaskOutput(output_dir=str(ctx.output_path))
+        except sqlite3.IntegrityError as ex:
+            raise DuplicateTaskOutput(output_dir=str(ctx.output_path)) from ex
 
         # Copy over all archived task outputs
         for task_id, version in archive_version_index.get_all_versions():
