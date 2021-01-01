@@ -27,6 +27,12 @@ ENTRY_POINTS = {
 
 INSTALL_REQUIRES = []
 
+DEV_REQUIRES = [
+    "black",
+    "mypy",
+    "pyyaml",
+]
+
 KEYWORDS = [
     "research",
     "experiment runner",
@@ -87,6 +93,9 @@ if __name__ == "__main__":
         package_dir=PACKAGE_DIR,
         python_requires=PYTHON_REQUIRES,
         install_requires=INSTALL_REQUIRES,
+        extras_require={
+            "dev": DEV_REQUIRES,
+        },
         entry_points=ENTRY_POINTS,
         classifiers=CLASSIFIERS,
         keywords=KEYWORDS,
