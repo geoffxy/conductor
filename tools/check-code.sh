@@ -78,10 +78,10 @@ if [ -z $mode ]; then
   fi
 fi
 
-if [ $mode == $check_format ]; then
+if [ "$mode" == $check_format ]; then
   exit $black_exit
-elif [ $mode == $check_lint ]; then
+elif [ "$mode" == $check_lint ]; then
   exit $pylint_exit
-elif [ $mode == $check_types ]; then
+elif [ "$mode" == $check_types ]; then
   exit $mypy_exit
 fi
