@@ -110,7 +110,14 @@ class TaskIndex:
             task_deps = []
             if "deps" in raw_task:
                 for dep in raw_task["deps"]:
-                    task_deps.append(TaskIdentifier.from_str(dep))
+                    # When defining task dependencies, we allow users to use "relative"
+                    # task identifiers to refer to tasks defined in the same COND file.
+                    if TaskIdentifier.is_relative_candidate(dep):
+                        task_deps.append(
+                            TaskIdentifier.from_relative_str(dep, identifier.path)
+                        )
+                    else:
+                        task_deps.append(TaskIdentifier.from_str(dep))
                 del raw_task["deps"]
             return TaskType.from_raw_task(identifier, raw_task, task_deps)
 
