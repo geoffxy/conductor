@@ -7,3 +7,5 @@
 __pycache__
 src/conductor_cli.egg-info
 .mypy_cache
+build
+dist
