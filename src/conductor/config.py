@@ -2,7 +2,7 @@
 COND_FILE_NAME = "COND"
 
 # The name of the Conductor configuration file (it marks the project root).
-CONFIG_FILE_NAME = ".condconfig"
+CONFIG_FILE_NAME = "cond_config.toml"
 
 # The output directory name. All Conductor outputs are stored in this
 # directory.
