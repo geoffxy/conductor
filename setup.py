@@ -32,6 +32,7 @@ DEV_REQUIRES = [
     "mypy",
     "pep517",
     "pylint",
+    "pytest",
     "pyyaml",
 ]
 

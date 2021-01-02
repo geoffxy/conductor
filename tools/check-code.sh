@@ -43,7 +43,7 @@ fi
 if [ -z $mode ] || [ $mode == $check_lint ]; then
   echo_blue "Lint (pylint)"
   echo_blue "============="
-  pylint src/conductor errors/codegen.py setup.py
+  pylint src/conductor errors/codegen.py setup.py tests
   pylint_exit=$?
   echo ""
 fi
@@ -51,7 +51,7 @@ fi
 if [ -z $mode ] || [ $mode == $check_types ]; then
   echo_blue "Type Check (mypy)"
   echo_blue "================="
-  mypy src/conductor/__main__.py
+  MYPYPATH=src mypy -p conductor -p tests
   mypy_exit=$?
   echo ""
 fi
