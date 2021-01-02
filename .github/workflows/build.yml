@@ -29,15 +29,21 @@ jobs:
 
     - name: Check Formatting (black)
       run: ./tools/check-code.sh format
-      continue-on-error: true
+      if: success() || failure()
 
     - name: Lint (pylint)
       run: ./tools/check-code.sh lint
       # pylint does not support Python 3.9 yet (results in false positives)
       # See issue #3882 in PyCQA/pylint on GitHub.
-      if: matrix.python-version != '3.9'
-      continue-on-error: true
+      if: (matrix.python-version != '3.9') && (success() || failure())
 
     - name: Type Check (mypy)
       run: ./tools/check-code.sh types
-      continue-on-error: true
+      if: success() || failure()
+    
+    - name: Run Tests (pytest)
+      run: pytest --quiet
+      if: success() || failure()
+
+    - name: Build Wheels
+      run: ./tools/build-and-release.sh build
