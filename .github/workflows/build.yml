@@ -35,7 +35,7 @@ jobs:
       run: ./tools/check-code.sh lint
       # pylint does not support Python 3.9 yet (results in false positives)
       # See issue #3882 in PyCQA/pylint on GitHub.
-      if: matrix.python-version != "3.9"
+      if: matrix.python-version != '3.9'
       continue-on-error: true
 
     - name: Type Check (mypy)
