@@ -163,7 +163,7 @@ class MissingProjectRoot(ConductorError):
 
     
     def _message(self):
-        return "Could not locate your project's root. Did you add a .condconfig file?".format(
+        return "Could not locate your project's root. Did you add a cond_config.toml file?".format(
 
         )
 

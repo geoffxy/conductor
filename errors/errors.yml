@@ -49,7 +49,7 @@
 
 2002:
   name: MissingProjectRoot
-  message: "Could not locate your project's root. Did you add a .condconfig file?"
+  message: "Could not locate your project's root. Did you add a cond_config.toml file?"
 
 2003:
   name: CyclicDependency

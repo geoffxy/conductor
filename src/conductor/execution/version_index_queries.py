@@ -10,6 +10,8 @@ create_table = """
 
 set_format_version = "PRAGMA user_version = {version:d}"
 
+get_max_timestamp = "SELECT MAX(timestamp) FROM version_index"
+
 insert_new_version = """
   INSERT INTO version_index (task_identifier, timestamp, git_commit)
     VALUES (?, ?, ?)

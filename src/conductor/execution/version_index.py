@@ -31,14 +31,20 @@ class VersionIndex:
 
     FormatVersion = 1
 
-    def __init__(self, conn: sqlite3.Connection):
+    def __init__(self, conn: sqlite3.Connection, last_timestamp: int):
         self._conn = conn
-        self._last_timestamp = 0
+        self._last_timestamp = last_timestamp
 
     @classmethod
     def create_or_load(cls, path: pathlib.Path) -> "VersionIndex":
         if path.exists():
-            return VersionIndex(sqlite3.connect(path))
+            # Need to restore the last timestamp used
+            conn = sqlite3.connect(path)
+            result = conn.execute(q.get_max_timestamp).fetchone()
+            return VersionIndex(
+                conn=conn,
+                last_timestamp=result[0] if result is not None else 0,
+            )
 
         # Need to create the DB
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -46,7 +52,7 @@ class VersionIndex:
         conn.execute(q.set_format_version.format(version=cls.FormatVersion))
         conn.execute(q.create_table)
         conn.commit()
-        return VersionIndex(conn)
+        return VersionIndex(conn, 0)
 
     def get_latest_output_version(
         self, task_identifier: TaskIdentifier
