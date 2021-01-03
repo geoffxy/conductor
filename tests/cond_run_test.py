@@ -1,15 +1,6 @@
 import csv
 import pathlib
-from conductor.config import TASK_OUTPUT_DIR_SUFFIX
-from .conductor_runner import ConductorRunner, EXAMPLE_TEMPLATES
-
-
-def count_task_outputs(in_dir: pathlib.Path):
-    num_outputs = 0
-    for file in in_dir.iterdir():
-        if file.is_dir() and TASK_OUTPUT_DIR_SUFFIX in file.name:
-            num_outputs += 1
-    return num_outputs
+from .conductor_runner import ConductorRunner, count_task_outputs, EXAMPLE_TEMPLATES
 
 
 def test_cond_run(tmp_path: pathlib.Path):
