@@ -2,6 +2,8 @@ import pathlib
 import shutil
 import subprocess
 
+from conductor.config import OUTPUT_DIR
+
 # pylint: disable=subprocess-run-check
 
 
@@ -24,7 +26,7 @@ class ConductorRunner:
 
     @property
     def output_path(self) -> pathlib.Path:
-        return self.project_root / "cond-out"
+        return self.project_root / OUTPUT_DIR
 
     def run(
         self, task_identifier: str, again: bool = False
@@ -42,5 +44,10 @@ class ConductorRunner:
 
 _TESTS_DIR = pathlib.Path(__file__).parent
 EXAMPLE_TEMPLATES = {
-    "hello_world": pathlib.Path(_TESTS_DIR, "..", "examples", "1-hello-world").resolve()
+    "hello_world": pathlib.Path(
+        _TESTS_DIR, "..", "examples", "1-hello-world"
+    ).resolve(),
+    "dependencies": pathlib.Path(
+        _TESTS_DIR, "..", "examples", "2-dependencies"
+    ).resolve(),
 }

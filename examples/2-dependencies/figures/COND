@@ -1,0 +1,7 @@
+run_command(
+    name="graph",
+    run="./graph.sh",
+    deps=[
+        "//experiments:run_benchmark",
+    ],
+)

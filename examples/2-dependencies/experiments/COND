@@ -1,0 +1,14 @@
+run_experiment(
+    name="run_benchmark",
+    run="./benchmark.sh",
+    deps=[
+        # If the dependency is defined in the same COND file, you
+        # can just specify the task name (prefixed by a colon).
+        ":build",
+    ],
+)
+
+run_command(
+    name="build",
+    run="./build.sh",
+)
