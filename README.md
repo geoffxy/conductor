@@ -1,4 +1,4 @@
-<h1 style="text-align: center;">🎶 Conductor</h1>
+# 🎶 Conductor
 
 Conductor is a simple and elegant tool that helps with orchestrating your
 research computing. Conductor helps with automating your research computing
@@ -117,8 +117,7 @@ group(
 The `group()` task is a convenience task used to group multiple other tasks
 together under one name.
 
-
-## Archiving and Restoring
+### Archiving and Restoring
 Conductor can archive "archivable" task outputs for safekeeping (e.g., for
 backup purposes). Currently, only `run_experiment()` task outputs are
 archivable. The idea is that `run_command()` task outputs should be
