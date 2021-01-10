@@ -10,8 +10,7 @@ import conductor.cli.clean
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Conductor: A simple, elegant, and opinionated tool that "
-        "orchestrates your research computing.",
+        description="Conductor: A simple and elegant research computing orchestrator.",
     )
     parser.add_argument(
         "-v",
@@ -32,7 +31,7 @@ def main():
     args = parser.parse_args()
 
     if args.version:
-        print(conductor.__version__)
+        print("Conductor", conductor.__version__)
         return
 
     if "func" not in args:
