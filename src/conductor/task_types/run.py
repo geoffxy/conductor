@@ -1,5 +1,6 @@
 import subprocess
 import pathlib
+import os
 from typing import Iterable, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -47,6 +48,7 @@ class RunCommand(TaskType):
                 shell=True,
                 cwd=self._get_working_path(ctx),
                 env={
+                    **os.environ,
                     OUTPUT_ENV_VARIABLE_NAME: str(output_path),
                     DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
                         map(str, self.get_deps_output_paths(ctx))
