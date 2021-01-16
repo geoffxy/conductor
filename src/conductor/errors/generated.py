@@ -222,6 +222,19 @@ class OutputDirTaken(ConductorError):
         )
 
 
+class ConductorAbort(ConductorError):
+    error_code = 3004
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Conductor's execution has been aborted by the user.".format(
+
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -317,6 +330,7 @@ __all__ = [
     "TaskNonZeroExit",
     "TaskFailed",
     "OutputDirTaken",
+    "ConductorAbort",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",

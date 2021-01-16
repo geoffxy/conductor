@@ -3,6 +3,7 @@ import sys
 import traceback
 
 from conductor.errors import ConductorError
+from conductor.errors.signal import register_signal_handlers
 
 
 @contextlib.contextmanager
@@ -32,6 +33,7 @@ def cli_command(main):
 
     def command_main(args):
         try:
+            register_signal_handlers()
             main(args)
         except ConductorError as ex:
             if args.debug:

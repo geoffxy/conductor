@@ -1,0 +1,4 @@
+run_command(
+  name="run",
+  run="./run.sh",
+)

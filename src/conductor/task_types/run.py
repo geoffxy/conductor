@@ -1,11 +1,12 @@
 import subprocess
 import pathlib
 import os
+import signal
 from typing import Iterable, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
-from conductor.errors import TaskFailed, TaskNonZeroExit
+from conductor.errors import TaskFailed, TaskNonZeroExit, ConductorAbort
 from conductor.task_identifier import TaskIdentifier
 from conductor.config import (
     OUTPUT_ENV_VARIABLE_NAME,
@@ -54,12 +55,22 @@ class RunCommand(TaskType):
                         map(str, self.get_deps_output_paths(ctx))
                     ),
                 },
+                start_new_session=True,
             )
             process.wait()
             if process.returncode != 0:
                 raise TaskNonZeroExit(
                     task_identifier=self.identifier, code=process.returncode
                 )
+
+        except ConductorAbort:
+            # Send SIGTERM to the entire process group (i.e., the subprocess
+            # and its child processes).
+            if process is not None:
+                group_id = os.getpgid(process.pid)
+                if group_id >= 0:
+                    os.killpg(group_id, signal.SIGTERM)
+            raise
 
         except OSError as ex:
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))

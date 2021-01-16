@@ -69,6 +69,10 @@
   name: OutputDirTaken
   message: "Conductor cannot create its output directory '{output_dir}' because it already exists as a file."
 
+3004:
+  name: ConductorAbort
+  message: "Conductor's execution has been aborted by the user."
+
 
 # Archive and restore errors (error code 4xxx)
 4001:
