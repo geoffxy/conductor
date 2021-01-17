@@ -2,7 +2,7 @@ import shutil
 import sys
 
 from conductor.context import Context
-from conductor.user_code_utils import cli_command
+from conductor.utils.user_code import cli_command
 
 
 def register_command(subparsers):

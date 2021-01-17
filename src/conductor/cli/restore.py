@@ -8,7 +8,7 @@ from conductor.config import ARCHIVE_STAGING, ARCHIVE_VERSION_INDEX
 from conductor.context import Context
 from conductor.errors import ArchiveFileInvalid, DuplicateTaskOutput
 from conductor.execution.version_index import VersionIndex
-from conductor.user_code_utils import cli_command
+from conductor.utils.user_code import cli_command
 
 
 def register_command(subparsers):

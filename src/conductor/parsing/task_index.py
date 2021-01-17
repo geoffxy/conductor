@@ -4,7 +4,7 @@ from typing import Dict, Set
 from conductor.errors import CyclicDependency, InvalidTaskIdentifier, TaskNotFound
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
-from conductor.user_code_utils import prevent_module_caching
+from conductor.utils.user_code import prevent_module_caching
 from conductor.task_types.base import TaskType
 
 

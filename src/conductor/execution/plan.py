@@ -3,6 +3,7 @@ import time
 from conductor.context import Context
 from conductor.errors import ConductorError, TaskNotFound, ConductorAbort
 from conductor.task_identifier import TaskIdentifier
+from conductor.utils.time import time_to_readable_string
 
 
 class ExecutionPlan:
@@ -51,7 +52,7 @@ class ExecutionPlan:
 
             ctx.version_index.commit_changes()
             elapsed = time.time() - start
-            print("✨ Done! (ran for {:.2f} seconds)".format(elapsed))
+            print("✨ Done! (ran for {})".format(time_to_readable_string(elapsed)))
 
         except TaskNotFound:
             ctx.version_index.rollback_changes()
@@ -60,13 +61,19 @@ class ExecutionPlan:
         except ConductorAbort:
             ctx.version_index.rollback_changes()
             elapsed = time.time() - start
-            print("⚠️  Task aborted. (ran for {:.2f} seconds)".format(elapsed))
+            print(
+                "⚠️  Task aborted. (ran for {})".format(
+                    time_to_readable_string(elapsed)
+                )
+            )
             print()
             raise
 
         except ConductorError:
             ctx.version_index.rollback_changes()
             elapsed = time.time() - start
-            print("🔴 Task failed. (ran for {:.2f} seconds)".format(elapsed))
+            print(
+                "🔴 Task failed. (ran for {})".format(time_to_readable_string(elapsed))
+            )
             print()
             raise
