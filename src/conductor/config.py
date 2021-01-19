@@ -30,6 +30,9 @@ DEPS_ENV_VARIABLE_NAME = "COND_DEPS"
 # environment variable.
 DEPS_ENV_PATH_SEPARATOR = ":"
 
+# The environment variable that stores the name of the task being executed.
+TASK_NAME_ENV_VARIABLE_NAME = "COND_NAME"
+
 # A template for the default name of a Conductor archive.
 ARCHIVE_FILE_NAME_TEMPLATE = "cond-archive+{timestamp}.tar.gz"
 

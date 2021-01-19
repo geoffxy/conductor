@@ -12,6 +12,7 @@ from conductor.config import (
     OUTPUT_ENV_VARIABLE_NAME,
     DEPS_ENV_VARIABLE_NAME,
     DEPS_ENV_PATH_SEPARATOR,
+    TASK_NAME_ENV_VARIABLE_NAME,
 )
 from .base import TaskType
 
@@ -54,6 +55,7 @@ class RunCommand(TaskType):
                     DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
                         map(str, self.get_deps_output_paths(ctx))
                     ),
+                    TASK_NAME_ENV_VARIABLE_NAME: self.identifier.name,
                 },
                 start_new_session=True,
             )
