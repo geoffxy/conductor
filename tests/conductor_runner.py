@@ -73,11 +73,21 @@ def count_task_outputs(in_dir: pathlib.Path):
 
 
 _TESTS_DIR = pathlib.Path(__file__).parent
+
 EXAMPLE_TEMPLATES = {
     "hello_world": pathlib.Path(
         _TESTS_DIR, "..", "examples", "1-hello-world"
     ).resolve(),
     "dependencies": pathlib.Path(
         _TESTS_DIR, "..", "examples", "2-dependencies"
+    ).resolve(),
+}
+
+FIXTURE_TEMPLATES = {
+    "long-running": pathlib.Path(
+        _TESTS_DIR, "fixture-projects", "long-running"
+    ).resolve(),
+    "combine-test": pathlib.Path(
+        _TESTS_DIR, "fixture-projects", "combine-test"
     ).resolve(),
 }

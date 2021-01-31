@@ -1,6 +1,12 @@
 import csv
 import pathlib
-from .conductor_runner import ConductorRunner, count_task_outputs, EXAMPLE_TEMPLATES
+from conductor.config import TASK_OUTPUT_DIR_SUFFIX
+from .conductor_runner import (
+    ConductorRunner,
+    count_task_outputs,
+    EXAMPLE_TEMPLATES,
+    FIXTURE_TEMPLATES,
+)
 
 
 def test_cond_run(tmp_path: pathlib.Path):
@@ -76,3 +82,18 @@ def test_cond_run_deps(tmp_path: pathlib.Path):
     assert result.returncode == 0
     assert count_task_outputs(experiment_out) == 3
     assert count_task_outputs(figures_out) == 1
+
+
+def test_cond_run_combine(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
+    result = cond.run("//:all")
+    assert result.returncode == 0
+    assert cond.output_path.exists()
+
+    combine_task_output_dir = cond.output_path / ("all" + TASK_OUTPUT_DIR_SUFFIX)
+    assert combine_task_output_dir.exists()
+
+    files = [file.name for file in combine_task_output_dir.iterdir()]
+    assert len(files) == 2
+    assert "file1.txt" in files
+    assert "file2.txt" in files

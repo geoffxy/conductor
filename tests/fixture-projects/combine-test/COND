@@ -1,0 +1,23 @@
+run_experiment(
+  name="echo1",
+  run="echo 'Hello world!' > ${COND_OUT}/file1.txt",
+)
+
+run_experiment(
+  name="echo2",
+  run="echo 'Hello world!' > ${COND_OUT}/file2.txt",
+)
+
+run_command(
+  name="noop",
+  run="exit 0",
+)
+
+combine(
+  name="all",
+  deps=[
+    ":echo1",
+    ":echo2",
+    ":noop",
+  ],
+)
