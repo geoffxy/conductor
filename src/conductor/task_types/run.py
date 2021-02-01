@@ -49,6 +49,7 @@ class RunCommand(TaskType):
                 [self._run],
                 shell=True,
                 cwd=self._get_working_path(ctx),
+                executable="/bin/bash",
                 env={
                     **os.environ,
                     OUTPUT_ENV_VARIABLE_NAME: str(output_path),
