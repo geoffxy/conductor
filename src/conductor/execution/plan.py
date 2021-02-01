@@ -45,7 +45,11 @@ class ExecutionPlan:
 
                 # Process dependencies and then come back to run this task
                 stack.append((next_task, 1))
-                for dep in next_task.deps:
+
+                # Append in reverse order because we pop from the back of the
+                # list. This ensures we process dependencies in the order they
+                # are listed in the COND file (for the user's convenience).
+                for dep in reversed(next_task.deps):
                     if dep in visited:
                         continue
                     stack.append((ctx.task_index.get_task(dep), 0))

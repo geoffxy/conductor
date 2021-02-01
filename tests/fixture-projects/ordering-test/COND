@@ -1,0 +1,32 @@
+run_command(
+  name="run_first",
+  run="echo 1 >> ${COND_OUT}/../out.txt",
+)
+
+run_command(
+  name="run_second",
+  run="echo 2 >> ${COND_OUT}/../out.txt",
+)
+
+run_command(
+  name="run_third",
+  run="echo 3 >> ${COND_OUT}/../out.txt",
+)
+
+group(
+  name="order123",
+  deps=[
+    ":run_first",
+    ":run_second",
+    ":run_third",
+  ],
+)
+
+group(
+  name="order213",
+  deps=[
+    ":run_second",
+    ":run_first",
+    ":run_third",
+  ],
+)

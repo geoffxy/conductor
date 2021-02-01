@@ -1,5 +1,5 @@
 import pathlib
-from typing import Iterable
+from typing import Sequence
 
 import conductor.context as c  # pylint: disable=unused-import
 from conductor.task_identifier import TaskIdentifier
@@ -11,7 +11,7 @@ class Group(TaskType):
         self,
         identifier: TaskIdentifier,
         cond_file_path: pathlib.Path,
-        deps: Iterable[TaskIdentifier],
+        deps: Sequence[TaskIdentifier],
     ):
         super().__init__(
             identifier=identifier, cond_file_path=cond_file_path, deps=deps

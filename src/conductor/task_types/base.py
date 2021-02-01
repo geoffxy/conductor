@@ -1,5 +1,5 @@
 import pathlib
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
@@ -11,7 +11,7 @@ class TaskType:
         self,
         identifier: TaskIdentifier,
         cond_file_path: pathlib.Path,
-        deps: Iterable[TaskIdentifier],
+        deps: Sequence[TaskIdentifier],
     ):
         self._identifier = identifier
         self._cond_file_path = cond_file_path
@@ -32,7 +32,7 @@ class TaskType:
 
     @staticmethod
     def from_raw_task(
-        identifier: TaskIdentifier, raw_task: Dict, deps: Iterable[TaskIdentifier]
+        identifier: TaskIdentifier, raw_task: Dict, deps: Sequence[TaskIdentifier]
     ) -> "TaskType":
         constructor = raw_task["_full_type"]
         del raw_task["name"]
@@ -44,7 +44,7 @@ class TaskType:
         return self._identifier
 
     @property
-    def deps(self) -> Iterable[TaskIdentifier]:
+    def deps(self) -> Sequence[TaskIdentifier]:
         return self._deps
 
     @property
@@ -104,7 +104,7 @@ class TaskType:
         """
         return ctx.output_path / self._output_path_suffix
 
-    def get_deps_output_paths(self, ctx: "c.Context") -> Iterable[pathlib.Path]:
+    def get_deps_output_paths(self, ctx: "c.Context") -> Sequence[pathlib.Path]:
         """
         Returns a list of `pathlib.Path` objects that represent the latest
         output paths of this task's dependencies.
