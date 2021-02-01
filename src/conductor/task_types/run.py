@@ -2,7 +2,7 @@ import subprocess
 import pathlib
 import os
 import signal
-from typing import Iterable, Optional
+from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
@@ -22,7 +22,7 @@ class RunCommand(TaskType):
         self,
         identifier: TaskIdentifier,
         cond_file_path: pathlib.Path,
-        deps: Iterable[TaskIdentifier],
+        deps: Sequence[TaskIdentifier],
         run: str,
     ):
         super().__init__(
@@ -83,7 +83,7 @@ class RunExperiment(RunCommand):
         self,
         identifier: TaskIdentifier,
         cond_file_path: pathlib.Path,
-        deps: Iterable[TaskIdentifier],
+        deps: Sequence[TaskIdentifier],
         run: str,
     ):
         super().__init__(
