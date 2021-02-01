@@ -1,5 +1,7 @@
 import csv
 import pathlib
+import os
+
 from conductor.config import TASK_OUTPUT_DIR_SUFFIX
 from .conductor_runner import (
     ConductorRunner,
@@ -97,3 +99,32 @@ def test_cond_run_combine(tmp_path: pathlib.Path):
     assert len(files) == 2
     assert "file1.txt" in files
     assert "file2.txt" in files
+
+
+def test_cond_run_ordering(tmp_path: pathlib.Path):
+    # This test ensures we run a task's directly dependent tasks (i.e., first
+    # level dependencies) in the order they are listed in the task's
+    # definition. This behavior is just for the user's convenience. Conductor
+    # only guarantees that a task's dependents have executed before the task
+    # itself is executed.
+
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["ordering-test"])
+    result = cond.run("//:order123")
+    assert result.returncode == 0
+    assert cond.output_path.exists()
+
+    out_file = cond.output_path / "out.txt"
+    assert out_file.exists()
+
+    with open(out_file) as file:
+        values = [line.rstrip(os.linesep) for line in file]
+    assert values == ["1", "2", "3"]
+    out_file.unlink()
+
+    result = cond.run("//:order213")
+    assert result.returncode == 0
+    assert out_file.exists()
+
+    with open(out_file) as file:
+        values = [line.rstrip(os.linesep) for line in file]
+    assert values == ["2", "1", "3"]
