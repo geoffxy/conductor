@@ -1,0 +1,8 @@
+run_command(
+  name="test",
+  run="exit 0",
+  deps=[
+    "//:echo1",
+    "//:echo1",
+  ],
+)

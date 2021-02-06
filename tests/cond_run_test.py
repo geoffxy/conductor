@@ -128,3 +128,9 @@ def test_cond_run_ordering(tmp_path: pathlib.Path):
     with open(out_file) as file:
         values = [line.rstrip(os.linesep) for line in file]
     assert values == ["2", "1", "3"]
+
+
+def test_cond_run_duplicate_deps(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
+    result = cond.run("//duplicate-deps:test")
+    assert result.returncode != 0

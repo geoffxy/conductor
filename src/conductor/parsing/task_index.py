@@ -1,7 +1,12 @@
 import pathlib
 from typing import Dict, Set
 
-from conductor.errors import CyclicDependency, InvalidTaskIdentifier, TaskNotFound
+from conductor.errors import (
+    CyclicDependency,
+    InvalidTaskIdentifier,
+    TaskNotFound,
+    DuplicateDependency,
+)
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.user_code import prevent_module_caching
@@ -108,20 +113,28 @@ class TaskIndex:
         try:
             raw_task = raw_task.copy()
             task_deps = []
+            task_deps_set = set()
             if "deps" in raw_task:
                 for dep in raw_task["deps"]:
                     # When defining task dependencies, we allow users to use "relative"
                     # task identifiers to refer to tasks defined in the same COND file.
                     if TaskIdentifier.is_relative_candidate(dep):
-                        task_deps.append(
-                            TaskIdentifier.from_relative_str(dep, identifier.path)
+                        dep_identifier = TaskIdentifier.from_relative_str(
+                            dep, identifier.path
                         )
                     else:
-                        task_deps.append(TaskIdentifier.from_str(dep))
+                        dep_identifier = TaskIdentifier.from_str(dep)
+                    if dep_identifier in task_deps_set:
+                        raise DuplicateDependency(
+                            task_identifier=identifier, dep_identifier=dep_identifier
+                        )
+                    task_deps.append(dep_identifier)
+                    task_deps_set.add(dep_identifier)
                 del raw_task["deps"]
+
             return TaskType.from_raw_task(identifier, raw_task, task_deps)
 
-        except InvalidTaskIdentifier as ex:
+        except (InvalidTaskIdentifier, DuplicateDependency) as ex:
             ex.add_file_context(
                 identifier.path_to_cond_file(self._project_root),
             )

@@ -41,6 +41,10 @@
     Could not find a required COND file. Please ensure that you have defined
     all the tasks that you use.
 
+1010:
+  name: DuplicateDependency
+  message: Task '{task_identifier}' has declared a dependency on '{dep_identifier}' more than once.
+
 
 # Task graph loading errors (error code 2xxx)
 2001:

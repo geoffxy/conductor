@@ -142,6 +142,21 @@ class MissingCondFile(ConductorError):
         )
 
 
+class DuplicateDependency(ConductorError):
+    error_code = 1010
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_identifier = kwargs["task_identifier"]
+        self.dep_identifier = kwargs["dep_identifier"]
+    
+    def _message(self):
+        return "Task '{task_identifier}' has declared a dependency on '{dep_identifier}' more than once.".format(
+            task_identifier=self.task_identifier,
+            dep_identifier=self.dep_identifier,
+        )
+
+
 class TaskNotFound(ConductorError):
     error_code = 2001
 
@@ -324,6 +339,7 @@ __all__ = [
     "TaskSyntaxError",
     "ParsingUnknownNameError",
     "MissingCondFile",
+    "DuplicateDependency",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",
