@@ -41,3 +41,7 @@ ARCHIVE_VERSION_INDEX = "version_index_archive.sqlite"
 
 # The name of the staging directory where archived files are temporarily extracted.
 ARCHIVE_STAGING = "archive-tmp"
+
+# The names of the files that store copies of a task's standard output and error.
+STDOUT_LOG_FILE = "stdout.log"
+STDERR_LOG_FILE = "stderr.log"

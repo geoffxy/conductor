@@ -2,6 +2,7 @@ import subprocess
 import pathlib
 import os
 import signal
+import sys
 from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -13,11 +14,17 @@ from conductor.config import (
     DEPS_ENV_VARIABLE_NAME,
     DEPS_ENV_PATH_SEPARATOR,
     TASK_NAME_ENV_VARIABLE_NAME,
+    STDOUT_LOG_FILE,
+    STDERR_LOG_FILE,
 )
 from .base import TaskType
 
 
-class RunCommand(TaskType):
+class _RunSubprocess(TaskType):
+    """
+    An abstract base class representing tasks that launch a subprocess.
+    """
+
     def __init__(
         self,
         identifier: TaskIdentifier,
@@ -40,6 +47,14 @@ class RunCommand(TaskType):
             ]
         )
 
+    @property
+    def record_output(self) -> bool:
+        """
+        If set to True, this task's output on stdout and stderr will be
+        recorded and saved to files in the task's output directory.
+        """
+        raise NotImplementedError
+
     def execute(self, ctx: "c.Context") -> None:
         try:
             output_path = self.get_output_path(ctx, create_new=True)
@@ -50,6 +65,8 @@ class RunCommand(TaskType):
                 shell=True,
                 cwd=self._get_working_path(ctx),
                 executable="/bin/bash",
+                stdout=subprocess.PIPE if self.record_output else None,
+                stderr=subprocess.PIPE if self.record_output else None,
                 env={
                     **os.environ,
                     OUTPUT_ENV_VARIABLE_NAME: str(output_path),
@@ -60,7 +77,19 @@ class RunCommand(TaskType):
                 },
                 start_new_session=True,
             )
+            if self.record_output:
+                assert process.stdout is not None
+                assert process.stderr is not None
+                stdout_tee = ctx.tee_processor.tee_pipe(
+                    process.stdout, sys.stdout, output_path / STDOUT_LOG_FILE
+                )
+                stderr_tee = ctx.tee_processor.tee_pipe(
+                    process.stderr, sys.stderr, output_path / STDERR_LOG_FILE
+                )
             process.wait()
+            if self.record_output:
+                stdout_tee.result()
+                stderr_tee.result()
             if process.returncode != 0:
                 raise TaskNonZeroExit(
                     task_identifier=self.identifier, code=process.returncode
@@ -79,7 +108,39 @@ class RunCommand(TaskType):
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
 
 
-class RunExperiment(RunCommand):
+class RunCommand(_RunSubprocess):
+    """
+    Represents the `run_command()` task type.
+
+    Runs a command using `bash`. The task's standard out and error are not
+    recorded. The task's outputs are not archivable either.
+    """
+
+    def __init__(
+        self,
+        identifier: TaskIdentifier,
+        cond_file_path: pathlib.Path,
+        deps: Sequence[TaskIdentifier],
+        run: str,
+    ):
+        super().__init__(
+            identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
+        )
+
+    @property
+    def record_output(self) -> bool:
+        return False
+
+
+class RunExperiment(_RunSubprocess):
+    """
+    Represents the `run_experiment()` task type.
+
+    Runs a command using `bash`. The task's standard out and error are
+    recorded. The task's outputs are placed in a timestamped directory and
+    are archivable.
+    """
+
     def __init__(
         self,
         identifier: TaskIdentifier,
@@ -93,6 +154,10 @@ class RunExperiment(RunCommand):
 
     @property
     def archivable(self) -> bool:
+        return True
+
+    @property
+    def record_output(self) -> bool:
         return True
 
     def get_output_path(

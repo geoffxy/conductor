@@ -1,8 +1,9 @@
 import csv
 import pathlib
 import os
+import sys
 
-from conductor.config import TASK_OUTPUT_DIR_SUFFIX
+from conductor.config import TASK_OUTPUT_DIR_SUFFIX, STDOUT_LOG_FILE, STDERR_LOG_FILE
 from .conductor_runner import (
     ConductorRunner,
     count_task_outputs,
@@ -143,3 +144,39 @@ def test_cond_run_combine_duplicates(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
     result = cond.run("//duplicate-names:test")
     assert result.returncode != 0
+
+
+def test_cond_run_record_output(tmp_path: pathlib.Path):
+    # This test tests Conductor's ability to record the stdout/stderr output of
+    # a `run_experiment()` task.
+
+    cond = ConductorRunner.from_template(
+        tmp_path, FIXTURE_TEMPLATES["output-recording"]
+    )
+    result = cond.run("//:test")
+    assert result.returncode == 0
+    assert cond.output_path.is_dir()
+
+    task_output_dir = None
+    for file in cond.output_path.iterdir():
+        if file.name.startswith("test" + TASK_OUTPUT_DIR_SUFFIX):
+            task_output_dir = file
+            break
+    assert task_output_dir is not None
+
+    stdout_file = task_output_dir / STDOUT_LOG_FILE
+    stderr_file = task_output_dir / STDERR_LOG_FILE
+    assert stdout_file.is_file()
+    assert stderr_file.is_file()
+
+    stdout_contents = [line.rstrip() for line in open(stdout_file, "r")]
+    assert len(stdout_contents) == 1
+    assert stdout_contents[0] == "!!stdout!!"
+    # Ensures that the task's stdout output is still written out to stdout
+    assert stdout_contents[0] in result.stdout.decode(sys.stdout.encoding)
+
+    stderr_contents = [line.rstrip() for line in open(stderr_file, "r")]
+    assert len(stderr_contents) == 1
+    assert stderr_contents[0] == "!!stderr!!"
+    # Ensures that the task's stderr output is still written out to stderr
+    assert stderr_contents[0] in result.stderr.decode(sys.stderr.encoding)
