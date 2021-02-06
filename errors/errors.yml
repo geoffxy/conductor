@@ -45,6 +45,13 @@
   name: DuplicateDependency
   message: Task '{task_identifier}' has declared a dependency on '{dep_identifier}' more than once.
 
+1011:
+  name: CombineDuplicateDepName
+  message: >-
+    The combine() task '{task_identifier}' has two or more dependencies that
+    share the same task name '{task_name}'. A combine() task's dependencies
+    must have unique names.
+
 
 # Task graph loading errors (error code 2xxx)
 2001:

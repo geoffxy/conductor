@@ -157,6 +157,21 @@ class DuplicateDependency(ConductorError):
         )
 
 
+class CombineDuplicateDepName(ConductorError):
+    error_code = 1011
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_identifier = kwargs["task_identifier"]
+        self.task_name = kwargs["task_name"]
+    
+    def _message(self):
+        return "The combine() task '{task_identifier}' has two or more dependencies that share the same task name '{task_name}'. A combine() task's dependencies must have unique names.".format(
+            task_identifier=self.task_identifier,
+            task_name=self.task_name,
+        )
+
+
 class TaskNotFound(ConductorError):
     error_code = 2001
 
@@ -340,6 +355,7 @@ __all__ = [
     "ParsingUnknownNameError",
     "MissingCondFile",
     "DuplicateDependency",
+    "CombineDuplicateDepName",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",

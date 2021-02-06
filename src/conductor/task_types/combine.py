@@ -3,6 +3,7 @@ import shutil
 from typing import Sequence
 
 import conductor.context as c  # pylint: disable=unused-import
+from conductor.errors import CombineDuplicateDepName
 from conductor.task_identifier import TaskIdentifier
 from .base import TaskType
 
@@ -23,6 +24,17 @@ class Combine(TaskType):
             identifier=identifier, cond_file_path=cond_file_path, deps=deps
         )
 
+        # Make sure that the task dependencies do not have the same name. This
+        # is because `combine()` will create subdirectories using each task's
+        # name (not fully qualified identifier).
+        task_names = set()
+        for dep in deps:
+            if dep.name in task_names:
+                raise CombineDuplicateDepName(
+                    task_identifier=identifier, task_name=dep.name
+                )
+            task_names.add(dep.name)
+
     def __repr__(self) -> str:
         return super().__repr__() + ")"
 
@@ -33,6 +45,12 @@ class Combine(TaskType):
         for dep in self.deps:
             task = ctx.task_index.get_task(dep)
             task_output_dir = task.get_output_path(ctx)
-            if task_output_dir is None or not task_output_dir.exists():
+            if (
+                task_output_dir is None
+                or not task_output_dir.is_dir()
+                # Checks if the directory is empty
+                or not any(True for _ in task_output_dir.iterdir())
+            ):
                 continue
-            shutil.copytree(task_output_dir, output_path, dirs_exist_ok=True)
+            copy_into = output_path / dep.name
+            shutil.copytree(task_output_dir, copy_into)

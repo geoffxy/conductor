@@ -95,10 +95,13 @@ def test_cond_run_combine(tmp_path: pathlib.Path):
     combine_task_output_dir = cond.output_path / ("all" + TASK_OUTPUT_DIR_SUFFIX)
     assert combine_task_output_dir.exists()
 
-    files = [file.name for file in combine_task_output_dir.iterdir()]
-    assert len(files) == 2
-    assert "file1.txt" in files
-    assert "file2.txt" in files
+    task_dirs = [file.name for file in combine_task_output_dir.iterdir()]
+    assert len(task_dirs) == 2
+    assert "echo1" in task_dirs
+    assert "echo2" in task_dirs
+
+    assert (combine_task_output_dir / "echo1" / "file1.txt").is_file()
+    assert (combine_task_output_dir / "echo2" / "file2.txt").is_file()
 
 
 def test_cond_run_ordering(tmp_path: pathlib.Path):
@@ -133,4 +136,10 @@ def test_cond_run_ordering(tmp_path: pathlib.Path):
 def test_cond_run_duplicate_deps(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
     result = cond.run("//duplicate-deps:test")
+    assert result.returncode != 0
+
+
+def test_cond_run_combine_duplicates(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
+    result = cond.run("//duplicate-names:test")
     assert result.returncode != 0

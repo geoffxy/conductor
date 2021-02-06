@@ -1,0 +1,13 @@
+combine(
+  name="test",
+  deps=[
+    # The dependencies are unique, but share the same name
+    "//duplicate-names:echo1",
+    "//:echo1",
+  ],
+)
+
+run_experiment(
+  name="echo1",
+  run="echo 'Hello world!' > ${COND_OUT}/file1.txt",
+)
