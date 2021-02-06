@@ -10,9 +10,16 @@ class TeeProcessor:
 
     def __init__(self):
         self._executor = ThreadPoolExecutor(max_workers=2)
+        self._has_shutdown = False
 
     def __del__(self):
+        self.shutdown()
+
+    def shutdown(self):
+        if self._has_shutdown:
+            return
         self._executor.shutdown(wait=True)
+        self._has_shutdown = True
 
     def tee_pipe(
         self, pipe: IO[bytes], stream: TextIO, file_name: pathlib.Path

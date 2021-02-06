@@ -102,6 +102,8 @@ class _RunSubprocess(TaskType):
                 group_id = os.getpgid(process.pid)
                 if group_id >= 0:
                     os.killpg(group_id, signal.SIGTERM)
+            if self.record_output:
+                ctx.tee_processor.shutdown()
             raise
 
         except OSError as ex:
