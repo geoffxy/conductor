@@ -1,10 +1,12 @@
 import itertools
 import pathlib
+from typing import Optional
 
 from conductor.config import CONFIG_FILE_NAME, OUTPUT_DIR, VERSION_INDEX_NAME
 from conductor.errors import MissingProjectRoot, OutputDirTaken
 from conductor.execution.version_index import VersionIndex
 from conductor.parsing.task_index import TaskIndex
+from conductor.utils.tee import TeeProcessor
 
 
 class Context:
@@ -22,6 +24,9 @@ class Context:
         self._version_index = VersionIndex.create_or_load(
             pathlib.Path(self.output_path, VERSION_INDEX_NAME)
         )
+
+        # We lazily initialize the TeeProcessor because it may not always be needed.
+        self._tee_processor: Optional[TeeProcessor] = None
 
     @classmethod
     def from_cwd(cls) -> "Context":
@@ -51,6 +56,12 @@ class Context:
     @property
     def version_index(self) -> VersionIndex:
         return self._version_index
+
+    @property
+    def tee_processor(self) -> TeeProcessor:
+        if self._tee_processor is None:
+            self._tee_processor = TeeProcessor()
+        return self._tee_processor
 
     def _ensure_output_dir_exists(self) -> None:
         self.output_path.mkdir(exist_ok=True)
