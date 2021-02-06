@@ -24,7 +24,11 @@ class TeeProcessor:
     ) -> None:
         with open(file_name, "wb") as file:
             while True:
-                data = pipe.read()
+                # We want the output to be interactive, so we make sure to
+                # immediately write out every byte we receive. However, we
+                # still rely on any write buffering used by the file and
+                # stream.
+                data = pipe.read(1)
                 if len(data) == 0:
                     break
                 file.write(data)
