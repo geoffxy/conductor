@@ -1,0 +1,20 @@
+run_experiment(
+  name="test-invalid-numeric",
+  run="exit 0",
+  options={
+    # Only string keys are allowed.
+    123: 456,
+  },
+)
+
+run_experiment(
+  name="test-invalid-complex",
+  run="exit 0",
+  options={
+    # Only primitive values are allowed (string, int, float, bool). No nested
+    # dicts are allowed.
+    "key": {
+      "value": 3,
+    },
+  },
+)

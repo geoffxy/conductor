@@ -84,11 +84,14 @@ EXAMPLE_TEMPLATES = {
 }
 
 FIXTURE_TEMPLATES = {
-    "long-running": pathlib.Path(
-        _TESTS_DIR, "fixture-projects", "long-running"
-    ).resolve(),
     "combine-test": pathlib.Path(
         _TESTS_DIR, "fixture-projects", "combine-test"
+    ).resolve(),
+    "experiments": pathlib.Path(
+        _TESTS_DIR, "fixture-projects", "experiments"
+    ).resolve(),
+    "long-running": pathlib.Path(
+        _TESTS_DIR, "fixture-projects", "long-running"
     ).resolve(),
     "ordering-test": pathlib.Path(
         _TESTS_DIR, "fixture-projects", "ordering-test"

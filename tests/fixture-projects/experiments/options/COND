@@ -1,0 +1,10 @@
+run_experiment(
+  name="test",
+  run="./run.sh",
+  options={
+    "key": "value",
+    "threads": 2,
+    "retry": True,
+    "epsilon": 0.05,
+  },
+)

@@ -158,7 +158,7 @@ class RunExperiment(_RunSubprocess):
             identifier=identifier,
             cond_file_path=cond_file_path,
             deps=deps,
-            run=run + self._options.serialize_cmdline(),
+            run=" ".join([run, self._options.serialize_cmdline()]),
         )
 
     @property

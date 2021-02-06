@@ -1,9 +1,17 @@
 import csv
-import pathlib
+import json
 import os
+import pathlib
 import sys
 
-from conductor.config import TASK_OUTPUT_DIR_SUFFIX, STDOUT_LOG_FILE, STDERR_LOG_FILE
+import pytest
+
+from conductor.config import (
+    TASK_OUTPUT_DIR_SUFFIX,
+    STDOUT_LOG_FILE,
+    STDERR_LOG_FILE,
+    EXP_OPTION_JSON_FILE_NAME,
+)
 from .conductor_runner import (
     ConductorRunner,
     count_task_outputs,
@@ -180,3 +188,53 @@ def test_cond_run_record_output(tmp_path: pathlib.Path):
     assert stderr_contents[0] == "!!stderr!!"
     # Ensures that the task's stderr output is still written out to stderr
     assert stderr_contents[0] in result.stderr.decode(sys.stderr.encoding)
+
+
+def test_cond_run_experiment_options(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//options:test")
+    assert result.returncode == 0
+    assert cond.output_path.is_dir()
+
+    options_dir = cond.output_path / "options"
+    assert options_dir.is_dir()
+
+    # Locate the task output directory
+    task_output_dir = None
+    for file in options_dir.iterdir():
+        if file.name.startswith("test" + TASK_OUTPUT_DIR_SUFFIX):
+            task_output_dir = file
+            break
+    assert task_output_dir is not None
+
+    # Read the outputted file and make sure the arguments were visible to the
+    # underlying bash script.
+    seen_options = [
+        line.rstrip() for line in open(task_output_dir / "all_options.txt", "r")
+    ]
+    assert len(seen_options) == 4
+    assert "--key=value" in seen_options
+    assert "--threads=2" in seen_options
+    assert "--retry=true" in seen_options
+    assert "--epsilon=0.05" in seen_options
+
+    serialized_json_file = task_output_dir / EXP_OPTION_JSON_FILE_NAME
+    assert serialized_json_file.is_file()
+    with open(serialized_json_file, "r") as json_file:
+        json_opts = json.load(json_file)
+
+    # Make sure the options serialization worked correctly.
+    assert len(json_opts) == len(seen_options)
+    assert json_opts["key"] == "value"
+    assert json_opts["threads"] == 2
+    assert json_opts["retry"] == True
+    assert json_opts["epsilon"] == pytest.approx(0.05)
+
+
+def test_cond_run_invalid_experiment_options(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    # These tasks have invalid options.
+    result = cond.run("//invalid-options:test-invalid-numeric")
+    assert result.returncode != 0
+    result = cond.run("//invalid-options:test-invalid-complex")
+    assert result.returncode != 0
