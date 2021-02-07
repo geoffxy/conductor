@@ -53,4 +53,4 @@ class Combine(TaskType):
             ):
                 continue
             copy_into = output_path / dep.name
-            shutil.copytree(task_output_dir, copy_into)
+            shutil.copytree(task_output_dir, copy_into, dirs_exist_ok=True)

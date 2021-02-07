@@ -97,20 +97,28 @@ def test_cond_run_deps(tmp_path: pathlib.Path):
 
 def test_cond_run_combine(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
-    result = cond.run("//:all")
-    assert result.returncode == 0
-    assert cond.output_path.exists()
 
-    combine_task_output_dir = cond.output_path / ("all" + TASK_OUTPUT_DIR_SUFFIX)
-    assert combine_task_output_dir.exists()
+    def run_assertions():
+        result = cond.run("//:all")
+        assert result.returncode == 0
+        assert cond.output_path.exists()
 
-    task_dirs = [file.name for file in combine_task_output_dir.iterdir()]
-    assert len(task_dirs) == 2
-    assert "echo1" in task_dirs
-    assert "echo2" in task_dirs
+        combine_task_output_dir = cond.output_path / ("all" + TASK_OUTPUT_DIR_SUFFIX)
+        assert combine_task_output_dir.exists()
 
-    assert (combine_task_output_dir / "echo1" / "file1.txt").is_file()
-    assert (combine_task_output_dir / "echo2" / "file2.txt").is_file()
+        task_dirs = [file.name for file in combine_task_output_dir.iterdir()]
+        assert len(task_dirs) == 2
+        assert "echo1" in task_dirs
+        assert "echo2" in task_dirs
+
+        file1 = combine_task_output_dir / "echo1" / "file1.txt"
+        assert file1.is_file()
+        assert (combine_task_output_dir / "echo2" / "file2.txt").is_file()
+        file1.unlink()
+
+    run_assertions()
+    # Should be able to re-run the task without any problems
+    run_assertions()
 
 
 def test_cond_run_ordering(tmp_path: pathlib.Path):
