@@ -16,7 +16,9 @@ from conductor.config import (
     TASK_NAME_ENV_VARIABLE_NAME,
     STDOUT_LOG_FILE,
     STDERR_LOG_FILE,
+    EXP_OPTION_JSON_FILE_NAME,
 )
+from conductor.utils.experiment_options import ExperimentOptions
 from .base import TaskType
 
 
@@ -149,9 +151,14 @@ class RunExperiment(_RunSubprocess):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        options: dict,
     ):
+        self._options = ExperimentOptions.from_raw(identifier, options)
         super().__init__(
-            identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
+            identifier=identifier,
+            cond_file_path=cond_file_path,
+            deps=deps,
+            run=" ".join([run, self._options.serialize_cmdline()]),
         )
 
     @property
@@ -191,3 +198,13 @@ class RunExperiment(_RunSubprocess):
         output_path = self.get_output_path(ctx)
         # Returns true iff the output directory does not exist or it is empty
         return output_path is None or not any(True for _ in output_path.iterdir())
+
+    def execute(self, ctx: "c.Context") -> None:
+        super().execute(ctx)
+
+        # Record the experiment options, if any were specified.
+        if self._options.empty():
+            return
+        output_path = self.get_output_path(ctx)
+        assert output_path is not None
+        self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)

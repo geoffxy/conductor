@@ -2,10 +2,9 @@ import pathlib
 from typing import Dict, Set
 
 from conductor.errors import (
-    CombineDuplicateDepName,
+    ConductorError,
     CyclicDependency,
     DuplicateDependency,
-    InvalidTaskIdentifier,
     TaskNotFound,
 )
 from conductor.parsing.task_loader import TaskLoader
@@ -135,11 +134,7 @@ class TaskIndex:
 
             return TaskType.from_raw_task(identifier, raw_task, task_deps)
 
-        except (
-            InvalidTaskIdentifier,
-            CombineDuplicateDepName,
-            DuplicateDependency,
-        ) as ex:
+        except ConductorError as ex:
             ex.add_file_context(
                 identifier.path_to_cond_file(self._project_root),
             )

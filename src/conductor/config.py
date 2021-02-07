@@ -45,3 +45,9 @@ ARCHIVE_STAGING = "archive-tmp"
 # The names of the files that store copies of a task's standard output and error.
 STDOUT_LOG_FILE = "stdout.log"
 STDERR_LOG_FILE = "stderr.log"
+
+# The format of an experiment option when used as a command line option.
+EXP_OPTION_CMD_FORMAT = "--{key}={value}"
+
+# The name of the experiment options serialized JSON file.
+EXP_OPTION_JSON_FILE_NAME = "options.json"

@@ -172,6 +172,34 @@ class CombineDuplicateDepName(ConductorError):
         )
 
 
+class ExperimentOptionsNonStringKey(ConductorError):
+    error_code = 1012
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.identifier = kwargs["identifier"]
+    
+    def _message(self):
+        return "Encountered a non-string experiment option key when processing task '{identifier}'. All experiment option keys must be strings.".format(
+            identifier=self.identifier,
+        )
+
+
+class ExperimentOptionsNonPrimitiveValue(ConductorError):
+    error_code = 1013
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.key = kwargs["key"]
+        self.identifier = kwargs["identifier"]
+    
+    def _message(self):
+        return "Encountered a non-primitive experiment option value for key '{key}' when processing task '{identifier}'. All experiment option values must be either a string, integer, floating point number, or boolean.".format(
+            key=self.key,
+            identifier=self.identifier,
+        )
+
+
 class TaskNotFound(ConductorError):
     error_code = 2001
 
@@ -356,6 +384,8 @@ __all__ = [
     "MissingCondFile",
     "DuplicateDependency",
     "CombineDuplicateDepName",
+    "ExperimentOptionsNonStringKey",
+    "ExperimentOptionsNonPrimitiveValue",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",
