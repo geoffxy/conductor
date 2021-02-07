@@ -6,17 +6,14 @@ from conductor.errors import (
     ParsingUnknownNameError,
     TaskSyntaxError,
 )
+from conductor.task_types.stdlib import STDLIB_FILES
 
 
 class TaskLoader:
     def __init__(self):
         self._tasks = None
         self._current_cond_file_path = None
-        self._task_constructors = {}
-        for raw_task_type in raw_task_types.values():
-            self._task_constructors[raw_task_type.name] = self._wrap_task_function(
-                raw_task_type.load_from_cond_file
-            )
+        self._conductor_scope = self._compile_scope()
 
     def parse_cond_file(self, cond_file_path):
         """
@@ -29,7 +26,7 @@ class TaskLoader:
             with open(cond_file_path) as file:
                 code = file.read()
             # pylint: disable=exec-used
-            exec(code, self._task_constructors, self._task_constructors)
+            exec(code, self._conductor_scope.copy())
             return tasks
         except ConductorError as ex:
             ex.add_file_context(file_path=cond_file_path)
@@ -52,6 +49,24 @@ class TaskLoader:
         finally:
             self._tasks = None
             self._current_cond_file_path = None
+
+    def _compile_scope(self):
+        scope = {}
+        # Create the task constructors for Conductor's foundational task types.
+        for raw_task_type in raw_task_types.values():
+            scope[raw_task_type.name] = self._wrap_task_function(
+                raw_task_type.load_from_cond_file
+            )
+        # We need to explicitly `compile()` the Conductor standard library
+        # files here to ensure that any uses of Conductor's foundational task
+        # types bind to the task constructors defined above.
+        for lib_file_path in STDLIB_FILES:
+            with open(lib_file_path, "r") as lib_file:
+                code = compile(lib_file.read(), str(lib_file_path), "exec")
+            # pylint: disable=exec-used
+            exec(code, scope)
+        del scope["__builtins__"]
+        return scope
 
     def _wrap_task_function(self, task_constructor):
         def shim(**kwargs):
