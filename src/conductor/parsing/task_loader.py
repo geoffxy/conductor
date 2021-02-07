@@ -65,7 +65,6 @@ class TaskLoader:
                 code = compile(lib_file.read(), str(lib_file_path), "exec")
             # pylint: disable=exec-used
             exec(code, scope)
-        del scope["__builtins__"]
         return scope
 
     def _wrap_task_function(self, task_constructor):

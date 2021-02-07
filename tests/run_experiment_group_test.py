@@ -32,3 +32,15 @@ def test_run_experiment_group(tmp_path: pathlib.Path):
 
     # 4 experiment instances plus the combined output dir.
     assert sweep_output_count == 5
+
+
+def test_run_experiment_group_invalid_duplicate(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//invalid-group-duplicate:test")
+    assert result.returncode != 0
+
+
+def test_run_experiment_group_invalid_type(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//invalid-group-type:test")
+    assert result.returncode != 0
