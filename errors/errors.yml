@@ -65,6 +65,21 @@
     processing task '{identifier}'. All experiment option values must be
     either a string, integer, floating point number, or boolean.
 
+1014:
+  name: ExperimentGroupDuplicateName
+  message: >-
+    Encountered a duplicate experiment instance name '{instance_name}' when
+    processing a run_experiment_group() task with name '{task_name}'.
+    Experiment instance names must be unique.
+
+1015:
+  name: ExperimentGroupInvalidExperimentInstance
+  message: >-
+    Encountered an experiment instance that was incorrectly formed when
+    processing a run_experiment_group() task with name '{task_name}'.
+    Experiments in an experiment group must be defined using an iterable of
+    ExperimentInstance named tuples.
+
 
 # Task graph loading errors (error code 2xxx)
 2001:

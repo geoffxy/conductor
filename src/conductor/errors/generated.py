@@ -200,6 +200,34 @@ class ExperimentOptionsNonPrimitiveValue(ConductorError):
         )
 
 
+class ExperimentGroupDuplicateName(ConductorError):
+    error_code = 1014
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.instance_name = kwargs["instance_name"]
+        self.task_name = kwargs["task_name"]
+    
+    def _message(self):
+        return "Encountered a duplicate experiment instance name '{instance_name}' when processing a run_experiment_group() task with name '{task_name}'. Experiment instance names must be unique.".format(
+            instance_name=self.instance_name,
+            task_name=self.task_name,
+        )
+
+
+class ExperimentGroupInvalidExperimentInstance(ConductorError):
+    error_code = 1015
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_name = kwargs["task_name"]
+    
+    def _message(self):
+        return "Encountered an experiment instance that was incorrectly formed when processing a run_experiment_group() task with name '{task_name}'. Experiments in an experiment group must be defined using a list of ExperimentInstance named tuples.".format(
+            task_name=self.task_name,
+        )
+
+
 class TaskNotFound(ConductorError):
     error_code = 2001
 
@@ -386,6 +414,8 @@ __all__ = [
     "CombineDuplicateDepName",
     "ExperimentOptionsNonStringKey",
     "ExperimentOptionsNonPrimitiveValue",
+    "ExperimentGroupDuplicateName",
+    "ExperimentGroupInvalidExperimentInstance",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",

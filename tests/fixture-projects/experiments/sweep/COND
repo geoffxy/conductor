@@ -1,0 +1,11 @@
+run_experiment_group(
+  name="threads",
+  run="./run.sh",
+  experiments=[
+    ExperimentInstance(
+      name="threads-{}".format(threads),
+      options={"threads": threads},
+    )
+    for threads in range(1, 5)
+  ],
+)

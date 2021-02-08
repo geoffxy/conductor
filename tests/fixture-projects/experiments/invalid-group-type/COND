@@ -1,0 +1,8 @@
+run_experiment_group(
+  name="test",
+  run="exit 0",
+  experiments=[
+    {"name": "test-inst", "options": {}},
+    {"name": "test-inst-2", "options": {}},
+  ]
+)
