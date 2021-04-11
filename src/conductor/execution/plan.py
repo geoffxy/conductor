@@ -29,6 +29,11 @@ class ExecutionPlan:
                     # All dependencies have finished running, can run now
                     print("Running '{}'...".format(str(next_task.identifier)))
                     next_task.execute(ctx)
+
+                    # If this task succeeded, make sure we commit it to the
+                    # version index. This way if later tasks fail, we don't
+                    # restart from scratch.
+                    ctx.version_index.commit_changes()
                     continue
 
                 visited.add(next_task.identifier)
@@ -54,7 +59,6 @@ class ExecutionPlan:
                         continue
                     stack.append((ctx.task_index.get_task(dep), 0))
 
-            ctx.version_index.commit_changes()
             elapsed = time.time() - start
             print("✨ Done! (ran for {})".format(time_to_readable_string(elapsed)))
 

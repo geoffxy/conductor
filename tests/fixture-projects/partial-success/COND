@@ -1,0 +1,12 @@
+# Prints the current UNIX timestamp.
+run_experiment(
+  name="datetime",
+  run="date +%s",
+)
+
+# Intended to fail (with a non-zero exit code).
+run_experiment(
+  name="noop",
+  run="exit 1",
+  deps=[":datetime"],
+)

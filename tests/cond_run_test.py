@@ -246,3 +246,19 @@ def test_cond_run_invalid_experiment_options(tmp_path: pathlib.Path):
     assert result.returncode != 0
     result = cond.run("//invalid-options:test-invalid-complex")
     assert result.returncode != 0
+
+
+def test_cond_run_partial_success(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["partial-success"])
+    # Expected to fail.
+    result = cond.run("//:noop")
+    assert result.returncode != 0
+    # We should have run the //:datetime task.
+    assert "//:datetime" in result.stdout.decode()
+
+    # Even though the previous task failed, its dependency should have
+    # succeeded. Running the dependent task should be a no-op (the results
+    # should be cached).
+    result = cond.run("//:datetime")
+    assert result.returncode == 0
+    assert "cached" in result.stdout.decode()
