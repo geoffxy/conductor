@@ -100,4 +100,5 @@ FIXTURE_TEMPLATES = {
         _TESTS_DIR, "fixture-projects", "output-recording"
     ).resolve(),
     "partial-success": pathlib.Path(_TESTS_DIR, "fixture-projects", "partial-success"),
+    "lib-test": pathlib.Path(_TESTS_DIR, "fixture-projects", "lib-test"),
 }

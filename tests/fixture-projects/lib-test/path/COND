@@ -1,0 +1,23 @@
+run_command(
+  name="one",
+  run="exit 0",
+)
+
+run_command(
+  name="two",
+  run="exit 0",
+)
+
+run_command(
+  name="deps",
+  run="python3 deps.py",
+  deps=[
+    ":one",
+    ":two",
+  ],
+)
+
+run_command(
+  name="output_path",
+  run="python3 output_path.py",
+)
