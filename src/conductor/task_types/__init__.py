@@ -14,8 +14,8 @@ _raw_task_types = [
     ),
     RawTaskType(
         name="run_experiment",
-        schema={"name": str, "run": str, "options": dict, "deps": [str]},
-        defaults={"options": {}, "deps": []},
+        schema={"name": str, "run": str, "args": list, "options": dict, "deps": [str]},
+        defaults={"args": [], "options": {}, "deps": []},
         full_type=RunExperiment,
     ),
     RawTaskType(

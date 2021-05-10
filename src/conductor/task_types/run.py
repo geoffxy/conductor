@@ -16,8 +16,10 @@ from conductor.config import (
     TASK_NAME_ENV_VARIABLE_NAME,
     STDOUT_LOG_FILE,
     STDERR_LOG_FILE,
+    EXP_ARGS_JSON_FILE_NAME,
     EXP_OPTION_JSON_FILE_NAME,
 )
+from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
 from .base import TaskType
 
@@ -151,14 +153,18 @@ class RunExperiment(_RunSubprocess):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        args: list,
         options: dict,
     ):
+        self._args = ExperimentArguments.from_raw(identifier, args)
         self._options = ExperimentOptions.from_raw(identifier, options)
         super().__init__(
             identifier=identifier,
             cond_file_path=cond_file_path,
             deps=deps,
-            run=" ".join([run, self._options.serialize_cmdline()]),
+            run=" ".join(
+                [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
+            ),
         )
 
     @property
@@ -201,10 +207,14 @@ class RunExperiment(_RunSubprocess):
 
     def execute(self, ctx: "c.Context") -> None:
         super().execute(ctx)
-
-        # Record the experiment options, if any were specified.
-        if self._options.empty():
+        # Record the experiment args and options, if any were specified.
+        if self._args.empty() and self._options.empty():
             return
+
         output_path = self.get_output_path(ctx)
         assert output_path is not None
-        self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)
+
+        if not self._args.empty():
+            self._args.serialize_json(output_path / EXP_ARGS_JSON_FILE_NAME)
+        if not self._options.empty():
+            self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)

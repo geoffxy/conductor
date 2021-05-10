@@ -80,6 +80,13 @@
     Experiments in an experiment group must be defined using an iterable of
     ExperimentInstance named tuples.
 
+1016:
+  name: ExperimentArgumentsNonPrimitiveValue
+  message: >-
+    Encountered a non-primitive experiment argument when processing task
+    '{identifier}'. All experiment arguments must be either a string, integer,
+    floating point number, or boolean.
+
 
 # Task graph loading errors (error code 2xxx)
 2001:

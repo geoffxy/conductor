@@ -1,4 +1,5 @@
-from typing import Dict, Iterable, NamedTuple, Optional, Sequence
+from typing import Dict, Iterable, List, NamedTuple, Optional, Sequence
+from conductor.utils.experiment_arguments import ArgumentValue
 from conductor.utils.experiment_options import OptionValue
 from conductor.errors import (
     ExperimentGroupDuplicateName,
@@ -8,7 +9,8 @@ from conductor.errors import (
 
 class ExperimentInstance(NamedTuple):
     name: str
-    options: Dict[str, OptionValue]
+    args: List[ArgumentValue] = []
+    options: Dict[str, OptionValue] = {}
 
 
 def run_experiment_group(
@@ -36,6 +38,7 @@ def run_experiment_group(
             run_experiment(  # type: ignore
                 name=experiment.name,
                 run=run,
+                args=experiment.args,
                 options=experiment.options,
                 deps=task_deps,
             )

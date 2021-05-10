@@ -223,8 +223,21 @@ class ExperimentGroupInvalidExperimentInstance(ConductorError):
         self.task_name = kwargs["task_name"]
     
     def _message(self):
-        return "Encountered an experiment instance that was incorrectly formed when processing a run_experiment_group() task with name '{task_name}'. Experiments in an experiment group must be defined using a list of ExperimentInstance named tuples.".format(
+        return "Encountered an experiment instance that was incorrectly formed when processing a run_experiment_group() task with name '{task_name}'. Experiments in an experiment group must be defined using an iterable of ExperimentInstance named tuples.".format(
             task_name=self.task_name,
+        )
+
+
+class ExperimentArgumentsNonPrimitiveValue(ConductorError):
+    error_code = 1016
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.identifier = kwargs["identifier"]
+    
+    def _message(self):
+        return "Encountered a non-primitive experiment argument when processing task '{identifier}'. All experiment arguments must be either a string, integer, floating point number, or boolean.".format(
+            identifier=self.identifier,
         )
 
 
@@ -416,6 +429,7 @@ __all__ = [
     "ExperimentOptionsNonPrimitiveValue",
     "ExperimentGroupDuplicateName",
     "ExperimentGroupInvalidExperimentInstance",
+    "ExperimentArgumentsNonPrimitiveValue",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",

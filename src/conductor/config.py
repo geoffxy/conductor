@@ -51,3 +51,6 @@ EXP_OPTION_CMD_FORMAT = "--{key}={value}"
 
 # The name of the experiment options serialized JSON file.
 EXP_OPTION_JSON_FILE_NAME = "options.json"
+
+# The name of the experiment arguments serialized JSON file.
+EXP_ARGS_JSON_FILE_NAME = "args.json"

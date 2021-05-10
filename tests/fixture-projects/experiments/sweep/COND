@@ -9,3 +9,15 @@ run_experiment_group(
     for threads in range(1, 5)
   ],
 )
+
+run_experiment_group(
+  name="threads-args",
+  run="./run.sh",
+  experiments=[
+    ExperimentInstance(
+      name="threads-args-{}".format(threads),
+      args=[threads],
+    )
+    for threads in range(1, 5)
+  ],
+)
