@@ -26,3 +26,6 @@ class TaskState(enum.Enum):
 
     # The task failed when it was executed (non-zero exit code).
     FAILED = 4
+
+    # The task was aborted (will stop executing the rest of the tasks).
+    ABORTED = 5

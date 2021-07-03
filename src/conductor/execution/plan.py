@@ -49,15 +49,13 @@ class ExecutionPlan:
                 if next_exe_task.state == TaskState.EXECUTING_DEPS:
                     # Make sure all dependencies succeeded.
                     if not next_exe_task.exe_deps_succeeded():
-                        print(
-                            "Skipping '{}'.".format(str(next_exe_task.task.identifier))
-                        )
+                        print("Skipping {}.".format(str(next_exe_task.task.identifier)))
                         next_exe_task.set_state(TaskState.SKIPPED)
                         completed_tasks.append(next_exe_task)
                         continue
 
                     # All dependencies have finished running, can run now.
-                    print("Running '{}'...".format(str(next_exe_task.task.identifier)))
+                    print("Running {}...".format(str(next_exe_task.task.identifier)))
                     try:
                         next_exe_task.task.execute(ctx)
                         # If this task succeeded, make sure we commit it to the
@@ -66,6 +64,11 @@ class ExecutionPlan:
                         ctx.version_index.commit_changes()
                         next_exe_task.set_state(TaskState.SUCCEEDED)
                         completed_tasks.append(next_exe_task)
+                    except ConductorAbort:
+                        # User-initiated aborts are not treated as a task failure.
+                        ctx.version_index.rollback_changes()
+                        next_exe_task.set_state(TaskState.ABORTED)
+                        raise
                     except ConductorError as ex:
                         # The task failed. Abort early if requested by
                         # re-raising the error.
@@ -86,7 +89,7 @@ class ExecutionPlan:
                 # its dependencies.
                 if not self._run_again and not next_exe_task.task.should_run(ctx):
                     print(
-                        "Using cached results for '{}'.".format(
+                        "Using cached results for {}.".format(
                             str(next_exe_task.task.identifier)
                         )
                     )
@@ -122,7 +125,14 @@ class ExecutionPlan:
 
             else:
                 # At least one task must have failed.
-                first_failed_task = None
+                failed_tasks: List[ExecutingTask] = []
+                skipped_tasks: List[ExecutingTask] = []
+                for exe_task in completed_tasks:
+                    if exe_task.state == TaskState.SKIPPED:
+                        skipped_tasks.append(exe_task)
+                    elif exe_task.state == TaskState.FAILED:
+                        failed_tasks.append(exe_task)
+                assert len(failed_tasks) > 0
                 print(
                     "🔴 Task failed. (ran for {})".format(
                         time_to_readable_string(elapsed)
@@ -130,33 +140,25 @@ class ExecutionPlan:
                 )
                 print()
                 print("Failed task(s):")
-                for exe_task in completed_tasks:
-                    if exe_task.state != TaskState.FAILED:
-                        continue
-                    if first_failed_task is None:
-                        first_failed_task = exe_task
-                    print("  {}".format(exe_task.task.identifier))
-                    assert exe_task.stored_error is not None
+                for failed in failed_tasks:
+                    print("  {}".format(failed.task.identifier))
+                    assert failed.stored_error is not None
                     print(
-                        "  -> {}".format(
-                            exe_task.stored_error.printable_message(
+                        "    {}".format(
+                            failed.stored_error.printable_message(
                                 omit_file_context=True
                             )
                         )
                     )
                 print()
-                print("Skipped task(s) (because one or more dependencies failed):")
-                for exe_task in completed_tasks:
-                    if exe_task.state != TaskState.SKIPPED:
-                        continue
-                    print("  {}".format(exe_task.task.identifier))
-                print()
+                if len(skipped_tasks) > 0:
+                    print("Skipped task(s) (one or more dependencies failed):")
+                    for skipped in skipped_tasks:
+                        print("  {}".format(skipped.task.identifier))
+                    print()
 
-                assert (
-                    first_failed_task is not None
-                    and first_failed_task.stored_error is not None
-                )
-                raise first_failed_task.stored_error
+                assert failed_tasks[0].stored_error is not None
+                raise failed_tasks[0].stored_error
 
         except TaskNotFound:
             # This should not happen. The task graph should be validated before
@@ -168,9 +170,7 @@ class ExecutionPlan:
             ctx.version_index.rollback_changes()
             elapsed = time.time() - start
             print(
-                "⚠️  Task aborted. (ran for {})".format(
-                    time_to_readable_string(elapsed)
-                )
+                "🔸 Task aborted. (ran for {})".format(time_to_readable_string(elapsed))
             )
             print()
             raise
