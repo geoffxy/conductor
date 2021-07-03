@@ -4,15 +4,15 @@ import re
 from conductor.config import COND_FILE_NAME
 from conductor.errors import InvalidTaskIdentifier
 
-_IDENTIFIER_GROUP = "[a-zA-Z0-9_-]+"
-_NAME_REGEX = re.compile("^{}$".format(_IDENTIFIER_GROUP))
+IDENTIFIER_GROUP = "[a-zA-Z0-9_-]+"
+_NAME_REGEX = re.compile("^{}$".format(IDENTIFIER_GROUP))
 _TASK_IDENTIFIER_REGEX = re.compile(
     "^(//)?(?P<path>({ident}/)*({ident})?):(?P<name>{ident})$".format(
-        ident=_IDENTIFIER_GROUP,
+        ident=IDENTIFIER_GROUP,
     ),
 )
 _RELATIVE_TASK_IDENTIFIER_REGEX = re.compile(
-    "^:(?P<name>{ident})$".format(ident=_IDENTIFIER_GROUP)
+    "^:(?P<name>{ident})$".format(ident=IDENTIFIER_GROUP)
 )
 
 

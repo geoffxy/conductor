@@ -1,0 +1,41 @@
+# Running "cond run //multiple:root" should lead to the following outcome:
+#
+# root:         Should be skipped
+# sweep:        Should be skipped
+# sweep-i:      Even i should fail, odd i should succeed
+# should_skip:  Should be skipped
+# should_run:   Should run and succeed
+
+run_experiment(
+  name="root",
+  run="./echo_date.sh",
+  deps=[
+    ":should_run",
+    ":should_skip",
+    ":sweep",
+  ],
+)
+
+run_experiment(
+  name="should_skip",
+  run="./echo_date.sh",
+  deps=[":sweep-0"],
+)
+
+run_command(
+  name="should_run",
+  run="./echo_date.sh",
+  deps=[":sweep-1"],
+)
+
+run_experiment_group(
+  name="sweep",
+  run="./sweep.sh",
+  experiments=[
+    ExperimentInstance(
+      name="sweep-{}".format(idx),
+      args=[idx],
+    )
+    for idx in range(6)
+  ],
+)
