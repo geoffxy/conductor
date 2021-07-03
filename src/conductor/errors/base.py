@@ -27,12 +27,12 @@ class ConductorError(RuntimeError):
     def _message(self):
         raise NotImplementedError
 
-    def printable_message(self):
+    def printable_message(self, ignore_context=False):
         full_message = self._message()
         if self.extra_context is not None:
             full_message += " " + self.extra_context
 
-        if self.file_context is None:
+        if self.file_context is None or ignore_context:
             return full_message
         elif self.file_context.line_number is None:
             return "".join(
