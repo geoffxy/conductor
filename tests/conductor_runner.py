@@ -1,11 +1,25 @@
 import pathlib
+import re
 import shutil
 import subprocess
 from typing import Optional, Iterable
 
 from conductor.config import OUTPUT_DIR, TASK_OUTPUT_DIR_SUFFIX
+from conductor.task_identifier import IDENTIFIER_GROUP, TaskIdentifier
 
 # pylint: disable=subprocess-run-check
+
+TASK_SUFFIX_REGEX = TASK_OUTPUT_DIR_SUFFIX.replace(".", "\\.")
+RUN_COMMAND_DIR_REGEX = re.compile(
+    "(?P<name>{ident}){task_suffix}".format(
+        ident=IDENTIFIER_GROUP, task_suffix=TASK_SUFFIX_REGEX
+    )
+)
+RUN_EXPERIMENT_DIR_REGEX = re.compile(
+    "(?P<name>{ident}){task_suffix}\\.(?P<timestamp>[1-9][0-9]*)".format(
+        ident=IDENTIFIER_GROUP, task_suffix=TASK_SUFFIX_REGEX
+    )
+)
 
 
 class ConductorRunner:
@@ -30,11 +44,16 @@ class ConductorRunner:
         return self.project_root / OUTPUT_DIR
 
     def run(
-        self, task_identifier: str, again: bool = False
+        self,
+        task_identifier: str,
+        again: bool = False,
+        stop_early: bool = False,
     ) -> subprocess.CompletedProcess:
         cmd = ["run", task_identifier]
         if again:
             cmd.append("--again")
+        if stop_early:
+            cmd.append("--stop-early")
         return self._run_command(cmd)
 
     def clean(self) -> subprocess.CompletedProcess:
@@ -57,6 +76,29 @@ class ConductorRunner:
 
     def restore(self, archive_path: pathlib.Path) -> subprocess.CompletedProcess:
         return self._run_command(["restore", str(archive_path)])
+
+    def find_task_output_dir(
+        self, task_identifier: str, is_experiment: bool = True
+    ) -> Optional[pathlib.Path]:
+        """Returns a path to the task's output directory, if it is found."""
+
+        identifier = TaskIdentifier.from_str(task_identifier)
+        containing_dir = self.output_path / identifier.path
+
+        for inner_dir in containing_dir.iterdir():
+            if not inner_dir.is_dir():
+                continue
+            match = (
+                RUN_EXPERIMENT_DIR_REGEX.match(inner_dir.name)
+                if is_experiment
+                else RUN_COMMAND_DIR_REGEX.match(inner_dir.name)
+            )
+            if match is None:
+                continue
+            if match.group("name") == identifier.name:
+                return inner_dir
+
+        return None
 
     def _run_command(self, args: Iterable[str]) -> subprocess.CompletedProcess:
         return subprocess.run(

@@ -262,3 +262,96 @@ def test_cond_run_partial_success(tmp_path: pathlib.Path):
     result = cond.run("//:datetime")
     assert result.returncode == 0
     assert "cached" in result.stdout.decode()
+
+
+def test_cond_run_multiple_failures(tmp_path: pathlib.Path):
+    # The task has multiple dependencies that may fail. Conductor should, by
+    # default, attempt to run all the tasks that can be executed (i.e., it
+    # should not stop at the first failure).
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["partial-success"])
+
+    # Expected to fail overall.
+    result = cond.run("//multiple:root")
+    assert result.returncode != 0
+
+    # Check for expected output files.
+
+    # Skipped tasks
+    root_out = cond.find_task_output_dir("//multiple:root", is_experiment=True)
+    assert root_out is None
+    should_skip_out = cond.find_task_output_dir(
+        "//multiple:should_skip", is_experiment=True
+    )
+    assert should_skip_out is None
+    # The top level `run_experiment_group()` task is technically not a Conductor experiment task.
+    sweep_out = cond.find_task_output_dir("//multiple:sweep", is_experiment=False)
+    assert sweep_out is None
+
+    # Succeeded/failed sweep tasks
+    for idx in range(6):
+        sweep_idx = cond.find_task_output_dir(
+            "//multiple:sweep-{}".format(idx), is_experiment=True
+        )
+        assert sweep_idx is not None
+
+        if idx % 2 == 0:
+            # Executed but failed.
+            assert not (sweep_idx / "date.txt").exists()
+        else:
+            # Executed and succeeded.
+            assert (sweep_idx / "date.txt").exists()
+
+    # `//multiple:should_run` should have executed and succeeded
+    should_run_out = cond.find_task_output_dir(
+        "//multiple:should_run", is_experiment=False
+    )
+    assert should_run_out is not None
+    assert (should_run_out / "date.txt").exists()
+
+
+def test_cond_run_multiple_failures_stop_early(tmp_path: pathlib.Path):
+    # The task has multiple dependencies that may fail. If requested, Conductor
+    # should stop running the task when it encounters the first failure.
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["partial-success"])
+
+    # Expected to fail overall.
+    result = cond.run("//multiple:root", stop_early=True)
+    assert result.returncode != 0
+
+    # Check for expected output files.
+    # `:sweep-1` should run first, followed by `:should_run`. Then `:sweep-0`
+    # will run, which will fail. No other tasks should be attempted.
+
+    # Runs and succeeds.
+    sweep1 = cond.find_task_output_dir("//multiple:sweep-1", is_experiment=True)
+    assert sweep1 is not None
+    assert (sweep1 / "date.txt").exists()
+
+    # `//multiple:should_run` should have executed and succeeded.
+    should_run_out = cond.find_task_output_dir(
+        "//multiple:should_run", is_experiment=False
+    )
+    assert should_run_out is not None
+    assert (should_run_out / "date.txt").exists()
+
+    # Runs but fails.
+    sweep0 = cond.find_task_output_dir("//multiple:sweep-0", is_experiment=True)
+    assert sweep0 is not None
+    assert not (sweep0 / "date.txt").exists()
+
+    # All other tasks should not have even been attempted.
+    for idx in range(2, 6):
+        sweep_idx = cond.find_task_output_dir(
+            "//multiple:sweep-{}".format(idx), is_experiment=True
+        )
+        assert sweep_idx is None
+
+    root_out = cond.find_task_output_dir("//multiple:root", is_experiment=True)
+    assert root_out is None
+    should_skip_out = cond.find_task_output_dir(
+        "//multiple:should_skip", is_experiment=True
+    )
+    assert should_skip_out is None
+    # The top level `run_experiment_group()` task is technically not a Conductor experiment task.
+    sweep_out = cond.find_task_output_dir("//multiple:sweep", is_experiment=False)
+    assert sweep_out is None
