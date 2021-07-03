@@ -1,8 +1,10 @@
 import time
+from typing import List
 
 from conductor.context import Context
 from conductor.errors import ConductorError, TaskNotFound, ConductorAbort
-from conductor.execution.task_state import ExecutingTask, TaskState
+from conductor.execution.task import ExecutingTask
+from conductor.execution.task_state import TaskState
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.time import time_to_readable_string
 
@@ -34,41 +36,43 @@ class ExecutionPlan:
             # Tracks tasks that have finished executing (succeeded,
             # succeeded_cached, skipped, failed). The order of tasks in this
             # list is the order they executed in.
-            completed_tasks = []
+            completed_tasks: List[ExecutingTask] = []
 
             # Execute the task dependency graph while respecting dependencies by
             # performing a post-order traversal.
             while len(stack) > 0:
-                next_task = stack.pop()
-                assert next_task.not_yet_executed()
+                next_exe_task = stack.pop()
+                assert next_exe_task.not_yet_executed()
 
                 # If true, this is the second time we are visiting this task, so
                 # this means its dependencies had a chance to execute.
-                if next_task.state == TaskState.EXECUTING_DEPS:
+                if next_exe_task.state == TaskState.EXECUTING_DEPS:
                     # Make sure all dependencies succeeded.
-                    if not all(map(lambda task: task.succeeded(), next_task.deps)):
-                        print("Skipping '{}'.".format(str(next_task.task.identifier)))
-                        next_task.set_state(TaskState.SKIPPED)
-                        completed_tasks.append(next_task)
+                    if not next_exe_task.exe_deps_succeeded():
+                        print(
+                            "Skipping '{}'.".format(str(next_exe_task.task.identifier))
+                        )
+                        next_exe_task.set_state(TaskState.SKIPPED)
+                        completed_tasks.append(next_exe_task)
                         continue
 
                     # All dependencies have finished running, can run now.
-                    print("Running '{}'...".format(str(next_task.task.identifier)))
+                    print("Running '{}'...".format(str(next_exe_task.task.identifier)))
                     try:
-                        next_task.task.execute(ctx)
+                        next_exe_task.task.execute(ctx)
                         # If this task succeeded, make sure we commit it to the
                         # version index. This way if later tasks fail, we don't
                         # restart from scratch.
                         ctx.version_index.commit_changes()
-                        next_task.set_state(TaskState.SUCCEEDED)
-                        completed_tasks.append(next_task)
+                        next_exe_task.set_state(TaskState.SUCCEEDED)
+                        completed_tasks.append(next_exe_task)
                     except ConductorError as ex:
                         # The task failed. Abort early if requested by
                         # re-raising the error.
                         ctx.version_index.rollback_changes()
-                        next_task.set_state(TaskState.FAILED)
-                        next_task.store_error(ex)
-                        completed_tasks.append(next_task)
+                        next_exe_task.set_state(TaskState.FAILED)
+                        next_exe_task.store_error(ex)
+                        completed_tasks.append(next_exe_task)
                         if self._stop_early:
                             break
 
@@ -76,33 +80,33 @@ class ExecutionPlan:
                     continue
 
                 # This is the first time we're visiting this task in the dependency graph.
-                visited.add(next_task.task.identifier)
+                visited.add(next_exe_task.task.identifier)
 
                 # If we do not need to run the task, we do not need to consider
                 # its dependencies.
-                if not self._run_again and not next_task.task.should_run(ctx):
+                if not self._run_again and not next_exe_task.task.should_run(ctx):
                     print(
                         "Using cached results for '{}'.".format(
-                            str(next_task.task.identifier)
+                            str(next_exe_task.task.identifier)
                         )
                     )
-                    next_task.set_state(TaskState.SUCCEEDED_CACHED)
-                    completed_tasks.append(next_task)
+                    next_exe_task.set_state(TaskState.SUCCEEDED_CACHED)
+                    completed_tasks.append(next_exe_task)
                     continue
 
                 # Process dependencies and then come back to run this task
-                next_task.set_state(TaskState.EXECUTING_DEPS)
-                stack.append(next_task)
+                next_exe_task.set_state(TaskState.EXECUTING_DEPS)
+                stack.append(next_exe_task)
 
                 # Append in reverse order because we pop from the back of the
                 # list. This ensures we process dependencies in the order they
                 # are listed in the COND file (for the user's convenience).
-                for dep in reversed(next_task.task.deps):
+                for dep in reversed(next_exe_task.task.deps):
                     if dep in visited:
                         continue
-                    task_dep = ExecutingTask(ctx.task_index.get_task(dep))
-                    next_task.add_dep(task_dep)
-                    stack.append(task_dep)
+                    exe_dep = ExecutingTask(ctx.task_index.get_task(dep))
+                    next_exe_task.add_exe_dep(exe_dep)
+                    stack.append(exe_dep)
 
             elapsed = time.time() - start
 
@@ -110,6 +114,8 @@ class ExecutionPlan:
             all_succeeded = all(map(lambda task: task.succeeded(), completed_tasks))
             if (
                 all_succeeded
+                # The main task we wanted to run should always be the last
+                # completed task (its dependencies must be executed first).
                 and completed_tasks[-1].task.identifier == self._task_identifier
             ):
                 print("✨ Done! (ran for {})".format(time_to_readable_string(elapsed)))
@@ -133,7 +139,9 @@ class ExecutionPlan:
                     assert exe_task.stored_error is not None
                     print(
                         "  -> {}".format(
-                            exe_task.stored_error.printable_message(ignore_context=True)
+                            exe_task.stored_error.printable_message(
+                                omit_file_context=True
+                            )
                         )
                     )
                 print()
