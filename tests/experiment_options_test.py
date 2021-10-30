@@ -30,7 +30,7 @@ def assert_serialized_json(
 ):
     assert json_path.is_file()
 
-    with open(json_path, "r") as file:
+    with open(json_path, "r", encoding="UTF-8") as file:
         loaded = json.load(file)
     assert loaded == raw_options
 

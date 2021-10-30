@@ -63,5 +63,5 @@ class ExperimentOptions:
         Serializes the options into JSON and writes the result to a file at
         `file_path`.
         """
-        with open(file_path, "w") as file:
+        with open(file_path, "w", encoding="UTF-8") as file:
             json.dump(self._options, file, indent=2, sort_keys=True)

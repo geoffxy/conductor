@@ -23,7 +23,7 @@ class TaskLoader:
         self._tasks = tasks
         self._current_cond_file_path = cond_file_path
         try:
-            with open(cond_file_path) as file:
+            with open(cond_file_path, encoding="UTF-8") as file:
                 code = file.read()
             # pylint: disable=exec-used
             exec(code, self._conductor_scope.copy())
@@ -61,7 +61,7 @@ class TaskLoader:
         # files here to ensure that any uses of Conductor's foundational task
         # types bind to the task constructors defined above.
         for lib_file_path in STDLIB_FILES:
-            with open(lib_file_path, "r") as lib_file:
+            with open(lib_file_path, "r", encoding="UTF-8") as lib_file:
                 code = compile(lib_file.read(), str(lib_file_path), "exec")
             # pylint: disable=exec-used
             exec(code, scope)

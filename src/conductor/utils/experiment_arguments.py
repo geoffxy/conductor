@@ -52,5 +52,5 @@ class ExperimentArguments:
         Serializes the options into JSON and writes the result to a file at
         `file_path`.
         """
-        with open(file_path, "w") as file:
+        with open(file_path, "w", encoding="UTF-8") as file:
             json.dump(self._args, file, indent=2)

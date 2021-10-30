@@ -29,6 +29,8 @@ class VersionIndex:
     output versions of "archivable" task executions.
     """
 
+    # pylint: disable=no-member
+
     FormatVersion = 1
 
     def __init__(self, conn: sqlite3.Connection, last_timestamp: int):

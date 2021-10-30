@@ -72,7 +72,7 @@ def test_cond_run_deps(tmp_path: pathlib.Path):
 
     graph_csv = pathlib.Path(figures_out, "graph.task", "graph.csv")
     assert graph_csv.exists()
-    with open(graph_csv, "r") as file:
+    with open(graph_csv, "r", encoding="UTF-8") as file:
         graph1 = list(csv.reader(file))
 
     # Conductor should use the cached benchmark result. Therefore the generated
@@ -83,7 +83,7 @@ def test_cond_run_deps(tmp_path: pathlib.Path):
     assert count_task_outputs(figures_out) == 1
 
     assert graph_csv.exists()
-    with open(graph_csv, "r") as file:
+    with open(graph_csv, "r", encoding="UTF-8") as file:
         graph2 = list(csv.reader(file))
 
     assert graph1 == graph2
@@ -136,7 +136,7 @@ def test_cond_run_ordering(tmp_path: pathlib.Path):
     out_file = cond.output_path / "out.txt"
     assert out_file.exists()
 
-    with open(out_file) as file:
+    with open(out_file, encoding="UTF-8") as file:
         values = [line.rstrip(os.linesep) for line in file]
     assert values == ["1", "2", "3"]
     out_file.unlink()
@@ -145,7 +145,7 @@ def test_cond_run_ordering(tmp_path: pathlib.Path):
     assert result.returncode == 0
     assert out_file.exists()
 
-    with open(out_file) as file:
+    with open(out_file, encoding="UTF-8") as file:
         values = [line.rstrip(os.linesep) for line in file]
     assert values == ["2", "1", "3"]
 
@@ -185,13 +185,17 @@ def test_cond_run_record_output(tmp_path: pathlib.Path):
     assert stdout_file.is_file()
     assert stderr_file.is_file()
 
-    stdout_contents = [line.rstrip() for line in open(stdout_file, "r")]
+    stdout_contents = [
+        line.rstrip() for line in open(stdout_file, "r", encoding="UTF-8")
+    ]
     assert len(stdout_contents) == 1
     assert stdout_contents[0] == "!!stdout!!"
     # Ensures that the task's stdout output is still written out to stdout
     assert stdout_contents[0] in result.stdout.decode(sys.stdout.encoding)
 
-    stderr_contents = [line.rstrip() for line in open(stderr_file, "r")]
+    stderr_contents = [
+        line.rstrip() for line in open(stderr_file, "r", encoding="UTF-8")
+    ]
     assert len(stderr_contents) == 1
     assert stderr_contents[0] == "!!stderr!!"
     # Ensures that the task's stderr output is still written out to stderr
@@ -218,7 +222,8 @@ def test_cond_run_experiment_options(tmp_path: pathlib.Path):
     # Read the outputted file and make sure the arguments were visible to the
     # underlying bash script.
     seen_options = [
-        line.rstrip() for line in open(task_output_dir / "all_options.txt", "r")
+        line.rstrip()
+        for line in open(task_output_dir / "all_options.txt", "r", encoding="UTF-8")
     ]
     assert len(seen_options) == 4
     assert "--key=value" in seen_options
@@ -228,7 +233,7 @@ def test_cond_run_experiment_options(tmp_path: pathlib.Path):
 
     serialized_json_file = task_output_dir / EXP_OPTION_JSON_FILE_NAME
     assert serialized_json_file.is_file()
-    with open(serialized_json_file, "r") as json_file:
+    with open(serialized_json_file, "r", encoding="UTF-8") as json_file:
         json_opts = json.load(json_file)
 
     # Make sure the options serialization worked correctly.
