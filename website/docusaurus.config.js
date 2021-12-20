@@ -29,6 +29,10 @@ module.exports = {
       links: [],
       copyright: `Copyright © ${new Date().getFullYear()} Geoffrey Yu.`,
     },
+    prism: {
+      theme: require('prism-react-renderer/themes/github'),
+      darkTheme: require('prism-react-renderer/themes/palenight'),
+    },
   },
   presets: [
     [
