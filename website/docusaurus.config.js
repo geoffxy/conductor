@@ -6,7 +6,7 @@ module.exports = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/ConductorFavicon64.png',
   organizationName: 'geoffxy',
   projectName: 'conductor',
   themeConfig: {
@@ -14,7 +14,8 @@ module.exports = {
       title: 'Conductor',
       logo: {
         alt: 'My Site Logo',
-        src: 'img/logo.svg',
+        src: 'img/ConductorLogo_Light.png',
+        srcDark: 'img/ConductorLogo_Dark.png',
       },
       items: [
         {
