@@ -280,6 +280,19 @@ class CyclicDependency(ConductorError):
         )
 
 
+class UnsupportedVersionIndexFormat(ConductorError):
+    error_code = 2004
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.version = kwargs["version"]
+    
+    def _message(self):
+        return "Detected an unsupported version index ({version}). Please make sure that you are using the latest version of Conductor.".format(
+            version=self.version,
+        )
+
+
 class TaskNonZeroExit(ConductorError):
     error_code = 3001
 
@@ -433,6 +446,7 @@ __all__ = [
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",
+    "UnsupportedVersionIndexFormat",
     "TaskNonZeroExit",
     "TaskFailed",
     "OutputDirTaken",

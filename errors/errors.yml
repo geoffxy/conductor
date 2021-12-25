@@ -101,6 +101,10 @@
   name: CyclicDependency
   message: "Encountered a cyclic dependency when loading the transitive closure of '{task_identifier}'."
 
+2004:
+  name: UnsupportedVersionIndexFormat
+  message: "Detected an unsupported version index ({version}). Please make sure that you are using the latest version of Conductor."
+
 
 # Execution errors (error code 3xxx)
 3001:
