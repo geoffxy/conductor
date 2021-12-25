@@ -3,7 +3,7 @@ create_table = """
     task_identifier TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
     git_commit_hash TEXT,
-    commit_has_changes INTEGER NOT NULL,
+    commit_has_uncommitted_changes INTEGER NOT NULL,
     PRIMARY KEY (task_identifier, timestamp)
   )
 """
@@ -15,8 +15,12 @@ get_format_version = "PRAGMA user_version"
 get_max_timestamp = "SELECT MAX(timestamp) FROM version_index"
 
 insert_new_version = """
-  INSERT INTO version_index (task_identifier, timestamp, commit_has_changes)
-    VALUES (?, ?, 0)
+  INSERT INTO version_index (
+    task_identifier,
+    timestamp,
+    commit_has_uncommitted_changes
+  )
+  VALUES (?, ?, 0)
 """
 
 latest_task_timestamp = """
@@ -88,7 +92,7 @@ v1_insert_new_version = """
 
 # Queries used for migrating from format 1 to format 2
 # - Remove the "NOT NULL" constraint from `version_index.git_commit`
-# - Add a `commit_has_changes BOOL` column to `version_index`
+# - Add a `commit_has_uncommitted_changes BOOL` column to `version_index`
 
 v1_to_v2_create_tmp_table = create_table.replace("version_index", "version_index_new")
 
