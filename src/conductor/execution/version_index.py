@@ -1,8 +1,11 @@
 import sqlite3
 import pathlib
+import shutil
 import time
 from typing import Iterable, List, Optional, Tuple
 
+from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE
+from conductor.errors import UnsupportedVersionIndexFormat
 from conductor.task_identifier import TaskIdentifier
 import conductor.execution.version_index_queries as q
 
@@ -31,7 +34,7 @@ class VersionIndex:
 
     # pylint: disable=no-member
 
-    FormatVersion = 1
+    FormatVersion = 2
 
     def __init__(self, conn: sqlite3.Connection, last_timestamp: int):
         self._conn = conn
@@ -40,8 +43,15 @@ class VersionIndex:
     @classmethod
     def create_or_load(cls, path: pathlib.Path) -> "VersionIndex":
         if path.exists():
-            # Need to restore the last timestamp used
             conn = sqlite3.connect(path)
+            format_version = conn.execute(q.get_format_version).fetchone()[0]
+            if format_version == 1:
+                # Upgrade the version index to format 2.
+                cls._run_v1_to_v2_migration(conn, path)
+            elif format_version != cls.FormatVersion:
+                raise UnsupportedVersionIndexFormat(version=format_version)
+
+            # Need to restore the last timestamp used.
             result = conn.execute(q.get_max_timestamp).fetchone()
             return VersionIndex(
                 conn=conn,
@@ -77,9 +87,7 @@ class VersionIndex:
         self._last_timestamp = timestamp
 
         cursor = self._conn.cursor()
-        cursor.execute(
-            q.insert_new_version, (str(task_identifier), timestamp, "unknown")
-        )
+        cursor.execute(q.insert_new_version, (str(task_identifier), timestamp))
         return Version(timestamp)
 
     def get_all_versions(self) -> List[Tuple[TaskIdentifier, Version]]:
@@ -127,3 +135,26 @@ class VersionIndex:
         if not self._conn.in_transaction:
             return
         self._conn.rollback()
+
+    @staticmethod
+    def _run_v1_to_v2_migration(conn: sqlite3.Connection, path: pathlib.Path):
+        # Upgrades the version index's persistent format from version 1 to 2.
+        # For all existing entries, the `git_commit_hash` and
+        # `commit_has_changes` columns are set to `NULL` and `0` respectively.
+        backup_copy_path = path.with_name(
+            VERSION_INDEX_BACKUP_NAME_TEMPLATE.format(vfrom=1, vto=2)
+        )
+        if not backup_copy_path.exists():
+            # Back up the version index file first.
+            shutil.copy2(src=path, dst=backup_copy_path)
+
+        # Run the migration.
+        try:
+            conn.execute(q.v1_to_v2_create_tmp_table)
+            conn.execute(q.v1_to_v2_migrate_tmp_table)
+            conn.execute(q.v1_to_v2_drop_old_table)
+            conn.execute(q.v1_to_v2_rename_new_table)
+            conn.execute(q.set_format_version.format(version=2))
+            conn.commit()
+        except RuntimeError:
+            conn.rollback()
