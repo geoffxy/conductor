@@ -93,9 +93,8 @@ v1_insert_new_version = """
 v1_to_v2_create_tmp_table = create_table.replace("version_index", "version_index_new")
 
 v1_to_v2_migrate_tmp_table = """
-  INSERT INTO version_index_new (
+  INSERT INTO version_index_new
     SELECT task_identifier, timestamp, NULL, 0 FROM version_index
-  )
 """
 
 v1_to_v2_drop_old_table = "DROP TABLE version_index"

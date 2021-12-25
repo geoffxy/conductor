@@ -15,6 +15,9 @@ TASK_OUTPUT_DIR_SUFFIX = ".task"
 # The file name of the on-disk version index.
 VERSION_INDEX_NAME = "version_index.sqlite"
 
+# A template for the version index backup when performing a version migration.
+VERSION_INDEX_BACKUP_NAME_TEMPLATE = "version_index_backup-v{vfrom}-v{vto}.sqlite"
+
 # The environment variable that stores the absolute path to the task's output
 # directory. Tasks are supposed to use this variable to determine where to
 # write their output files.
