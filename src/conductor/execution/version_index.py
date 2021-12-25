@@ -7,6 +7,7 @@ from typing import Iterable, List, Optional, Tuple
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE
 from conductor.errors import UnsupportedVersionIndexFormat
 from conductor.task_identifier import TaskIdentifier
+from conductor.utils.git import Git
 import conductor.execution.version_index_queries as q
 
 
@@ -34,6 +35,7 @@ class VersionIndex:
 
     # pylint: disable=no-member
 
+    # v0.4.0 and older: FormatVersion = 1
     FormatVersion = 2
 
     def __init__(self, conn: sqlite3.Connection, last_timestamp: int):
@@ -78,7 +80,9 @@ class VersionIndex:
             return None
         return Version(row[0])
 
-    def generate_new_output_version(self, task_identifier: TaskIdentifier) -> Version:
+    def generate_new_output_version(
+        self, task_identifier: TaskIdentifier, commit: Optional[Git.Commit]
+    ) -> Version:
         timestamp = int(time.time())
         if timestamp == self._last_timestamp:
             timestamp += 1
@@ -86,8 +90,17 @@ class VersionIndex:
             timestamp = self._last_timestamp + 1
         self._last_timestamp = timestamp
 
+        commit_hash: Optional[str] = None
+        has_uncommitted_changes = 0
+        if commit is not None:
+            commit_hash = commit.hash
+            has_uncommitted_changes = 1 if commit.has_changes else 0
+
         cursor = self._conn.cursor()
-        cursor.execute(q.insert_new_version, (str(task_identifier), timestamp))
+        cursor.execute(
+            q.insert_new_version,
+            (str(task_identifier), timestamp, commit_hash, has_uncommitted_changes),
+        )
         return Version(timestamp)
 
     def get_all_versions(self) -> List[Tuple[TaskIdentifier, Version]]:
@@ -140,7 +153,8 @@ class VersionIndex:
     def _run_v1_to_v2_migration(conn: sqlite3.Connection, path: pathlib.Path):
         # Upgrades the version index's persistent format from version 1 to 2.
         # For all existing entries, the `git_commit_hash` and
-        # `commit_has_changes` columns are set to `NULL` and `0` respectively.
+        # `has_uncommitted_changes` columns are set to `NULL` and `0`
+        # respectively.
         backup_copy_path = path.with_name(
             VERSION_INDEX_BACKUP_NAME_TEMPLATE.format(vfrom=1, vto=2)
         )

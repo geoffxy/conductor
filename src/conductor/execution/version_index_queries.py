@@ -3,7 +3,7 @@ create_table = """
     task_identifier TEXT NOT NULL,
     timestamp INTEGER NOT NULL,
     git_commit_hash TEXT,
-    commit_has_uncommitted_changes INTEGER NOT NULL,
+    has_uncommitted_changes INTEGER NOT NULL,
     PRIMARY KEY (task_identifier, timestamp)
   )
 """
@@ -18,9 +18,10 @@ insert_new_version = """
   INSERT INTO version_index (
     task_identifier,
     timestamp,
-    commit_has_uncommitted_changes
+    git_commit_hash,
+    has_uncommitted_changes
   )
-  VALUES (?, ?, 0)
+  VALUES (?, ?, ?, ?)
 """
 
 latest_task_timestamp = """
@@ -33,7 +34,9 @@ latest_task_timestamp = """
 all_entries = """
   SELECT
     task_identifier,
-    timestamp
+    timestamp,
+    git_commit_hash,
+    has_uncommitted_changes
   FROM
     version_index
 """
@@ -43,15 +46,26 @@ all_entries_latest = """
     SELECT task_identifier, MAX(timestamp) AS timestamp
     FROM version_index GROUP BY task_identifier
   )
-  SELECT c.task_identifier, c.timestamp
-    FROM version_index AS c INNER JOIN latest_entries AS l
-    ON c.task_identifier = l.task_identifier AND c.timestamp = l.timestamp
+  SELECT
+    c.task_identifier,
+    c.timestamp,
+    c.git_commit_hash,
+    c.has_uncommitted_changes
+  FROM
+    version_index AS c
+  INNER JOIN
+    latest_entries AS l
+  ON
+    c.task_identifier = l.task_identifier
+    AND c.timestamp = l.timestamp
 """
 
 all_entries_for_task = """
   SELECT
     task_identifier,
-    timestamp
+    timestamp,
+    git_commit_hash,
+    has_uncommitted_changes
   FROM
     version_index
   WHERE
@@ -61,7 +75,9 @@ all_entries_for_task = """
 latest_entry_for_task = """
   SELECT
     task_identifier,
-    timestamp
+    timestamp,
+    git_commit_hash,
+    has_uncommitted_changes
   FROM
     version_index
   WHERE
@@ -70,10 +86,18 @@ latest_entry_for_task = """
   LIMIT 1
 """
 
-all_versions = "SELECT task_identifier, timestamp FROM version_index"
+all_versions = """
+  SELECT
+    task_identifier,
+    timestamp,
+    git_commit_hash,
+    has_uncommitted_changes
+  FROM
+    version_index
+"""
 
 
-# Queries used for format 1 (retained for testing purposes)
+# Queries used in format 1 (retained for testing purposes)
 
 v1_create_table = """
   CREATE TABLE version_index (
@@ -92,7 +116,7 @@ v1_insert_new_version = """
 
 # Queries used for migrating from format 1 to format 2
 # - Remove the "NOT NULL" constraint from `version_index.git_commit`
-# - Add a `commit_has_uncommitted_changes BOOL` column to `version_index`
+# - Add a `has_uncommitted_changes BOOL` column to `version_index`
 
 v1_to_v2_create_tmp_table = create_table.replace("version_index", "version_index_new")
 

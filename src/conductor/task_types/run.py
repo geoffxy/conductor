@@ -192,7 +192,9 @@ class RunExperiment(_RunSubprocess):
         return unversioned_path.with_name(
             f.task_output_dir(
                 self.identifier,
-                version=ctx.version_index.generate_new_output_version(self.identifier),
+                version=ctx.version_index.generate_new_output_version(
+                    task_identifier=self.identifier, commit=None
+                ),
             )
         )
 
