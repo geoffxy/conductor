@@ -170,6 +170,7 @@ class RunExperiment(_RunSubprocess):
         )
         self._did_retrieve_version = False
         self._most_relevant_version: Optional[Version] = None
+        self._current_commit: Optional[Git.Commit] = None
 
     @property
     def archivable(self) -> bool:
@@ -224,6 +225,14 @@ class RunExperiment(_RunSubprocess):
             self._args.serialize_json(output_path / EXP_ARGS_JSON_FILE_NAME)
         if not self._options.empty():
             self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)
+
+    def _ensure_most_relevant_existing_version_computed(self, ctx: "c.Context"):
+        if self._did_retrieve_version:
+            return
+        version, commit = self._retrieve_most_relevant_existing_version(ctx)
+        self._most_relevant_version = version
+        self._current_commit = commit
+        self._did_retrieve_version = True
 
     def _retrieve_most_relevant_existing_version(
         self, ctx: "c.Context"

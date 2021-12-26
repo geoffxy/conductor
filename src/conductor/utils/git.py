@@ -32,6 +32,8 @@ class Git:
             ["git", "rev-parse", "--git-dir"],
             cwd=self._project_root,
             check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
         return result.returncode == 0
 
