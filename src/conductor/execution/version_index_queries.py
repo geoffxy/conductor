@@ -24,9 +24,14 @@ insert_new_version = """
   VALUES (?, ?, ?, ?)
 """
 
-latest_task_timestamp = """
-  SELECT timestamp FROM version_index
-    WHERE task_identifier = ?
+latest_task_version = """
+  SELECT
+    timestamp,
+    git_commit_hash,
+    has_uncommitted_changes
+  FROM
+    version_index
+  WHERE task_identifier = ?
     ORDER BY timestamp DESC
     LIMIT 1
 """

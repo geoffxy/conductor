@@ -2,7 +2,7 @@ import sqlite3
 import pathlib
 import shutil
 import time
-from typing import Iterable, List, Optional, Tuple
+from typing import Any, Iterable, List, Optional, Tuple, Sequence
 
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE
 from conductor.errors import UnsupportedVersionIndexFormat
@@ -12,19 +12,46 @@ import conductor.execution.version_index_queries as q
 
 
 class Version:
-    def __init__(self, ident: int):
-        self._id = ident
+    def __init__(
+        self, timestamp: int, commit_hash: Optional[str], has_uncommitted_changes: bool
+    ):
+        self._timestamp = timestamp
+        self._commit_hash = commit_hash
+        self._has_uncommitted_changes = has_uncommitted_changes
+
+    @property
+    def timestamp(self) -> int:
+        return self._timestamp
+
+    @property
+    def commit_hash(self) -> Optional[str]:
+        return self._commit_hash
+
+    @property
+    def has_uncommitted_changes(self) -> bool:
+        return self._has_uncommitted_changes
 
     def __repr__(self) -> str:
-        return "Version(id={})".format(self._id)
+        return (
+            "Version(timestamp={}, commit_hash={}, has_uncommitted_changes={})".format(
+                self._timestamp,
+                str(self._commit_hash),
+                str(self._has_uncommitted_changes),
+            )
+        )
 
     def __str__(self) -> str:
-        return str(self._id)
+        # The timestamp uniquely identifies the version.
+        return str(self._timestamp)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Version):
             return NotImplemented
-        return self._id == other._id
+        return (
+            self.timestamp == other.timestamp
+            and self.commit_hash == other.commit_hash
+            and self.has_uncommitted_changes == other.has_uncommitted_changes
+        )
 
 
 class VersionIndex:
@@ -74,11 +101,21 @@ class VersionIndex:
         self, task_identifier: TaskIdentifier
     ) -> Optional[Version]:
         cursor = self._conn.cursor()
-        cursor.execute(q.latest_task_timestamp, (str(task_identifier),))
+        cursor.execute(q.latest_task_version, (str(task_identifier),))
         row = cursor.fetchone()
         if row is None:
             return None
-        return Version(row[0])
+        return self._version_from_row(row)
+
+    def get_all_versions_for_task(
+        self, task_identifier: TaskIdentifier
+    ) -> List[Version]:
+        cursor = self._conn.cursor()
+        cursor.execute(q.all_entries_for_task, (str(task_identifier),))
+        results = []
+        for row in cursor:
+            results.append(self._version_from_row(row[1:]))
+        return results
 
     def generate_new_output_version(
         self, task_identifier: TaskIdentifier, commit: Optional[Git.Commit]
@@ -101,12 +138,17 @@ class VersionIndex:
             q.insert_new_version,
             (str(task_identifier), timestamp, commit_hash, has_uncommitted_changes),
         )
-        return Version(timestamp)
+        return Version(
+            timestamp, commit_hash, commit.has_changes if commit is not None else False
+        )
 
     def get_all_versions(self) -> List[Tuple[TaskIdentifier, Version]]:
         cursor = self._conn.cursor()
         cursor.execute(q.all_versions)
-        return [(TaskIdentifier.from_str(row[0]), Version(row[1])) for row in cursor]
+        return [
+            (TaskIdentifier.from_str(row[0]), self._version_from_row(row[1:]))
+            for row in cursor
+        ]
 
     def copy_entries_to(
         self,
@@ -172,3 +214,10 @@ class VersionIndex:
             conn.commit()
         except RuntimeError:
             conn.rollback()
+
+    def _version_from_row(self, row: Sequence[Any]) -> Version:
+        return Version(
+            timestamp=row[0],
+            commit_hash=row[1],
+            has_uncommitted_changes=(False if row[2] == 0 else True),
+        )

@@ -66,7 +66,7 @@ def test_v1_to_v2_upgrade_e2e(tmp_path: pathlib.Path):
     assert len(test_versions) == len(all_versions)
     for expected, actual in zip(test_versions, all_versions):
         assert expected[0] == str(actual[0])
-        assert expected[1] == actual[1]._id
+        assert expected[1] == actual[1].timestamp
 
 
 def create_v1_version_index(filepath: pathlib.Path, entries: Iterable[Iterable]):
