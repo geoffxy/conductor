@@ -3,11 +3,12 @@ import pathlib
 import os
 import signal
 import sys
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Tuple
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.errors import TaskFailed, TaskNonZeroExit, ConductorAbort
+from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
 from conductor.config import (
     OUTPUT_ENV_VARIABLE_NAME,
@@ -21,6 +22,7 @@ from conductor.config import (
 )
 from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
+from conductor.utils.git import Git
 from .base import TaskType
 
 
@@ -166,6 +168,8 @@ class RunExperiment(_RunSubprocess):
                 [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
             ),
         )
+        self._did_retrieve_version = False
+        self._most_relevant_version: Optional[Version] = None
 
     @property
     def archivable(self) -> bool:
@@ -220,3 +224,77 @@ class RunExperiment(_RunSubprocess):
             self._args.serialize_json(output_path / EXP_ARGS_JSON_FILE_NAME)
         if not self._options.empty():
             self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)
+
+    def _retrieve_most_relevant_existing_version(
+        self, ctx: "c.Context"
+    ) -> Tuple[Optional[Version], Optional[Git.Commit]]:
+        """
+        Finds the "most relevant" existing version of this task's outputs, if
+        one exists. The definition of "most relevant" depends on whether git is
+        used to track the code in the project, and is governed by the logic in
+        this method. Also returns the commit hash associated with `HEAD`, if git
+        is being used.
+
+        This method is meant for internal use.
+        """
+        # Simple case. If the project does not use git, the most relevant
+        # existing version is the latest (newest) version (if it exists).
+        if not ctx.uses_git:
+            return (ctx.version_index.get_latest_output_version(self._identifier), None)
+
+        # Retrieve the commit hash associated with `HEAD`.
+        curr_commit = ctx.git.current_commit()
+
+        # This case happens if the repository is bare (no commits). Then the
+        # most relevant existing version is the latest version, if it exists.
+        if curr_commit is None:
+            return (ctx.version_index.get_latest_output_version(self._identifier), None)
+
+        # Retrieve all existing versions for this task. Filter them into tasks
+        # with null commit hashes and ones that are ancestors.
+        existing_versions = ctx.version_index.get_all_versions_for_task(
+            self._identifier
+        )
+        ancestor_versions = []
+        null_commit_versions = []
+        for version in existing_versions:
+            if version.commit_hash is None:
+                null_commit_versions.append(version)
+            elif ctx.git.is_ancestor(
+                curr_commit.hash, candidate_ancestor_hash=version.commit_hash
+            ):
+                ancestor_versions.append(version)
+
+        # The most relevant existing version is the one that is "closest" to the
+        # current commit (measured by number of commits between them). If there
+        # are multiple closest commit versions, we select the newest one.
+        if len(ancestor_versions) > 0:
+            selected_version = None
+            closest_distance = -1
+            for v in ancestor_versions:
+                assert v.commit_hash is not None
+                dist = ctx.git.get_distance(curr_commit.hash, v.commit_hash)
+                if selected_version is None or dist < closest_distance:
+                    selected_version = v
+                    closest_distance = dist
+                elif (
+                    dist == closest_distance
+                    and v.timestamp > selected_version.timestamp
+                ):
+                    selected_version = v
+            assert selected_version is not None
+            return (selected_version, curr_commit)
+
+        # There are no ancestor commits and all existing versions do not have a
+        # commit hash. We select the newest version. This maintains the same
+        # behavior as Conductor v0.4.0 and older.
+        if (
+            len(null_commit_versions) == len(existing_versions)
+            and len(null_commit_versions) > 0
+        ):
+            return (max(null_commit_versions, key=lambda v: v.timestamp), curr_commit)
+
+        # Otherwise, this means there may exist versions with commits that are
+        # not ancestors of the current commit. For correctness, we should not
+        # depend on the results from any previous version.
+        return (None, curr_commit)
