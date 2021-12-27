@@ -196,7 +196,7 @@ class RunExperiment(_RunSubprocess):
             f.task_output_dir(
                 self.identifier,
                 version=ctx.version_index.generate_new_output_version(
-                    task_identifier=self.identifier, commit=None
+                    task_identifier=self.identifier, commit=ctx.current_commit
                 ),
             )
         )
