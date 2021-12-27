@@ -3,7 +3,7 @@ import pathlib
 import os
 import signal
 import sys
-from typing import Sequence, Optional, Tuple
+from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
@@ -22,7 +22,6 @@ from conductor.config import (
 )
 from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
-from conductor.utils.git import Git
 from .base import TaskType
 
 
@@ -170,7 +169,6 @@ class RunExperiment(_RunSubprocess):
         )
         self._did_retrieve_version = False
         self._most_relevant_version: Optional[Version] = None
-        self._current_commit: Optional[Git.Commit] = None
 
     @property
     def archivable(self) -> bool:
@@ -183,15 +181,15 @@ class RunExperiment(_RunSubprocess):
     def get_output_path(
         self, ctx: "c.Context", create_new: bool = False
     ) -> Optional[pathlib.Path]:
+        self._ensure_most_relevant_existing_version_computed(ctx)
         unversioned_path = super().get_output_path(ctx, create_new)
         assert unversioned_path is not None
 
         if not create_new:
-            latest = ctx.version_index.get_latest_output_version(self.identifier)
-            if latest is None:
+            if self._most_relevant_version is None:
                 return None
             return unversioned_path.with_name(
-                f.task_output_dir(self.identifier, version=latest)
+                f.task_output_dir(self.identifier, version=self._most_relevant_version)
             )
 
         return unversioned_path.with_name(
@@ -205,15 +203,20 @@ class RunExperiment(_RunSubprocess):
 
     def should_run(self, ctx: "c.Context") -> bool:
         """
-        We use the presence of files in the output directory to determine
-        whether or not we should run the experiment again.
+        We use the presence a "most relevant" existing version to decide whether
+        or not this task needs to execute.
         """
-        output_path = self.get_output_path(ctx)
-        # Returns true iff the output directory does not exist or it is empty
-        return output_path is None or not any(True for _ in output_path.iterdir())
+        self._ensure_most_relevant_existing_version_computed(ctx)
+        return self._most_relevant_version is None
 
     def execute(self, ctx: "c.Context") -> None:
         super().execute(ctx)
+
+        # Running an experiment changes the task index, and we may now have a
+        # new "most relevant" version. Clearing this flag allows it to be
+        # retrieved the next time it is needed.
+        self._did_retrieve_version = False
+
         # Record the experiment args and options, if any were specified.
         if self._args.empty() and self._options.empty():
             return
@@ -229,35 +232,34 @@ class RunExperiment(_RunSubprocess):
     def _ensure_most_relevant_existing_version_computed(self, ctx: "c.Context"):
         if self._did_retrieve_version:
             return
-        version, commit = self._retrieve_most_relevant_existing_version(ctx)
+        version = self._retrieve_most_relevant_existing_version(ctx)
         self._most_relevant_version = version
-        self._current_commit = commit
         self._did_retrieve_version = True
 
     def _retrieve_most_relevant_existing_version(
         self, ctx: "c.Context"
-    ) -> Tuple[Optional[Version], Optional[Git.Commit]]:
+    ) -> Optional[Version]:
         """
         Finds the "most relevant" existing version of this task's outputs, if
         one exists. The definition of "most relevant" depends on whether git is
         used to track the code in the project, and is governed by the logic in
-        this method. Also returns the commit hash associated with `HEAD`, if git
-        is being used.
+        this method.
 
         This method is meant for internal use.
         """
         # Simple case. If the project does not use git, the most relevant
         # existing version is the latest (newest) version (if it exists).
         if not ctx.uses_git:
-            return (ctx.version_index.get_latest_output_version(self._identifier), None)
+            res = ctx.version_index.get_latest_output_version(self._identifier)
+            return res
 
         # Retrieve the commit hash associated with `HEAD`.
-        curr_commit = ctx.git.current_commit()
+        curr_commit = ctx.current_commit
 
         # This case happens if the repository is bare (no commits). Then the
         # most relevant existing version is the latest version, if it exists.
         if curr_commit is None:
-            return (ctx.version_index.get_latest_output_version(self._identifier), None)
+            return ctx.version_index.get_latest_output_version(self._identifier)
 
         # Retrieve all existing versions for this task. Filter them into tasks
         # with null commit hashes and ones that are ancestors.
@@ -292,7 +294,7 @@ class RunExperiment(_RunSubprocess):
                 ):
                     selected_version = v
             assert selected_version is not None
-            return (selected_version, curr_commit)
+            return selected_version
 
         # There are no ancestor commits and all existing versions do not have a
         # commit hash. We select the newest version. This maintains the same
@@ -301,9 +303,9 @@ class RunExperiment(_RunSubprocess):
             len(null_commit_versions) == len(existing_versions)
             and len(null_commit_versions) > 0
         ):
-            return (max(null_commit_versions, key=lambda v: v.timestamp), curr_commit)
+            return max(null_commit_versions, key=lambda v: v.timestamp)
 
         # Otherwise, this means there may exist versions with commits that are
         # not ancestors of the current commit. For correctness, we should not
         # depend on the results from any previous version.
-        return (None, curr_commit)
+        return None

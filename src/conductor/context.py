@@ -24,6 +24,7 @@ class Context:
 
         self._git = Git(self._project_root)
         self._uses_git = self._git.is_used()
+        self._curr_commit = self._git.current_commit() if self._uses_git else None
 
         self._version_index = VersionIndex.create_or_load(
             pathlib.Path(self.output_path, VERSION_INDEX_NAME)
@@ -68,6 +69,10 @@ class Context:
     @property
     def uses_git(self) -> bool:
         return self._uses_git
+
+    @property
+    def current_commit(self) -> Optional[Git.Commit]:
+        return self._curr_commit
 
     @property
     def tee_processor(self) -> TeeProcessor:
