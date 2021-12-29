@@ -1,0 +1,10 @@
+run_experiment(
+  name="generate",
+  run="./generate.sh",
+)
+
+run_command(
+  name="copy",
+  run="./copy.sh",
+  deps=[":generate"],
+)

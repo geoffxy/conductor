@@ -6,6 +6,7 @@ from conductor.config import CONFIG_FILE_NAME, OUTPUT_DIR, VERSION_INDEX_NAME
 from conductor.errors import MissingProjectRoot, OutputDirTaken
 from conductor.execution.version_index import VersionIndex
 from conductor.parsing.task_index import TaskIndex
+from conductor.utils.git import Git
 from conductor.utils.tee import TeeProcessor
 
 
@@ -20,6 +21,10 @@ class Context:
         self._task_index = TaskIndex(self._project_root)
         self._output_path = project_root / OUTPUT_DIR
         self._ensure_output_dir_exists()
+
+        self._git = Git(self._project_root)
+        self._uses_git = self._git.is_used()
+        self._curr_commit = self._git.current_commit() if self._uses_git else None
 
         self._version_index = VersionIndex.create_or_load(
             pathlib.Path(self.output_path, VERSION_INDEX_NAME)
@@ -56,6 +61,18 @@ class Context:
     @property
     def version_index(self) -> VersionIndex:
         return self._version_index
+
+    @property
+    def git(self) -> Git:
+        return self._git
+
+    @property
+    def uses_git(self) -> bool:
+        return self._uses_git
+
+    @property
+    def current_commit(self) -> Optional[Git.Commit]:
+        return self._curr_commit
 
     @property
     def tee_processor(self) -> TeeProcessor:

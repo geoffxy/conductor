@@ -143,4 +143,5 @@ FIXTURE_TEMPLATES = {
     ).resolve(),
     "partial-success": pathlib.Path(_TESTS_DIR, "fixture-projects", "partial-success"),
     "lib-test": pathlib.Path(_TESTS_DIR, "fixture-projects", "lib-test"),
+    "git-context": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-context"),
 }
