@@ -123,6 +123,14 @@
   name: ConductorAbort
   message: "Conductor's execution has been aborted by the user."
 
+3005:
+  name: ConfigParseError
+  message: "Conductor failed to parse cond_config.toml."
+
+3006:
+  name: ConfigInvalidValue
+  message: "Encountered an invalid value for '{config_key}' in cond_config.toml."
+
 
 # Archive and restore errors (error code 4xxx)
 4001:
