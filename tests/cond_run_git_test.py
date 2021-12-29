@@ -97,3 +97,167 @@ def test_use_relevant(tmp_path: pathlib.Path):
     res = cond.run("//:copy")
     assert res.returncode == 0
     assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+
+def test_bare_repo(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+    shutil.move(repo_path / "gen-master1.sh", repo_path / "generate.sh")
+    run_git_command(repo_path, ["init"])
+
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    shutil.move(repo_path / "gen-master2.sh", repo_path / "generate.sh")
+
+    # Should use old cached copy.
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    # Should re-run and select the latest version.
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master2"
+
+
+def test_multiple_ancestors_most_recent(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+
+    run_git_command(repo_path, ["checkout", "branchb"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "branchb"
+
+    run_git_command(repo_path, ["checkout", "brancha"])
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
+
+    # Create a merge commit (auto resolve conflicts).
+    run_git_command(
+        repo_path,
+        [
+            "merge",
+            "branchb",
+            "--strategy-option",
+            "theirs",
+            "--no-ff",
+            "-m",
+            "Test merge.",
+        ],
+    )
+
+    # Should use the most recent cached copy.
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
+
+    # Re-running produces "branchb" because the merge strategy prefers the base
+    # branch.
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "branchb"
+
+
+def test_existing_but_not_ancestor(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+
+    run_git_command(repo_path, ["checkout", "brancha"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
+
+    # The `brancha` result is more recent, but because the current commit is not
+    # an ancestor of `brancha` we need to re-run the task.
+    run_git_command(repo_path, ["checkout", "master1"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+
+def test_context_supercedes_recency(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+
+    run_git_command(repo_path, ["checkout", "master1"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    run_git_command(repo_path, ["checkout", "brancha"])
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
+
+    # The `brancha` result is more recent, but is not an ancestor of the current
+    # commit. So we should use the `master1` result.
+    run_git_command(repo_path, ["checkout", "master2"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+
+def test_all_no_commit(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+
+    shutil.move(repo_path / "gen-master1.sh", repo_path / "generate.sh")
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    shutil.move(repo_path / "gen-master2.sh", repo_path / "generate.sh")
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master2"
+
+    run_git_command(repo_path, ["init"])
+    run_git_command(
+        repo_path, ["add", "COND", "cond_config.toml", "copy.sh", "generate.sh"]
+    )
+    run_git_command(repo_path, ["commit", "-m", "New repository."])
+
+    # All prior versions have null commits (new repository). So we should be
+    # using the latest archived version.
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master2"
+
+
+def test_null_commit_and_no_ancestor(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+
+    # This version is not tied to a particular commit (no repository).
+    shutil.copy2(repo_path / "gen-master1.sh", repo_path / "generate.sh")
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    set_up_git_repository(repo_path)
+
+    # Should use the cached (latest) version.
+    run_git_command(repo_path, ["checkout", "brancha"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    # Force re-run produces a `brancha` result.
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
+
+    # Neither existing version is "compatible" (one is not an ancestor, the
+    # other has no commit information). So Conductor chooses to re-run to be
+    # conservative.
+    run_git_command(repo_path, ["checkout", "branchb"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "branchb"
