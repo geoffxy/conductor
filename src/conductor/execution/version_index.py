@@ -214,6 +214,7 @@ class VersionIndex:
             conn.commit()
         except RuntimeError:
             conn.rollback()
+            raise
 
     def _version_from_row(self, row: Sequence[Any]) -> Version:
         return Version(
