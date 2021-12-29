@@ -32,24 +32,24 @@ def set_up_git_repository(tmp_path: pathlib.Path):
         run_git_command(tmp_path, args)
 
     run(["init"])
-    shutil.move(tmp_path / "gen-master1.sh", tmp_path / "generate.sh")
+    shutil.move(str(tmp_path / "gen-master1.sh"), str(tmp_path / "generate.sh"))
     run(["add", "COND", "cond_config.toml", "copy.sh", "generate.sh"])
     run(["commit", "-m", "master1"])
     run(["checkout", "-b", "master1"])
 
     run(["checkout", "-b", "master2"])
-    shutil.move(tmp_path / "gen-master2.sh", tmp_path / "generate.sh")
+    shutil.move(str(tmp_path / "gen-master2.sh"), str(tmp_path / "generate.sh"))
     run(["add", "generate.sh"])
     run(["commit", "-m", "master2"])
 
     run(["checkout", "-b", "brancha"])
-    shutil.move(tmp_path / "gen-brancha.sh", tmp_path / "generate.sh")
+    shutil.move(str(tmp_path / "gen-brancha.sh"), str(tmp_path / "generate.sh"))
     run(["add", "generate.sh"])
     run(["commit", "-m", "brancha"])
 
     run(["checkout", "master2"])
     run(["checkout", "-b", "branchb"])
-    shutil.move(tmp_path / "gen-branchb.sh", tmp_path / "generate.sh")
+    shutil.move(str(tmp_path / "gen-branchb.sh"), str(tmp_path / "generate.sh"))
     run(["add", "generate.sh"])
     run(["commit", "-m", "branchb"])
 
@@ -102,14 +102,14 @@ def test_use_relevant(tmp_path: pathlib.Path):
 def test_bare_repo(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
     repo_path = tmp_path / "root"
-    shutil.move(repo_path / "gen-master1.sh", repo_path / "generate.sh")
+    shutil.move(str(repo_path / "gen-master1.sh"), str(repo_path / "generate.sh"))
     run_git_command(repo_path, ["init"])
 
     res = cond.run("//:copy")
     assert res.returncode == 0
     assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
 
-    shutil.move(repo_path / "gen-master2.sh", repo_path / "generate.sh")
+    shutil.move(str(repo_path / "gen-master2.sh"), str(repo_path / "generate.sh"))
 
     # Should use old cached copy.
     res = cond.run("//:copy")
@@ -208,12 +208,12 @@ def test_all_no_commit(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
     repo_path = tmp_path / "root"
 
-    shutil.move(repo_path / "gen-master1.sh", repo_path / "generate.sh")
+    shutil.move(str(repo_path / "gen-master1.sh"), str(repo_path / "generate.sh"))
     res = cond.run("//:copy")
     assert res.returncode == 0
     assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
 
-    shutil.move(repo_path / "gen-master2.sh", repo_path / "generate.sh")
+    shutil.move(str(repo_path / "gen-master2.sh"), str(repo_path / "generate.sh"))
     res = cond.run("//:copy", again=True)
     assert res.returncode == 0
     assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master2"
