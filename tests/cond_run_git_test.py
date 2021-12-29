@@ -3,7 +3,7 @@ import shutil
 import subprocess
 from typing import Any, Iterable
 
-from conductor.config import TASK_OUTPUT_DIR_SUFFIX
+from conductor.config import TASK_OUTPUT_DIR_SUFFIX, CONFIG_FILE_NAME
 from .conductor_runner import ConductorRunner, FIXTURE_TEMPLATES
 
 
@@ -261,3 +261,30 @@ def test_null_commit_and_no_ancestor(tmp_path: pathlib.Path):
     res = cond.run("//:copy")
     assert res.returncode == 0
     assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "branchb"
+
+
+def test_disabled_git_use_recency(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-context"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+
+    run_git_command(repo_path, ["checkout", "master1"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "master1"
+
+    run_git_command(repo_path, ["checkout", "brancha"])
+    res = cond.run("//:copy", again=True)
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
+
+    # Disable git integration.
+    with open(repo_path / CONFIG_FILE_NAME, "w", encoding="UTF-8") as file:
+        file.write("disable_git = true\n")
+
+    # If git integration was enabled, this should return a `master1` result.
+    # Instead Conductor will rely on recency to select a cached version.
+    run_git_command(repo_path, ["checkout", "branchb"])
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    assert load_file_contents(cond.output_path / CHECK_FILE_PATH) == "brancha"
