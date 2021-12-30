@@ -61,6 +61,8 @@ class Executor:
                         next_task.set_state(TaskState.FAILED)
                         next_task.store_error(ex)
                         if stop_early:
+                            # To allow the failure to be printed below.
+                            completed_tasks.append(next_task)
                             break
 
                 completed_tasks.append(next_task)
@@ -74,22 +76,24 @@ class Executor:
 
             elapsed = time.time() - start
 
-            # Print the final execution result (succeeded or failed).
             all_succeeded = all(map(lambda task: task.succeeded(), completed_tasks))
-            if all_succeeded:
-                assert (
-                    # We executed at least one task.
-                    # The main task we wanted to run should always be the last
-                    # completed task (its dependencies must be executed first).
-                    len(completed_tasks) > 0
-                    and completed_tasks[-1].task.identifier
-                    == plan.task_to_run.task.identifier
-                ) or (
-                    # We did not run any tasks, so the task we wanted to run
-                    # must have been cached.
-                    len(completed_tasks) == 0
-                    and plan.task_to_run.state == TaskState.SUCCEEDED_CACHED
-                )
+            # We executed at least one task.
+            # The main task we wanted to run should always be the last
+            # completed task (its dependencies must be executed first).
+            main_task_executed = (
+                len(completed_tasks) > 0
+                and completed_tasks[-1].task.identifier
+                == plan.task_to_run.task.identifier
+            )
+            # We did not run any tasks, so the task we wanted to run
+            # must have been cached.
+            main_task_cached = (
+                len(completed_tasks) == 0
+                and plan.task_to_run.state == TaskState.SUCCEEDED_CACHED
+            )
+
+            # Print the final execution result (succeeded or failed).
+            if all_succeeded and (main_task_executed or main_task_cached):
                 print("✨ Done! (ran for {})".format(time_to_readable_string(elapsed)))
 
             else:
