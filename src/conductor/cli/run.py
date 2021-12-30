@@ -1,6 +1,7 @@
 from conductor.context import Context
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
+from conductor.execution.plan import ExecutionPlan
 from conductor.utils.user_code import cli_command
 
 
@@ -42,5 +43,6 @@ def main(args):
         require_prefix=False,
     )
     ctx.task_index.load_transitive_closure(task_identifier)
-    plan = Executor(task_identifier, run_again=args.again, stop_early=args.stop_early)
-    plan.execute(ctx)
+    plan = ExecutionPlan.for_task(ctx, task_identifier, run_again=args.again)
+    executor = Executor()
+    executor.run_plan(ctx, plan, stop_early=args.stop_early)

@@ -67,9 +67,10 @@ class ExecutingTask:
     def reset_waiting_on(self) -> None:
         self._waiting_on = len(self._exe_deps)
 
-    def decrement_waiting_on(self) -> None:
-        assert self._waiting_on > 0
-        self._waiting_on -= 1
+    def decrement_deps_of_waiting_on(self) -> None:
+        for dep_of in self.deps_of:
+            # pylint: disable=protected-access
+            dep_of._decrement_waiting_on()
 
     def succeeded(self) -> bool:
         return (
@@ -83,3 +84,7 @@ class ExecutingTask:
     def exe_deps_succeeded(self) -> bool:
         """Returns true iff all dependent tasks have executed successfully."""
         return all(map(lambda task: task.succeeded(), self.exe_deps))
+
+    def _decrement_waiting_on(self) -> None:
+        assert self._waiting_on > 0
+        self._waiting_on -= 1

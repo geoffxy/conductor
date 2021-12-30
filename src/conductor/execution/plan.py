@@ -59,8 +59,7 @@ class ExecutionPlan:
                 if not run_again and not etask.task.should_run(ctx):
                     etask.set_state(TaskState.SUCCEEDED_CACHED)
                     cached_tasks.append(etask)
-                    for dep_of in etask.deps_of:
-                        dep_of.decrement_waiting_on()
+                    etask.decrement_deps_of_waiting_on()
                     continue
 
                 etask.set_state(TaskState.PREPROCESS_SECOND)
