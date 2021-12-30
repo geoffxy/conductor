@@ -11,7 +11,7 @@ from conductor.utils.time import time_to_readable_string
 
 
 class Executor:
-    def run_plan(self, ctx: Context, plan: ExecutionPlan, stop_early: bool = False):
+    def run_plan(self, plan: ExecutionPlan, ctx: Context, stop_early: bool = False):
         start = time.time()
         try:
             # 1. Print out any cached tasks.
