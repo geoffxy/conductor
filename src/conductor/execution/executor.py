@@ -9,7 +9,7 @@ from conductor.task_identifier import TaskIdentifier
 from conductor.utils.time import time_to_readable_string
 
 
-class ExecutionPlan:
+class Executor:
     def __init__(
         self,
         task_identifier: TaskIdentifier,
@@ -26,9 +26,6 @@ class ExecutionPlan:
         self._stop_early = stop_early
 
     def execute(self, ctx: Context):
-        """
-        Run the execution plan.
-        """
         start = time.time()
         try:
             stack = [ExecutingTask(ctx.task_index.get_task(self._task_identifier))]

@@ -8,7 +8,7 @@ from conductor.task_types.base import TaskType
 class ExecutingTask:
     """
     Used to track metadata about a task during execution. See
-    `execution.plan.ExecutionPlan`. This class is essentially a light wrapper
+    `execution.executor.Executor`. This class is essentially a light wrapper
     around a `TaskType` instance.
     """
 
