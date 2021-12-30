@@ -9,9 +9,6 @@ class TaskState(enum.Enum):
     # The task is queued to be executed
     QUEUED = 0
 
-    # Currently executing the task's dependencies
-    EXECUTING_DEPS = 1
-
     # Skipped executing this task because one or more of its dependencies
     # failed to execute successfully.
     SKIPPED = 1
@@ -29,3 +26,7 @@ class TaskState(enum.Enum):
 
     # The task was aborted (will stop executing the rest of the tasks).
     ABORTED = 5
+
+    # States used during preprocessing (see `execution.plan.ExecutionPlan`).
+    PREPROCESS_FIRST = 6
+    PREPROCESS_SECOND = 7
