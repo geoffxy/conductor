@@ -1,8 +1,9 @@
 import contextlib
+import platform
 import sys
 import traceback
 
-from conductor.errors import ConductorError
+from conductor.errors import ConductorError, UnsupportedPlatform
 from conductor.errors.signal import register_signal_handlers
 
 
@@ -25,6 +26,15 @@ def prevent_module_caching():
             del sys.modules[module_name]
 
 
+def check_platform_compatibility():
+    """
+    Conductor only supports Linux and macOS (i.e., it does not support Windows).
+    """
+    system = platform.system()
+    if system != "Linux" and system != "Darwin":
+        raise UnsupportedPlatform()
+
+
 def cli_command(main):
     """
     A decorator used for CLI command entry point methods. This decorator
@@ -33,6 +43,7 @@ def cli_command(main):
 
     def command_main(args):
         try:
+            check_platform_compatibility()
             register_signal_handlers()
             main(args)
         except ConductorError as ex:

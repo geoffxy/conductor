@@ -123,14 +123,6 @@
   name: ConductorAbort
   message: "Conductor's execution has been aborted by the user."
 
-3005:
-  name: ConfigParseError
-  message: "Conductor failed to parse cond_config.toml."
-
-3006:
-  name: ConfigInvalidValue
-  message: "Encountered an invalid value for '{config_key}' in cond_config.toml."
-
 
 # Archive and restore errors (error code 4xxx)
 4001:
@@ -160,3 +152,19 @@
   message: >-
     The provided archive contains task output(s) that already exist in the output
     directory '{output_dir}'.
+
+
+# General Conductor errors (error code 5xxx)
+5001:
+  name: ConfigParseError
+  message: "Conductor failed to parse cond_config.toml."
+
+5002:
+  name: ConfigInvalidValue
+  message: "Encountered an invalid value for '{config_key}' in cond_config.toml."
+
+5003:
+  name: UnsupportedPlatform
+  message: >-
+    Conductor is not supported on your system. Conductor only supports Linux and
+    macOS.

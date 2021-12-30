@@ -347,32 +347,6 @@ class ConductorAbort(ConductorError):
         )
 
 
-class ConfigParseError(ConductorError):
-    error_code = 3005
-
-    def __init__(self, **kwargs):
-        super().__init__()
-
-    
-    def _message(self):
-        return "Conductor failed to parse cond_config.toml.".format(
-
-        )
-
-
-class ConfigInvalidValue(ConductorError):
-    error_code = 3006
-
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.config_key = kwargs["config_key"]
-    
-    def _message(self):
-        return "Encountered an invalid value for '{config_key}' in the configuration.".format(
-            config_key=self.config_key,
-        )
-
-
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -451,6 +425,45 @@ class DuplicateTaskOutput(ConductorError):
         )
 
 
+class ConfigParseError(ConductorError):
+    error_code = 5001
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Conductor failed to parse cond_config.toml.".format(
+
+        )
+
+
+class ConfigInvalidValue(ConductorError):
+    error_code = 5002
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.config_key = kwargs["config_key"]
+    
+    def _message(self):
+        return "Encountered an invalid value for '{config_key}' in cond_config.toml.".format(
+            config_key=self.config_key,
+        )
+
+
+class UnsupportedPlatform(ConductorError):
+    error_code = 5003
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Conductor only supports Linux and macOS.".format(
+
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -477,12 +490,13 @@ __all__ = [
     "TaskFailed",
     "OutputDirTaken",
     "ConductorAbort",
-    "ConfigParseError",
-    "ConfigInvalidValue",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",
     "CreateArchiveFailed",
     "ArchiveFileInvalid",
     "DuplicateTaskOutput",
+    "ConfigParseError",
+    "ConfigInvalidValue",
+    "UnsupportedPlatform",
 ]
