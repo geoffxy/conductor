@@ -1,176 +1,124 @@
-import time
-from typing import List
+from typing import List, Dict
 
 from conductor.context import Context
-from conductor.errors import ConductorError, TaskNotFound, ConductorAbort
 from conductor.execution.task import ExecutingTask
 from conductor.execution.task_state import TaskState
 from conductor.task_identifier import TaskIdentifier
-from conductor.utils.time import time_to_readable_string
 
 
 class ExecutionPlan:
     def __init__(
         self,
-        task_identifier: TaskIdentifier,
-        run_again: bool = False,
-        stop_early: bool = False,
+        task_to_run: ExecutingTask,
+        exec_tasks: Dict[TaskIdentifier, ExecutingTask],
+        initial_tasks: List[ExecutingTask],
+        cached_tasks: List[ExecutingTask],
     ):
-        # The identifier of the task to run
-        self._task_identifier = task_identifier
-        # If true, we will always run cached tasks again (even if
-        # `TaskType.should_run()` returns `False`)
-        self._run_again = run_again
-        # If true, we will stop executing a task if one of its dependencies
-        # fail.
-        self._stop_early = stop_early
+        self.task_to_run = task_to_run
+        # A subset of the transitive closure of `task_to_run`, containing all
+        # tasks that need to be executed (there may be some tasks in the
+        # transitive closure that have cached results available).
+        self.exec_tasks = exec_tasks
+        # Tasks that can be immediately executed (i.e., that have no
+        # dependencies).
+        self.initial_tasks = initial_tasks
+        # Tasks that do not need to be executed because they have relevant
+        # cached results available.
+        self.cached_tasks = cached_tasks
 
-    def execute(self, ctx: Context):
-        """
-        Run the execution plan.
-        """
-        start = time.time()
-        try:
-            stack = [ExecutingTask(ctx.task_index.get_task(self._task_identifier))]
-            visited = set()
-            # Tracks tasks that have finished executing (succeeded,
-            # succeeded_cached, skipped, failed). The order of tasks in this
-            # list is the order they executed in.
-            completed_tasks: List[ExecutingTask] = []
+    @classmethod
+    def for_task(
+        cls,
+        task_identifier: TaskIdentifier,
+        ctx: Context,
+        run_again: bool = False,
+    ) -> "ExecutionPlan":
+        exec_tasks: Dict[TaskIdentifier, ExecutingTask] = {}
+        initial_tasks: List[ExecutingTask] = []
+        cached_tasks: List[ExecutingTask] = []
 
-            # Execute the task dependency graph while respecting dependencies by
-            # performing a post-order traversal.
-            while len(stack) > 0:
-                next_exe_task = stack.pop()
-                assert next_exe_task.not_yet_executed()
+        # Perform a depth-first dependency graph traversal to
+        # 1. Prune tasks that do not need to execute (due to having cached results)
+        # 2. Link task dependencies
+        # 3. Compute the starting tasks (tasks that have no additional dependencies)
+        stack = [
+            ExecutingTask(
+                ctx.task_index.get_task(task_identifier),
+                TaskState.PREPROCESS_FIRST,
+            )
+        ]
+        while len(stack) > 0:
+            etask = stack.pop()
 
-                # If true, this is the second time we are visiting this task, so
-                # this means its dependencies had a chance to execute.
-                if next_exe_task.state == TaskState.EXECUTING_DEPS:
-                    # Make sure all dependencies succeeded.
-                    if not next_exe_task.exe_deps_succeeded():
-                        print("Skipping {}.".format(str(next_exe_task.task.identifier)))
-                        next_exe_task.set_state(TaskState.SKIPPED)
-                        completed_tasks.append(next_exe_task)
-                        continue
-
-                    # All dependencies have finished running, can run now.
-                    print("Running {}...".format(str(next_exe_task.task.identifier)))
-                    try:
-                        next_exe_task.task.execute(ctx)
-                        # If this task succeeded, make sure we commit it to the
-                        # version index. This way if later tasks fail, we don't
-                        # restart from scratch.
-                        ctx.version_index.commit_changes()
-                        next_exe_task.set_state(TaskState.SUCCEEDED)
-                        completed_tasks.append(next_exe_task)
-                    except ConductorAbort:
-                        # User-initiated aborts are not treated as a task failure.
-                        ctx.version_index.rollback_changes()
-                        next_exe_task.set_state(TaskState.ABORTED)
-                        raise
-                    except ConductorError as ex:
-                        # The task failed. Abort early if requested by
-                        # re-raising the error.
-                        ctx.version_index.rollback_changes()
-                        next_exe_task.set_state(TaskState.FAILED)
-                        next_exe_task.store_error(ex)
-                        completed_tasks.append(next_exe_task)
-                        if self._stop_early:
-                            break
-
-                    # Move on to the next task in the stack.
-                    continue
-
-                # This is the first time we're visiting this task in the dependency graph.
-                visited.add(next_exe_task.task.identifier)
+            if etask.state == TaskState.PREPROCESS_FIRST:
+                # First visit to this task.
+                exec_tasks[etask.task.identifier] = etask
 
                 # If we do not need to run the task, we do not need to consider
                 # its dependencies.
-                if not self._run_again and not next_exe_task.task.should_run(ctx):
-                    print(
-                        "Using cached results for {}.".format(
-                            str(next_exe_task.task.identifier)
-                        )
-                    )
-                    next_exe_task.set_state(TaskState.SUCCEEDED_CACHED)
-                    completed_tasks.append(next_exe_task)
+                if not run_again and not etask.task.should_run(ctx):
+                    etask.set_state(TaskState.SUCCEEDED_CACHED)
+                    cached_tasks.append(etask)
+                    etask.decrement_deps_of_waiting_on()
                     continue
 
-                # Process dependencies and then come back to run this task
-                next_exe_task.set_state(TaskState.EXECUTING_DEPS)
-                stack.append(next_exe_task)
+                etask.set_state(TaskState.PREPROCESS_SECOND)
+                stack.append(etask)
 
                 # Append in reverse order because we pop from the back of the
                 # list. This ensures we process dependencies in the order they
                 # are listed in the COND file (for the user's convenience).
-                for dep in reversed(next_exe_task.task.deps):
-                    if dep in visited:
-                        continue
-                    exe_dep = ExecutingTask(ctx.task_index.get_task(dep))
-                    next_exe_task.add_exe_dep(exe_dep)
-                    stack.append(exe_dep)
+                for dep_ident in reversed(etask.task.deps):
+                    if dep_ident in exec_tasks:
+                        # We do not need to visit this dependency since it was
+                        # already visited. But we do want to keep track of its
+                        # dependency relationships if the dependency will run.
+                        exe_dep = exec_tasks[dep_ident]
+                        # Because the dependency graph is acyclic, it cannot be
+                        # the case that this dependency is still in a
+                        # "preprocessing" state.
+                        assert (
+                            exe_dep.state == TaskState.QUEUED
+                            or exe_dep.state == TaskState.SUCCEEDED_CACHED
+                        )
+                        if exe_dep.state == TaskState.QUEUED:
+                            etask.add_exe_dep(exe_dep)
+                            exe_dep.add_dep_of(etask)
+                    else:
+                        exe_dep = ExecutingTask(
+                            ctx.task_index.get_task(dep_ident),
+                            TaskState.PREPROCESS_FIRST,
+                        )
+                        stack.append(exe_dep)
+                        etask.add_exe_dep(exe_dep)
+                        exe_dep.add_dep_of(etask)
 
-            elapsed = time.time() - start
+                # All dependencies added.
+                etask.reset_waiting_on()
 
-            # Print the final execution result (succeeded or failed).
-            all_succeeded = all(map(lambda task: task.succeeded(), completed_tasks))
-            if (
-                all_succeeded
-                # The main task we wanted to run should always be the last
-                # completed task (its dependencies must be executed first).
-                and completed_tasks[-1].task.identifier == self._task_identifier
-            ):
-                print("✨ Done! (ran for {})".format(time_to_readable_string(elapsed)))
+            elif etask.state == TaskState.PREPROCESS_SECOND:
+                # Second visit to this node (dependencies have all been
+                # processed).
+                etask.set_state(TaskState.QUEUED)
+                # If this task has no dependencies (or their results are
+                # cached), this task can be executed.
+                if etask.waiting_on == 0:
+                    initial_tasks.append(etask)
 
             else:
-                # At least one task must have failed.
-                failed_tasks: List[ExecutingTask] = []
-                skipped_tasks: List[ExecutingTask] = []
-                for exe_task in completed_tasks:
-                    if exe_task.state == TaskState.SKIPPED:
-                        skipped_tasks.append(exe_task)
-                    elif exe_task.state == TaskState.FAILED:
-                        failed_tasks.append(exe_task)
-                assert len(failed_tasks) > 0
-                print(
-                    "🔴 Task failed. (ran for {})".format(
-                        time_to_readable_string(elapsed)
-                    )
-                )
-                print()
-                print("Failed task(s):")
-                for failed in failed_tasks:
-                    print("  {}".format(failed.task.identifier))
-                    assert failed.stored_error is not None
-                    print(
-                        "    {}".format(
-                            failed.stored_error.printable_message(
-                                omit_file_context=True
-                            )
-                        )
-                    )
-                print()
-                if len(skipped_tasks) > 0:
-                    print("Skipped task(s) (one or more dependencies failed):")
-                    for skipped in skipped_tasks:
-                        print("  {}".format(skipped.task.identifier))
-                    print()
+                # Not supposed to happen.
+                raise AssertionError
 
-                assert failed_tasks[0].stored_error is not None
-                raise failed_tasks[0].stored_error
+        # Correctness sanity checks.
+        # There must be at least one task that can run (since the graph is
+        # acyclic), or the result of the task we wanted to run is cached.
+        assert task_identifier in exec_tasks
+        task_to_run = exec_tasks[task_identifier]
+        assert len(initial_tasks) > 0 or task_to_run.state == TaskState.SUCCEEDED_CACHED
 
-        except TaskNotFound:
-            # This should not happen. The task graph should be validated before
-            # execution.
-            ctx.version_index.rollback_changes()
-            assert False
-
-        except ConductorAbort:
-            ctx.version_index.rollback_changes()
-            elapsed = time.time() - start
-            print(
-                "🔸 Task aborted. (ran for {})".format(time_to_readable_string(elapsed))
-            )
-            print()
-            raise
+        return cls(
+            task_to_run=task_to_run,
+            exec_tasks=exec_tasks,
+            initial_tasks=initial_tasks,
+            cached_tasks=cached_tasks,
+        )

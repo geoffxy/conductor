@@ -324,20 +324,20 @@ def test_cond_run_multiple_failures_stop_early(tmp_path: pathlib.Path):
     assert result.returncode != 0
 
     # Check for expected output files.
-    # `:sweep-1` should run first, followed by `:should_run`. Then `:sweep-0`
-    # will run, which will fail. No other tasks should be attempted.
+    # `:sweep-1` should run first. Then `:sweep-0` will run, which will fail. No
+    # other tasks should be attempted.
 
     # Runs and succeeds.
     sweep1 = cond.find_task_output_dir("//multiple:sweep-1", is_experiment=True)
     assert sweep1 is not None
     assert (sweep1 / "date.txt").exists()
 
-    # `//multiple:should_run` should have executed and succeeded.
+    # `//multiple:should_run` should not have been attempted (Conductor now
+    # executes tasks breadth first).
     should_run_out = cond.find_task_output_dir(
         "//multiple:should_run", is_experiment=False
     )
-    assert should_run_out is not None
-    assert (should_run_out / "date.txt").exists()
+    assert should_run_out is None
 
     # Runs but fails.
     sweep0 = cond.find_task_output_dir("//multiple:sweep-0", is_experiment=True)

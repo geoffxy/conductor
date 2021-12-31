@@ -3,7 +3,7 @@ from typing import Sequence
 
 import conductor.context as c  # pylint: disable=unused-import
 from conductor.task_identifier import TaskIdentifier
-from .base import TaskType
+from .base import TaskExecutionHandle, TaskType
 
 
 class Group(TaskType):
@@ -20,7 +20,11 @@ class Group(TaskType):
     def __repr__(self) -> str:
         return super().__repr__() + ")"
 
-    def execute(self, ctx: "c.Context"):
+    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
         # This task provides an "alias" for a group of other tasks (its
         # dependencies). As a result, it is a no-op.
+        return TaskExecutionHandle.from_sync_execution()
+
+    def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
+        # Nothing special needs to be done here.
         pass

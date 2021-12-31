@@ -1,4 +1,5 @@
 import pathlib
+import subprocess
 from typing import Callable, Dict, Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -78,10 +79,20 @@ class TaskType:
         """
         return True
 
-    def execute(self, ctx: "c.Context") -> None:
+    def start_execution(self, ctx: "c.Context") -> "TaskExecutionHandle":
         """
-        Run this task. This method throws an exception if the task fails.
+        Start executing this task. Returns a handle that represents the
+        execution. After the execution finishes, callers must invoke
+        `finish_execution()`.
         """
+        # Task execution may be asynchronous. Ideally we should adopt something
+        # like `asyncio` for a cleaner abstraction. To avoid significant
+        # architectural changes, our async abstraction here is coupled with
+        # `execution.executor.Executor`, which actually waits for asynchronous
+        # tasks to complete.
+        raise NotImplementedError
+
+    def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
         raise NotImplementedError
 
     def get_output_path(
@@ -119,3 +130,36 @@ class TaskType:
 
     def _get_working_path(self, ctx: "c.Context") -> pathlib.Path:
         return pathlib.Path(ctx.project_root, self._identifier.path)
+
+
+class TaskExecutionHandle:
+    """
+    Represents a possibly asynchronously executing task.
+    """
+
+    def __init__(
+        self,
+        process: Optional[subprocess.Popen],
+    ):
+        self._process = process
+        self.stdout_tee = None
+        self.stderr_tee = None
+
+    @classmethod
+    def from_async_process(
+        cls,
+        process: subprocess.Popen,
+    ):
+        return cls(process)
+
+    @classmethod
+    def from_sync_execution(cls):
+        return cls(process=None)
+
+    @property
+    def already_completed(self) -> bool:
+        return self._process is None
+
+    def get_process(self) -> subprocess.Popen:
+        assert self._process is not None
+        return self._process
