@@ -3,6 +3,7 @@ import pathlib
 import os
 import signal
 import sys
+from concurrent.futures import Future
 from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -22,7 +23,7 @@ from conductor.config import (
 )
 from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
-from .base import TaskType
+from .base import TaskExecutionHandle, TaskType
 
 
 class _RunSubprocess(TaskType):
@@ -60,7 +61,7 @@ class _RunSubprocess(TaskType):
         """
         raise NotImplementedError
 
-    def execute(self, ctx: "c.Context") -> None:
+    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
         try:
             output_path = self.get_output_path(ctx, create_new=True)
             assert output_path is not None
@@ -82,6 +83,8 @@ class _RunSubprocess(TaskType):
                 },
                 start_new_session=True,
             )
+            stdout_tee: Optional[Future] = None
+            stderr_tee: Optional[Future] = None
             if self.record_output:
                 assert process.stdout is not None
                 assert process.stderr is not None
@@ -91,14 +94,10 @@ class _RunSubprocess(TaskType):
                 stderr_tee = ctx.tee_processor.tee_pipe(
                     process.stderr, sys.stderr, output_path / STDERR_LOG_FILE
                 )
-            process.wait()
-            if self.record_output:
-                stdout_tee.result()
-                stderr_tee.result()
-            if process.returncode != 0:
-                raise TaskNonZeroExit(
-                    task_identifier=self.identifier, code=process.returncode
-                )
+            handle = TaskExecutionHandle.from_async_process(process)
+            handle.stdout_tee = stdout_tee
+            handle.stderr_tee = stderr_tee
+            return handle
 
         except ConductorAbort:
             # Send SIGTERM to the entire process group (i.e., the subprocess
@@ -113,6 +112,19 @@ class _RunSubprocess(TaskType):
 
         except OSError as ex:
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
+
+    def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
+        process = handle.get_process()
+        if self.record_output:
+            assert handle.stdout_tee is not None
+            assert handle.stderr_tee is not None
+            handle.stdout_tee.result()
+            handle.stderr_tee.result()
+
+        if process.returncode != 0:
+            raise TaskNonZeroExit(
+                task_identifier=self.identifier, code=process.returncode
+            )
 
 
 class RunCommand(_RunSubprocess):
@@ -209,8 +221,8 @@ class RunExperiment(_RunSubprocess):
         self._ensure_most_relevant_existing_version_computed(ctx)
         return self._most_relevant_version is None
 
-    def execute(self, ctx: "c.Context") -> None:
-        super().execute(ctx)
+    def finish_execution(self, handle: TaskExecutionHandle, ctx: "c.Context") -> None:
+        super().finish_execution(handle, ctx)
 
         # Running an experiment changes the task index, and we may now have a
         # new "most relevant" version. Clearing this flag allows it to be

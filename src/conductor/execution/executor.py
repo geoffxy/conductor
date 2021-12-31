@@ -43,7 +43,10 @@ class Executor:
                     # All dependencies have successfully run; can run now.
                     print("Running {}...".format(str(next_task.task.identifier)))
                     try:
-                        next_task.task.execute(ctx)
+                        handle = next_task.task.start_execution(ctx)
+                        if not handle.already_completed:
+                            handle.get_process().wait()
+                        next_task.task.finish_execution(handle, ctx)
                         # If this task succeeded, make sure we commit it to the
                         # version index. This way if later tasks fail, we don't
                         # restart from scratch.

@@ -5,7 +5,7 @@ from typing import Sequence
 import conductor.context as c  # pylint: disable=unused-import
 from conductor.errors import CombineDuplicateDepName
 from conductor.task_identifier import TaskIdentifier
-from .base import TaskType
+from .base import TaskType, TaskExecutionHandle
 
 
 class Combine(TaskType):
@@ -38,7 +38,7 @@ class Combine(TaskType):
     def __repr__(self) -> str:
         return super().__repr__() + ")"
 
-    def execute(self, ctx: "c.Context"):
+    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
         output_path = self.get_output_path(ctx, create_new=True)
         assert output_path is not None
 
@@ -54,3 +54,9 @@ class Combine(TaskType):
                 continue
             copy_into = output_path / dep.name
             shutil.copytree(task_output_dir, copy_into, dirs_exist_ok=True)
+
+        return TaskExecutionHandle.from_sync_execution()
+
+    def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
+        # Nothing special needs to be done here.
+        pass
