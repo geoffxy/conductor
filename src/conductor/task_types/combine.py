@@ -39,7 +39,7 @@ class Combine(TaskType):
         return super().__repr__() + ")"
 
     def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
-        output_path = self.get_output_path(ctx, create_new=True)
+        output_path = self.get_output_path(ctx)
         assert output_path is not None
 
         for dep in self.deps:

@@ -47,10 +47,6 @@ class Executor:
                         if not handle.already_completed:
                             handle.get_process().wait()
                         next_task.task.finish_execution(handle, ctx)
-                        # If this task succeeded, make sure we commit it to the
-                        # version index. This way if later tasks fail, we don't
-                        # restart from scratch.
-                        ctx.version_index.commit_changes()
                         next_task.set_state(TaskState.SUCCEEDED)
                     except ConductorAbort:
                         # User-initiated aborts are not treated as a task failure.

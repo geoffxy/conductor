@@ -98,7 +98,6 @@ class TaskType:
     def get_output_path(
         self,
         ctx: "c.Context",
-        create_new: bool = False,  # pylint: disable=unused-argument
     ) -> Optional[pathlib.Path]:
         """
         Returns the absolute path to this task's outputs directory. Note that
@@ -108,10 +107,6 @@ class TaskType:
         If the task supports multiple output versions (e.g.,
         `run_experiment`), this method returns the latest output path. The
         return value will be `None` if no such path exists.
-
-        The `create_new` argument is used by tasks that support multiple
-        output versions to indicate that a new output version directory
-        should be created. For all other tasks, `create_new` is ignored.
         """
         return ctx.output_path / self._output_path_suffix
 
