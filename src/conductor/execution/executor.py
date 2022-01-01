@@ -1,3 +1,4 @@
+import errno
 import time
 import collections
 import os
@@ -10,6 +11,7 @@ from conductor.execution.plan import ExecutionPlan
 from conductor.execution.task import ExecutingTask
 from conductor.execution.task_state import TaskState
 from conductor.task_types.base import TaskExecutionHandle
+from conductor.utils.sigchld import SigchldHelper
 from conductor.utils.time import time_to_readable_string
 
 
@@ -68,29 +70,32 @@ class _InflightTasks:
             return self._sync_tasks.pop()
 
         # Wait for the next child process to finish.
-        pid, status = os.wait()
+        while True:
+            pid, returncode = SigchldHelper.instance().wait()
+            if pid in self._processes:
+                break
         assert pid in self._processes
         handle, task = self._processes[pid]
         del self._processes[pid]
-        if os.WIFEXITED(status):
-            exitcode = os.WEXITSTATUS(status)
-        elif os.WIFSIGNALED(status):
-            exitcode = os.WTERMSIG(status)
-        else:
-            raise AssertionError
-        handle.returncode = exitcode
+        handle.returncode = returncode
         return handle, task
 
     def terminate_processes(self) -> None:
         # Send SIGTERM to each process' process group (i.e., the subprocess and
         # its child processes).
         for handle, _ in self._processes.values():
-            if handle.pid is None:
-                continue
-            group_id = os.getpgid(handle.pid)
-            if group_id < 0:
-                continue
-            os.killpg(group_id, signal.SIGTERM)
+            try:
+                if handle.pid is None:
+                    continue
+                group_id = os.getpgid(handle.pid)
+                if group_id < 0:
+                    continue
+                os.killpg(group_id, signal.SIGTERM)
+            except OSError as ex:
+                # Ignore errors due to the process not existing or having no
+                # children.
+                if ex.errno != errno.ESRCH and ex.errno != errno.ECHILD:
+                    raise
 
     def clear(self) -> None:
         self.terminate_processes()
@@ -126,21 +131,22 @@ class Executor:
             # 2. Run the tasks as they become eligible for execution.
             should_stop = False
             self._ready_to_run.load(plan.initial_tasks)
-            while self._ready_to_run.has_tasks() or len(self._inflight_tasks) > 0:
-                should_stop = self._launch_tasks_if_able(ctx, stop_on_first_error)
-                if should_stop:
-                    break
+            with SigchldHelper.instance().track():
+                while self._ready_to_run.has_tasks() or len(self._inflight_tasks) > 0:
+                    should_stop = self._launch_tasks_if_able(ctx, stop_on_first_error)
+                    if should_stop:
+                        break
 
-                if len(self._inflight_tasks) == 0:
-                    # There may be no in-flight tasks if the last ready-to-run
-                    # task failed or was skipped.
-                    continue
+                    if len(self._inflight_tasks) == 0:
+                        # There may be no in-flight tasks if the last ready-to-run
+                        # task failed or was skipped.
+                        continue
 
-                should_stop = self._wait_for_next_inflight_task(
-                    ctx, stop_on_first_error
-                )
-                if should_stop:
-                    break
+                    should_stop = self._wait_for_next_inflight_task(
+                        ctx, stop_on_first_error
+                    )
+                    if should_stop:
+                        break
 
             # Only has an effect if we exited the loop above early due to
             # encountering an error.
