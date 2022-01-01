@@ -1,5 +1,5 @@
 import pathlib
-import subprocess
+from concurrent.futures import Future
 from typing import Callable, Dict, Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -50,6 +50,10 @@ class TaskType:
 
     @property
     def archivable(self) -> bool:
+        return False
+
+    @property
+    def parallelizable(self) -> bool:
         return False
 
     def traverse(self, ctx: "c.Context", visitor: Callable[["TaskType"], None]) -> None:
@@ -134,27 +138,21 @@ class TaskExecutionHandle:
 
     def __init__(
         self,
-        process: Optional[subprocess.Popen],
+        pid: Optional[int],
     ):
-        self._process = process
-        self.stdout_tee = None
-        self.stderr_tee = None
+        self.pid: Optional[int] = pid
+        self.stdout_tee: Optional[Future] = None
+        self.stderr_tee: Optional[Future] = None
+        self.returncode: Optional[int] = None
 
     @classmethod
-    def from_async_process(
-        cls,
-        process: subprocess.Popen,
-    ):
-        return cls(process)
+    def from_async_process(cls, pid: int):
+        return cls(pid)
 
     @classmethod
     def from_sync_execution(cls):
-        return cls(process=None)
+        return cls(pid=None)
 
     @property
-    def already_completed(self) -> bool:
-        return self._process is None
-
-    def get_process(self) -> subprocess.Popen:
-        assert self._process is not None
-        return self._process
+    def is_sync(self) -> bool:
+        return self.pid is None

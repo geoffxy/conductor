@@ -44,5 +44,5 @@ def main(args):
     )
     ctx.task_index.load_transitive_closure(task_identifier)
     plan = ExecutionPlan.for_task(task_identifier, ctx, run_again=args.again)
-    executor = Executor()
-    executor.run_plan(plan, ctx, stop_early=args.stop_early)
+    executor = Executor(execution_slots=1)
+    executor.run_plan(plan, ctx, stop_on_first_error=args.stop_early)

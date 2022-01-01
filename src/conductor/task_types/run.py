@@ -95,7 +95,7 @@ class _RunSubprocess(TaskType):
                 stderr_tee = ctx.tee_processor.tee_pipe(
                     process.stderr, sys.stderr, output_path / STDERR_LOG_FILE
                 )
-            handle = TaskExecutionHandle.from_async_process(process)
+            handle = TaskExecutionHandle.from_async_process(pid=process.pid)
             handle.stdout_tee = stdout_tee
             handle.stderr_tee = stderr_tee
             return handle
@@ -115,16 +115,16 @@ class _RunSubprocess(TaskType):
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
 
     def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
-        process = handle.get_process()
         if self.record_output:
             assert handle.stdout_tee is not None
             assert handle.stderr_tee is not None
             handle.stdout_tee.result()
             handle.stderr_tee.result()
 
-        if process.returncode != 0:
+        assert handle.returncode is not None
+        if handle.returncode != 0:
             raise TaskNonZeroExit(
-                task_identifier=self.identifier, code=process.returncode
+                task_identifier=self.identifier, code=handle.returncode
             )
 
     def _create_new_version(self, ctx: "c.Context") -> None:
