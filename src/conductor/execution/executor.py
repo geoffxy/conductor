@@ -29,7 +29,10 @@ class _ReadyToRunQueue:
         return len(self._parallel_tasks) > 0
 
     def enqueue_task(self, task: ExecutingTask) -> None:
-        self._sequential_tasks.append(task)
+        if task.task.parallelizable:
+            self._parallel_tasks.append(task)
+        else:
+            self._sequential_tasks.append(task)
 
     def dequeue_next(self) -> ExecutingTask:
         if self.has_parallelizable_tasks():
