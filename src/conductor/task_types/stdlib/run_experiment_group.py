@@ -17,6 +17,7 @@ def run_experiment_group(
     name: str,
     run: str,
     experiments: Iterable[ExperimentInstance],
+    parallelizable: bool = False,
     deps: Optional[Sequence[str]] = None,
 ) -> None:
     task_deps = deps if deps is not None else []
@@ -38,6 +39,7 @@ def run_experiment_group(
             run_experiment(  # type: ignore
                 name=experiment.name,
                 run=run,
+                parallelizable=parallelizable,
                 args=experiment.args,
                 options=experiment.options,
                 deps=task_deps,

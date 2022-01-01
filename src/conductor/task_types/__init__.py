@@ -8,14 +8,21 @@ from .run import RunCommand, RunExperiment
 _raw_task_types = [
     RawTaskType(
         name="run_command",
-        schema={"name": str, "run": str, "deps": [str]},
-        defaults={"deps": []},
+        schema={"name": str, "run": str, "parallelizable": bool, "deps": [str]},
+        defaults={"parallelizable": False, "deps": []},
         full_type=RunCommand,
     ),
     RawTaskType(
         name="run_experiment",
-        schema={"name": str, "run": str, "args": list, "options": dict, "deps": [str]},
-        defaults={"args": [], "options": {}, "deps": []},
+        schema={
+            "name": str,
+            "run": str,
+            "parallelizable": bool,
+            "args": list,
+            "options": dict,
+            "deps": [str],
+        },
+        defaults={"parallelizable": False, "args": [], "options": {}, "deps": []},
         full_type=RunExperiment,
     ),
     RawTaskType(

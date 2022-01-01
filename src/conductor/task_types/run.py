@@ -37,11 +37,13 @@ class _RunSubprocess(TaskType):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        parallelizable: bool,
     ):
         super().__init__(
             identifier=identifier, cond_file_path=cond_file_path, deps=deps
         )
         self._run = run
+        self._parallelizable = parallelizable
 
     def __repr__(self) -> str:
         return "".join(
@@ -49,6 +51,8 @@ class _RunSubprocess(TaskType):
                 super().__repr__(),
                 ", run=",
                 self._run,
+                ", parallelizable=",
+                str(self._parallelizable),
                 ")",
             ]
         )
@@ -60,6 +64,10 @@ class _RunSubprocess(TaskType):
         recorded and saved to files in the task's output directory.
         """
         raise NotImplementedError
+
+    @property
+    def parallelizable(self) -> bool:
+        return self._parallelizable
 
     def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
         try:
@@ -146,9 +154,14 @@ class RunCommand(_RunSubprocess):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        parallelizable: bool,
     ):
         super().__init__(
-            identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
+            identifier=identifier,
+            cond_file_path=cond_file_path,
+            deps=deps,
+            run=run,
+            parallelizable=parallelizable,
         )
 
     @property
@@ -173,6 +186,7 @@ class RunExperiment(_RunSubprocess):
         run: str,
         args: list,
         options: dict,
+        parallelizable: bool,
     ):
         self._args = ExperimentArguments.from_raw(identifier, args)
         self._options = ExperimentOptions.from_raw(identifier, options)
@@ -183,6 +197,7 @@ class RunExperiment(_RunSubprocess):
             run=" ".join(
                 [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
             ),
+            parallelizable=parallelizable,
         )
         self._did_retrieve_version = False
         self._most_relevant_version: Optional[Version] = None
