@@ -12,9 +12,6 @@ class TeeProcessor:
         self._executor = ThreadPoolExecutor(max_workers=2)
         self._has_shutdown = False
 
-    def __del__(self):
-        self.shutdown()
-
     def shutdown(self):
         if self._has_shutdown:
             return
