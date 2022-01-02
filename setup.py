@@ -35,6 +35,7 @@ DEV_REQUIRES = [
     "pep517",
     "pylint",
     "pytest",
+    "pytest-timeout",
     "pyyaml",
 ]
 
