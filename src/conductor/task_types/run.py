@@ -20,6 +20,7 @@ from conductor.config import (
     STDERR_LOG_FILE,
     EXP_ARGS_JSON_FILE_NAME,
     EXP_OPTION_JSON_FILE_NAME,
+    SLOT_ENV_VARIABLE_NAME,
 )
 from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
@@ -69,12 +70,24 @@ class _RunSubprocess(TaskType):
     def parallelizable(self) -> bool:
         return self._parallelizable
 
-    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
+    def start_execution(
+        self, ctx: "c.Context", slot: Optional[int]
+    ) -> TaskExecutionHandle:
         try:
             self._create_new_version(ctx)
             output_path = self.get_output_path(ctx)
             assert output_path is not None
             output_path.mkdir(parents=True, exist_ok=True)
+            env_vars = {
+                **os.environ,
+                OUTPUT_ENV_VARIABLE_NAME: str(output_path),
+                DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
+                    map(str, self.get_deps_output_paths(ctx))
+                ),
+                TASK_NAME_ENV_VARIABLE_NAME: self.identifier.name,
+            }
+            if slot is not None:
+                env_vars[SLOT_ENV_VARIABLE_NAME] = str(slot)
             process = subprocess.Popen(
                 [self._run],
                 shell=True,
@@ -82,19 +95,12 @@ class _RunSubprocess(TaskType):
                 executable="/bin/bash",
                 stdout=subprocess.PIPE if self.record_output else None,
                 stderr=subprocess.PIPE if self.record_output else None,
-                env={
-                    **os.environ,
-                    OUTPUT_ENV_VARIABLE_NAME: str(output_path),
-                    DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
-                        map(str, self.get_deps_output_paths(ctx))
-                    ),
-                    TASK_NAME_ENV_VARIABLE_NAME: self.identifier.name,
-                },
+                env=env_vars,
                 start_new_session=True,
             )
             stdout_tee: Optional[Future] = None
             stderr_tee: Optional[Future] = None
-            if self.record_output:
+            if self.record_output and slot is None:
                 assert process.stdout is not None
                 assert process.stderr is not None
                 stdout_tee = ctx.tee_processor.tee_pipe(
@@ -123,7 +129,7 @@ class _RunSubprocess(TaskType):
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
 
     def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
-        if self.record_output:
+        if self.record_output and handle.slot is None:
             assert handle.stdout_tee is not None
             assert handle.stderr_tee is not None
             handle.stdout_tee.result()

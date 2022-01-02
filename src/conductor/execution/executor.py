@@ -107,6 +107,7 @@ class Executor:
     def __init__(self, execution_slots: int):
         assert execution_slots > 0
         self._slots = execution_slots
+        self._available_slots = list(reversed(range(self._slots)))
 
         self._ready_to_run = _ReadyToRunQueue()
         self._inflight_tasks = _InflightTasks()
@@ -169,6 +170,7 @@ class Executor:
         self._completed_tasks.clear()
         self._inflight_tasks.clear()
         self._running_parallel = False
+        self._available_slots = list(reversed(range(self._slots)))
 
     def _launch_tasks_if_able(self, ctx: Context, stop_on_first_error: bool) -> bool:
         """
@@ -202,10 +204,20 @@ class Executor:
             else:
                 print("Running {}...".format(str(next_task.task.identifier)))
                 try:
-                    handle = next_task.task.start_execution(ctx)
+                    slot = (
+                        self._available_slots[-1]
+                        if self._running_parallel and self._slots > 1
+                        else None
+                    )
+                    handle = next_task.task.start_execution(ctx, slot)
+                    handle.slot = slot
                     self._inflight_tasks.add_task(handle, next_task)
+                    if slot is not None:
+                        self._available_slots.pop()
                 except ConductorAbort:
                     next_task.set_state(TaskState.ABORTED)
+                    # N.B. A slot may be leaked here, but it does not matter
+                    # because we are aborting the execution.
                     raise
                 except ConductorError as ex:
                     next_task.store_error(ex)
@@ -233,11 +245,16 @@ class Executor:
             task.set_state(TaskState.SUCCEEDED)
         except ConductorAbort:
             task.set_state(TaskState.ABORTED)
+            # N.B. A slot may be leaked here, but it does not matter because we
+            # are aborting the execution.
             raise
         except ConductorError as ex:
             task.store_error(ex)
             task.set_state(TaskState.FAILED)
             error_occurred = True
+
+        if handle.slot is not None:
+            self._available_slots.append(handle.slot)
         self._process_finished_task(task)
 
         return error_occurred and stop_on_first_error

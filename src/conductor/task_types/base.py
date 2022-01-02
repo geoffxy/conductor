@@ -83,7 +83,9 @@ class TaskType:
         """
         return True
 
-    def start_execution(self, ctx: "c.Context") -> "TaskExecutionHandle":
+    def start_execution(
+        self, ctx: "c.Context", slot: Optional[int]
+    ) -> "TaskExecutionHandle":
         """
         Start executing this task. Returns a handle that represents the
         execution. After the execution finishes, callers must invoke
@@ -144,6 +146,7 @@ class TaskExecutionHandle:
         self.stdout_tee: Optional[Future] = None
         self.stderr_tee: Optional[Future] = None
         self.returncode: Optional[int] = None
+        self.slot: Optional[int] = None
 
     @classmethod
     def from_async_process(cls, pid: int):
