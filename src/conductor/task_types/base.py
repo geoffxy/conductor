@@ -1,10 +1,10 @@
 import pathlib
-from concurrent.futures import Future
 from typing import Callable, Dict, Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.task_identifier import TaskIdentifier
+from conductor.utils.output_handler import OutputHandler
 
 
 class TaskType:
@@ -143,8 +143,8 @@ class TaskExecutionHandle:
         pid: Optional[int],
     ):
         self.pid: Optional[int] = pid
-        self.stdout_tee: Optional[Future] = None
-        self.stderr_tee: Optional[Future] = None
+        self.stdout: Optional[OutputHandler] = None
+        self.stderr: Optional[OutputHandler] = None
         self.returncode: Optional[int] = None
         self.slot: Optional[int] = None
 

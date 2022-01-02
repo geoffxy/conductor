@@ -3,7 +3,6 @@ import pathlib
 import os
 import signal
 import sys
-from concurrent.futures import Future
 from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -24,6 +23,7 @@ from conductor.config import (
 )
 from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
+from conductor.utils.output_handler import RecordType, OutputHandler
 from .base import TaskExecutionHandle, TaskType
 
 
@@ -78,6 +78,7 @@ class _RunSubprocess(TaskType):
             output_path = self.get_output_path(ctx)
             assert output_path is not None
             output_path.mkdir(parents=True, exist_ok=True)
+
             env_vars = {
                 **os.environ,
                 OUTPUT_ENV_VARIABLE_NAME: str(output_path),
@@ -88,30 +89,35 @@ class _RunSubprocess(TaskType):
             }
             if slot is not None:
                 env_vars[SLOT_ENV_VARIABLE_NAME] = str(slot)
+
+            if self.record_output:
+                if slot is None:
+                    record_type = RecordType.Teed
+                else:
+                    record_type = RecordType.OnlyLogged
+            else:
+                record_type = RecordType.NotRecorded
+
+            stdout_output = OutputHandler(output_path / STDOUT_LOG_FILE, record_type)
+            stderr_output = OutputHandler(output_path / STDERR_LOG_FILE, record_type)
+
             process = subprocess.Popen(
                 [self._run],
                 shell=True,
                 cwd=self._get_working_path(ctx),
                 executable="/bin/bash",
-                stdout=subprocess.PIPE if self.record_output else None,
-                stderr=subprocess.PIPE if self.record_output else None,
+                stdout=stdout_output.popen_arg(),
+                stderr=stderr_output.popen_arg(),
                 env=env_vars,
                 start_new_session=True,
             )
-            stdout_tee: Optional[Future] = None
-            stderr_tee: Optional[Future] = None
-            if self.record_output and slot is None:
-                assert process.stdout is not None
-                assert process.stderr is not None
-                stdout_tee = ctx.tee_processor.tee_pipe(
-                    process.stdout, sys.stdout, output_path / STDOUT_LOG_FILE
-                )
-                stderr_tee = ctx.tee_processor.tee_pipe(
-                    process.stderr, sys.stderr, output_path / STDERR_LOG_FILE
-                )
+
+            stdout_output.maybe_tee(process.stdout, sys.stdout, ctx)
+            stderr_output.maybe_tee(process.stderr, sys.stderr, ctx)
+
             handle = TaskExecutionHandle.from_async_process(pid=process.pid)
-            handle.stdout_tee = stdout_tee
-            handle.stderr_tee = stderr_tee
+            handle.stdout = stdout_output
+            handle.stderr = stderr_output
             return handle
 
         except ConductorAbort:
@@ -129,11 +135,10 @@ class _RunSubprocess(TaskType):
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
 
     def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
-        if self.record_output and handle.slot is None:
-            assert handle.stdout_tee is not None
-            assert handle.stderr_tee is not None
-            handle.stdout_tee.result()
-            handle.stderr_tee.result()
+        assert handle.stdout is not None
+        assert handle.stderr is not None
+        handle.stdout.finish()
+        handle.stderr.finish()
 
         assert handle.returncode is not None
         if handle.returncode != 0:
