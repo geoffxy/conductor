@@ -1,5 +1,5 @@
 import pathlib
-from typing import Sequence
+from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 from conductor.task_identifier import TaskIdentifier
@@ -20,7 +20,9 @@ class Group(TaskType):
     def __repr__(self) -> str:
         return super().__repr__() + ")"
 
-    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
+    def start_execution(
+        self, ctx: "c.Context", slot: Optional[int]
+    ) -> TaskExecutionHandle:
         # This task provides an "alias" for a group of other tasks (its
         # dependencies). As a result, it is a no-op.
         return TaskExecutionHandle.from_sync_execution()

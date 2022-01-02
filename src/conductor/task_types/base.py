@@ -1,10 +1,10 @@
 import pathlib
-import subprocess
 from typing import Callable, Dict, Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.task_identifier import TaskIdentifier
+from conductor.utils.output_handler import OutputHandler
 
 
 class TaskType:
@@ -52,6 +52,10 @@ class TaskType:
     def archivable(self) -> bool:
         return False
 
+    @property
+    def parallelizable(self) -> bool:
+        return False
+
     def traverse(self, ctx: "c.Context", visitor: Callable[["TaskType"], None]) -> None:
         """
         Performs a pre-order traversal of the dependency graph starting at
@@ -79,7 +83,9 @@ class TaskType:
         """
         return True
 
-    def start_execution(self, ctx: "c.Context") -> "TaskExecutionHandle":
+    def start_execution(
+        self, ctx: "c.Context", slot: Optional[int]
+    ) -> "TaskExecutionHandle":
         """
         Start executing this task. Returns a handle that represents the
         execution. After the execution finishes, callers must invoke
@@ -98,7 +104,6 @@ class TaskType:
     def get_output_path(
         self,
         ctx: "c.Context",
-        create_new: bool = False,  # pylint: disable=unused-argument
     ) -> Optional[pathlib.Path]:
         """
         Returns the absolute path to this task's outputs directory. Note that
@@ -108,10 +113,6 @@ class TaskType:
         If the task supports multiple output versions (e.g.,
         `run_experiment`), this method returns the latest output path. The
         return value will be `None` if no such path exists.
-
-        The `create_new` argument is used by tasks that support multiple
-        output versions to indicate that a new output version directory
-        should be created. For all other tasks, `create_new` is ignored.
         """
         return ctx.output_path / self._output_path_suffix
 
@@ -139,27 +140,22 @@ class TaskExecutionHandle:
 
     def __init__(
         self,
-        process: Optional[subprocess.Popen],
+        pid: Optional[int],
     ):
-        self._process = process
-        self.stdout_tee = None
-        self.stderr_tee = None
+        self.pid: Optional[int] = pid
+        self.stdout: Optional[OutputHandler] = None
+        self.stderr: Optional[OutputHandler] = None
+        self.returncode: Optional[int] = None
+        self.slot: Optional[int] = None
 
     @classmethod
-    def from_async_process(
-        cls,
-        process: subprocess.Popen,
-    ):
-        return cls(process)
+    def from_async_process(cls, pid: int):
+        return cls(pid)
 
     @classmethod
     def from_sync_execution(cls):
-        return cls(process=None)
+        return cls(pid=None)
 
     @property
-    def already_completed(self) -> bool:
-        return self._process is None
-
-    def get_process(self) -> subprocess.Popen:
-        assert self._process is not None
-        return self._process
+    def is_sync(self) -> bool:
+        return self.pid is None

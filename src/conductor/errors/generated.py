@@ -459,7 +459,33 @@ class UnsupportedPlatform(ConductorError):
 
     
     def _message(self):
-        return "Conductor only supports Linux and macOS.".format(
+        return "Conductor is not supported on your system. Conductor only supports Linux and macOS.".format(
+
+        )
+
+
+class InvalidJobsCount(ConductorError):
+    error_code = 5004
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The maximum number of parallel jobs must be at least 1.".format(
+
+        )
+
+
+class CannotSelectJobCount(ConductorError):
+    error_code = 5005
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Conductor could not automatically set the maximum number of parallel jobs. Please explicitly specify a number using the --jobs flag.".format(
 
         )
 
@@ -499,4 +525,6 @@ __all__ = [
     "ConfigParseError",
     "ConfigInvalidValue",
     "UnsupportedPlatform",
+    "InvalidJobsCount",
+    "CannotSelectJobCount",
 ]

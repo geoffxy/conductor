@@ -168,3 +168,13 @@
   message: >-
     Conductor is not supported on your system. Conductor only supports Linux and
     macOS.
+
+5004:
+  name: InvalidJobsCount
+  message: "The maximum number of parallel jobs must be at least 1."
+
+5005:
+  name: CannotSelectJobCount
+  message: >-
+    Conductor could not automatically set the maximum number of parallel jobs.
+    Please explicitly specify a number using the --jobs flag.

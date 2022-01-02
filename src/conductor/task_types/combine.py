@@ -1,6 +1,6 @@
 import pathlib
 import shutil
-from typing import Sequence
+from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 from conductor.errors import CombineDuplicateDepName
@@ -38,8 +38,10 @@ class Combine(TaskType):
     def __repr__(self) -> str:
         return super().__repr__() + ")"
 
-    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
-        output_path = self.get_output_path(ctx, create_new=True)
+    def start_execution(
+        self, ctx: "c.Context", slot: Optional[int]
+    ) -> TaskExecutionHandle:
+        output_path = self.get_output_path(ctx)
         assert output_path is not None
 
         for dep in self.deps:

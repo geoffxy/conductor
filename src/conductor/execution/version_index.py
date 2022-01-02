@@ -117,9 +117,7 @@ class VersionIndex:
             results.append(self._version_from_row(row[1:]))
         return results
 
-    def generate_new_output_version(
-        self, task_identifier: TaskIdentifier, commit: Optional[Git.Commit]
-    ) -> Version:
+    def generate_new_output_version(self, commit: Optional[Git.Commit]) -> Version:
         timestamp = int(time.time())
         if timestamp == self._last_timestamp:
             timestamp += 1
@@ -128,18 +126,24 @@ class VersionIndex:
         self._last_timestamp = timestamp
 
         commit_hash: Optional[str] = None
-        has_uncommitted_changes = 0
         if commit is not None:
             commit_hash = commit.hash
-            has_uncommitted_changes = 1 if commit.has_changes else 0
 
-        cursor = self._conn.cursor()
-        cursor.execute(
-            q.insert_new_version,
-            (str(task_identifier), timestamp, commit_hash, has_uncommitted_changes),
-        )
         return Version(
             timestamp, commit_hash, commit.has_changes if commit is not None else False
+        )
+
+    def insert_output_version(self, task_identifier: TaskIdentifier, version: Version):
+        cursor = self._conn.cursor()
+        has_uncommitted_changes = 1 if version.has_uncommitted_changes else 0
+        cursor.execute(
+            q.insert_new_version,
+            (
+                str(task_identifier),
+                version.timestamp,
+                version.commit_hash,
+                has_uncommitted_changes,
+            ),
         )
 
     def get_all_versions(self) -> List[Tuple[TaskIdentifier, Version]]:

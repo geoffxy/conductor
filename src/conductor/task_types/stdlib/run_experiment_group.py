@@ -11,6 +11,7 @@ class ExperimentInstance(NamedTuple):
     name: str
     args: List[ArgumentValue] = []
     options: Dict[str, OptionValue] = {}
+    parallelizable: bool = False
 
 
 def run_experiment_group(
@@ -38,6 +39,7 @@ def run_experiment_group(
             run_experiment(  # type: ignore
                 name=experiment.name,
                 run=run,
+                parallelizable=experiment.parallelizable,
                 args=experiment.args,
                 options=experiment.options,
                 deps=task_deps,

@@ -1,0 +1,68 @@
+run_experiment_group(
+  name="three",
+  run="./test.sh",
+  experiments=[
+    ExperimentInstance(
+      name="three-{}".format(i),
+      args=[str(i)],
+      parallelizable=True,
+    )
+    for i in range(3)
+  ],
+)
+
+run_experiment_group(
+  name="three_seq",
+  run="./test.sh",
+  experiments=[
+    ExperimentInstance(
+      name="three_seq-{}".format(i),
+      args=[str(i)],
+      parallelizable=False,
+    )
+    for i in range(3)
+  ],
+)
+
+run_experiment_group(
+  name="three_may_fail",
+  run="./test-may-fail.sh",
+  experiments=[
+    ExperimentInstance(
+      name="three_may_fail-{}".format(i),
+      args=[str(i)],
+      parallelizable=True,
+    )
+    for i in range(6)
+  ],
+)
+
+group(
+  name="three_after",
+  deps=[
+    ":three_after-0",
+    ":three_after-1",
+    ":three_after-2",
+  ],
+)
+
+run_experiment(
+  name="three_after-0",
+  run="./test-after.sh",
+  parallelizable=True,
+  deps=[":three-0"],
+)
+
+run_experiment(
+  name="three_after-1",
+  run="./test-after.sh",
+  parallelizable=True,
+  deps=[":three-1"],
+)
+
+run_experiment(
+  name="three_after-2",
+  run="./test-after.sh",
+  parallelizable=True,
+  deps=[":three-2"],
+)

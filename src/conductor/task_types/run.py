@@ -3,7 +3,6 @@ import pathlib
 import os
 import signal
 import sys
-from concurrent.futures import Future
 from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
@@ -20,9 +19,11 @@ from conductor.config import (
     STDERR_LOG_FILE,
     EXP_ARGS_JSON_FILE_NAME,
     EXP_OPTION_JSON_FILE_NAME,
+    SLOT_ENV_VARIABLE_NAME,
 )
 from conductor.utils.experiment_arguments import ExperimentArguments
 from conductor.utils.experiment_options import ExperimentOptions
+from conductor.utils.output_handler import RecordType, OutputHandler
 from .base import TaskExecutionHandle, TaskType
 
 
@@ -37,11 +38,13 @@ class _RunSubprocess(TaskType):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        parallelizable: bool,
     ):
         super().__init__(
             identifier=identifier, cond_file_path=cond_file_path, deps=deps
         )
         self._run = run
+        self._parallelizable = parallelizable
 
     def __repr__(self) -> str:
         return "".join(
@@ -49,6 +52,8 @@ class _RunSubprocess(TaskType):
                 super().__repr__(),
                 ", run=",
                 self._run,
+                ", parallelizable=",
+                str(self._parallelizable),
                 ")",
             ]
         )
@@ -61,42 +66,58 @@ class _RunSubprocess(TaskType):
         """
         raise NotImplementedError
 
-    def start_execution(self, ctx: "c.Context") -> TaskExecutionHandle:
+    @property
+    def parallelizable(self) -> bool:
+        return self._parallelizable
+
+    def start_execution(
+        self, ctx: "c.Context", slot: Optional[int]
+    ) -> TaskExecutionHandle:
         try:
-            output_path = self.get_output_path(ctx, create_new=True)
+            self._create_new_version(ctx)
+            output_path = self.get_output_path(ctx)
             assert output_path is not None
             output_path.mkdir(parents=True, exist_ok=True)
+
+            env_vars = {
+                **os.environ,
+                OUTPUT_ENV_VARIABLE_NAME: str(output_path),
+                DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
+                    map(str, self.get_deps_output_paths(ctx))
+                ),
+                TASK_NAME_ENV_VARIABLE_NAME: self.identifier.name,
+            }
+            if slot is not None:
+                env_vars[SLOT_ENV_VARIABLE_NAME] = str(slot)
+
+            if self.record_output:
+                if slot is None:
+                    record_type = RecordType.Teed
+                else:
+                    record_type = RecordType.OnlyLogged
+            else:
+                record_type = RecordType.NotRecorded
+
+            stdout_output = OutputHandler(output_path / STDOUT_LOG_FILE, record_type)
+            stderr_output = OutputHandler(output_path / STDERR_LOG_FILE, record_type)
+
             process = subprocess.Popen(
                 [self._run],
                 shell=True,
                 cwd=self._get_working_path(ctx),
                 executable="/bin/bash",
-                stdout=subprocess.PIPE if self.record_output else None,
-                stderr=subprocess.PIPE if self.record_output else None,
-                env={
-                    **os.environ,
-                    OUTPUT_ENV_VARIABLE_NAME: str(output_path),
-                    DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
-                        map(str, self.get_deps_output_paths(ctx))
-                    ),
-                    TASK_NAME_ENV_VARIABLE_NAME: self.identifier.name,
-                },
+                stdout=stdout_output.popen_arg(),
+                stderr=stderr_output.popen_arg(),
+                env=env_vars,
                 start_new_session=True,
             )
-            stdout_tee: Optional[Future] = None
-            stderr_tee: Optional[Future] = None
-            if self.record_output:
-                assert process.stdout is not None
-                assert process.stderr is not None
-                stdout_tee = ctx.tee_processor.tee_pipe(
-                    process.stdout, sys.stdout, output_path / STDOUT_LOG_FILE
-                )
-                stderr_tee = ctx.tee_processor.tee_pipe(
-                    process.stderr, sys.stderr, output_path / STDERR_LOG_FILE
-                )
-            handle = TaskExecutionHandle.from_async_process(process)
-            handle.stdout_tee = stdout_tee
-            handle.stderr_tee = stderr_tee
+
+            stdout_output.maybe_tee(process.stdout, sys.stdout, ctx)
+            stderr_output.maybe_tee(process.stderr, sys.stderr, ctx)
+
+            handle = TaskExecutionHandle.from_async_process(pid=process.pid)
+            handle.stdout = stdout_output
+            handle.stderr = stderr_output
             return handle
 
         except ConductorAbort:
@@ -114,17 +135,20 @@ class _RunSubprocess(TaskType):
             raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
 
     def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
-        process = handle.get_process()
-        if self.record_output:
-            assert handle.stdout_tee is not None
-            assert handle.stderr_tee is not None
-            handle.stdout_tee.result()
-            handle.stderr_tee.result()
+        assert handle.stdout is not None
+        assert handle.stderr is not None
+        handle.stdout.finish()
+        handle.stderr.finish()
 
-        if process.returncode != 0:
+        assert handle.returncode is not None
+        if handle.returncode != 0:
             raise TaskNonZeroExit(
-                task_identifier=self.identifier, code=process.returncode
+                task_identifier=self.identifier, code=handle.returncode
             )
+
+    def _create_new_version(self, ctx: "c.Context") -> None:
+        # N.B. Only `RunExperiment` is versioned.
+        pass
 
 
 class RunCommand(_RunSubprocess):
@@ -141,9 +165,14 @@ class RunCommand(_RunSubprocess):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        parallelizable: bool,
     ):
         super().__init__(
-            identifier=identifier, cond_file_path=cond_file_path, deps=deps, run=run
+            identifier=identifier,
+            cond_file_path=cond_file_path,
+            deps=deps,
+            run=run,
+            parallelizable=parallelizable,
         )
 
     @property
@@ -168,6 +197,7 @@ class RunExperiment(_RunSubprocess):
         run: str,
         args: list,
         options: dict,
+        parallelizable: bool,
     ):
         self._args = ExperimentArguments.from_raw(identifier, args)
         self._options = ExperimentOptions.from_raw(identifier, options)
@@ -178,6 +208,7 @@ class RunExperiment(_RunSubprocess):
             run=" ".join(
                 [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
             ),
+            parallelizable=parallelizable,
         )
         self._did_retrieve_version = False
         self._most_relevant_version: Optional[Version] = None
@@ -190,27 +221,15 @@ class RunExperiment(_RunSubprocess):
     def record_output(self) -> bool:
         return True
 
-    def get_output_path(
-        self, ctx: "c.Context", create_new: bool = False
-    ) -> Optional[pathlib.Path]:
+    def get_output_path(self, ctx: "c.Context") -> Optional[pathlib.Path]:
         self._ensure_most_relevant_existing_version_computed(ctx)
-        unversioned_path = super().get_output_path(ctx, create_new)
+        if self._most_relevant_version is None:
+            return None
+
+        unversioned_path = super().get_output_path(ctx)
         assert unversioned_path is not None
-
-        if not create_new:
-            if self._most_relevant_version is None:
-                return None
-            return unversioned_path.with_name(
-                f.task_output_dir(self.identifier, version=self._most_relevant_version)
-            )
-
         return unversioned_path.with_name(
-            f.task_output_dir(
-                self.identifier,
-                version=ctx.version_index.generate_new_output_version(
-                    task_identifier=self.identifier, commit=ctx.current_commit
-                ),
-            )
+            f.task_output_dir(self.identifier, version=self._most_relevant_version)
         )
 
     def should_run(self, ctx: "c.Context") -> bool:
@@ -224,15 +243,7 @@ class RunExperiment(_RunSubprocess):
     def finish_execution(self, handle: TaskExecutionHandle, ctx: "c.Context") -> None:
         super().finish_execution(handle, ctx)
 
-        # Running an experiment changes the task index, and we may now have a
-        # new "most relevant" version. Clearing this flag allows it to be
-        # retrieved the next time it is needed.
-        self._did_retrieve_version = False
-
         # Record the experiment args and options, if any were specified.
-        if self._args.empty() and self._options.empty():
-            return
-
         output_path = self.get_output_path(ctx)
         assert output_path is not None
 
@@ -240,6 +251,23 @@ class RunExperiment(_RunSubprocess):
             self._args.serialize_json(output_path / EXP_ARGS_JSON_FILE_NAME)
         if not self._options.empty():
             self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)
+
+        # Commit the new version into the version index.
+        assert self._most_relevant_version is not None
+        ctx.version_index.insert_output_version(
+            self.identifier, self._most_relevant_version
+        )
+        ctx.version_index.commit_changes()
+
+    def _create_new_version(self, ctx: "c.Context") -> None:
+        # N.B. If this task fails, the value of `most_relevant_version` will be
+        # incorrect. However, any tasks that have this task as a dependency will
+        # be skipped, so no incorrectness will occur. The new version will not
+        # be committed into the version index.
+        self._did_retrieve_version = True
+        self._most_relevant_version = ctx.version_index.generate_new_output_version(
+            commit=ctx.current_commit
+        )
 
     def _ensure_most_relevant_existing_version_computed(self, ctx: "c.Context"):
         if self._did_retrieve_version:
