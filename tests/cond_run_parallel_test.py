@@ -191,3 +191,29 @@ def test_run_parallel_stop_early(tmp_path: pathlib.Path):
             seen_result_dirs += 1
 
     assert seen_result_dirs <= 3
+
+
+def test_run_parallel_with_deps(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//parallel:three_after", jobs=5)
+    assert result.returncode == 0
+
+    expected_success = [
+        cond.find_task_output_dir("//parallel:three-0", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three-1", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three-2", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three_after-0", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three_after-1", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three_after-2", is_experiment=True),
+    ]
+    assert all(map(lambda p: p is not None and p.is_dir(), expected_success))
+
+    seen_slots = set()
+    for out_dir in expected_success:
+        # Each task should have succeeded and produced a slot.txt file.
+        assert out_dir is not None
+        slot = extract_logged_slot(out_dir)
+        seen_slots.add(slot)
+
+    # Can run at most 3 jobs in parallel, even though we have 5 slots available.
+    assert len(seen_slots) == 3
