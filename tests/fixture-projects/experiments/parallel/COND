@@ -1,0 +1,25 @@
+run_experiment_group(
+  name="three",
+  run="./test.sh",
+  experiments=[
+    ExperimentInstance(
+      name="three-{}".format(i),
+      args=[str(i)],
+      parallelizable=True,
+    )
+    for i in range(3)
+  ],
+)
+
+run_experiment_group(
+  name="three_seq",
+  run="./test.sh",
+  experiments=[
+    ExperimentInstance(
+      name="three_seq-{}".format(i),
+      args=[str(i)],
+      parallelizable=False,
+    )
+    for i in range(3)
+  ],
+)

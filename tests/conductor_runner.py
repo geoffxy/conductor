@@ -48,12 +48,16 @@ class ConductorRunner:
         task_identifier: str,
         again: bool = False,
         stop_early: bool = False,
+        jobs: Optional[int] = None,
     ) -> subprocess.CompletedProcess:
         cmd = ["run", task_identifier]
         if again:
             cmd.append("--again")
         if stop_early:
             cmd.append("--stop-early")
+        if jobs is not None:
+            cmd.append("--jobs")
+            cmd.append(str(jobs))
         return self._run_command(cmd)
 
     def clean(self) -> subprocess.CompletedProcess:
