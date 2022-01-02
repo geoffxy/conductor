@@ -1,7 +1,4 @@
 import pathlib
-import shutil
-import subprocess
-from typing import Any, Iterable
 
 from conductor.config import TASK_OUTPUT_DIR_SUFFIX, STDOUT_LOG_FILE, STDERR_LOG_FILE
 from .conductor_runner import ConductorRunner, FIXTURE_TEMPLATES
@@ -114,7 +111,7 @@ def test_run_parallel_but_sequential(tmp_path: pathlib.Path):
 
     # No slot printed.
     for out_dir in paths:
-        with open(out_dir / "slot.txt") as f:
+        with open(out_dir / "slot.txt", encoding="UTF-8") as f:
             assert f.read().strip() == ""
 
 
@@ -136,5 +133,61 @@ def test_run_sequential_multiple_jobs(tmp_path: pathlib.Path):
 
     # No slot printed.
     for out_dir in paths:
-        with open(out_dir / "slot.txt") as f:
+        with open(out_dir / "slot.txt", encoding="UTF-8") as f:
             assert f.read().strip() == ""
+
+
+def test_run_parallel_partial_success(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//parallel:three_may_fail", jobs=3)
+    assert result.returncode != 0
+
+    # Odd indexes should succeed (1 and 3).
+    expected_success = [
+        cond.find_task_output_dir("//parallel:three_may_fail-1", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three_may_fail-3", is_experiment=True),
+        cond.find_task_output_dir("//parallel:three_may_fail-5", is_experiment=True),
+    ]
+    assert all(map(lambda p: p is not None and p.is_dir(), expected_success))
+
+    seen_slots = set()
+    for out_dir in expected_success:
+        assert out_dir is not None
+        slot = extract_logged_slot(out_dir)
+        seen_slots.add(slot)
+
+        # Even if running in parallel, we should still log the task's output on
+        # stdout and stderr.
+        stdout_file = out_dir / STDOUT_LOG_FILE
+        assert stdout_file.exists()
+        with open(stdout_file, encoding="UTF-8") as f:
+            parts = f.read().strip().split(" ")
+        assert parts[0] == "stdout"
+        assert int(parts[1]) == slot
+
+        stderr_file = out_dir / STDERR_LOG_FILE
+        assert stderr_file.exists()
+        with open(stderr_file, encoding="UTF-8") as f:
+            parts = f.read().strip().split(" ")
+        assert parts[0] == "stderr"
+        assert int(parts[1]) == slot
+
+    # Cannot use more than 3 slots.
+    assert len(seen_slots) <= 3
+
+
+def test_run_parallel_stop_early(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//parallel:three_may_fail", jobs=3, stop_early=True)
+    assert result.returncode != 0
+
+    # At most 3 jobs can start executing before we hit a failure.
+    seen_result_dirs = 0
+    for i in range(6):
+        maybe_dir = cond.find_task_output_dir(
+            "//parallel:three_may_fail-{}".format(i), is_experiment=True
+        )
+        if maybe_dir is not None and maybe_dir.is_dir():
+            seen_result_dirs += 1
+
+    assert seen_result_dirs <= 3

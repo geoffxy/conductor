@@ -23,3 +23,16 @@ run_experiment_group(
     for i in range(3)
   ],
 )
+
+run_experiment_group(
+  name="three_may_fail",
+  run="./test-may-fail.sh",
+  experiments=[
+    ExperimentInstance(
+      name="three_may_fail-{}".format(i),
+      args=[str(i)],
+      parallelizable=True,
+    )
+    for i in range(6)
+  ],
+)
