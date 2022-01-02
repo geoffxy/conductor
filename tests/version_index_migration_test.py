@@ -5,7 +5,6 @@ import conductor.execution.version_index_queries as q
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE, VERSION_INDEX_NAME
 from conductor.execution.version_index import VersionIndex
 
-# pylint: disable=no-member
 # pylint: disable=protected-access
 
 

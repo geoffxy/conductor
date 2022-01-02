@@ -60,8 +60,6 @@ class VersionIndex:
     output versions of "archivable" task executions.
     """
 
-    # pylint: disable=no-member
-
     # v0.4.0 and older: FormatVersion = 1
     FormatVersion = 2
 
