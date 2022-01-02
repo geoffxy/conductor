@@ -64,7 +64,6 @@ def main(args):
             archive_version_index.copy_entries_to(
                 dest=ctx.version_index, tasks=None, latest_only=False
             )
-        # pylint: disable=no-member
         except sqlite3.IntegrityError as ex:
             raise DuplicateTaskOutput(output_dir=str(ctx.output_path)) from ex
 
