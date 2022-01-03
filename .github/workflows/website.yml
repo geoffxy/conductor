@@ -1,0 +1,32 @@
+# The purpose of this workflow is to ensure we can build the website
+# successfully.
+
+name: Test Website Build
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+    - 'website/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+    - 'website/**'
+
+jobs:
+  build:
+    name: Test Website Build
+    timeout-minutes: 30
+
+    runs-on: ubuntu-20.04
+
+  steps:
+    - uses: actions/checkout@v2
+
+    - name: Set Up Node 16
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - name: Run Website Build Script
+      run: ./tools/build-website.sh --install-deps
