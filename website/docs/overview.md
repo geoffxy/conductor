@@ -24,8 +24,8 @@ cond --help
 
 ## Getting Started
 A quick way to get started is to look at Conductor's [example
-projects](https://github.com/geoffxy/conductor/tree/master/examples). Below, we
-give a quick overview of a few important Conductor concepts.
+projects](https://github.com/geoffxy/conductor/tree/master/examples). Below is a
+quick overview of a few important Conductor concepts.
 
 ### Project Root
 When using Conductor with your project, you first need to add a

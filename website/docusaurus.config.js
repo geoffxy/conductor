@@ -13,7 +13,7 @@ module.exports = {
     navbar: {
       title: 'Conductor',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'Conductor',
         src: 'img/ConductorLogo_Light.png',
         srcDark: 'img/ConductorLogo_Dark.png',
       },
