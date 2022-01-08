@@ -1,0 +1,25 @@
+# The purpose of this workflow is to "skip" the `build` job when the changed
+# code only modifies files under `/website`.
+name: Build and Test
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+    - 'website/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+    - 'website/**'
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
+
+    steps:
+    - run: 'echo "No build required."'
