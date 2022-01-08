@@ -13,11 +13,11 @@ and non-experiment task types.
 
 ### Experiment Task Types
 
-Experiment task types ([`run_experiment()`](task-types/run-experiment) and
-[`run_experiment_group()`](task-types/run-experiment-group)) are used to launch
-scripts or executables that produce results for your research. For example, a
-benchmark script that you run to collect performance results for your project
-should be encoded as a `run_experiment()` task.
+Experiment task types ([`run_experiment()`](task-types/run-experiment.md) and
+[`run_experiment_group()`](task-types/run-experiment-group.md)) are used to
+launch scripts or executables that produce results for your research. For
+example, a benchmark script that you run to collect performance results for your
+project should be encoded as a `run_experiment()` task.
 
 **Special handling.**
 Conductor distinguishes between experiment task types and non-experiment task
@@ -30,9 +30,9 @@ automatically
 
 **Versioning.**
 The outputs of an experiment task (e.g., the collected performance results) are
-also versioned and [archivable](cli/archive). The reference page for
-[`run_experiment()`](task-types/run-experiment) provides more details about what
-this means.
+also versioned and [archivable](cli/archive.md). The reference page for
+[`run_experiment()`](task-types/run-experiment.md) provides more details about
+what this means.
 
 ### Non-Experiment Task Types
 
@@ -42,7 +42,7 @@ each non-experiment task type are described in each task type's reference page.
 Non-experiment task types are typically used to orchestrate the environment
 setup and data transformation steps of your research computing pipeline. For
 example, a script that takes raw experiment results and generates a graph should
-be encoded as a [`run_command()`](task-types/run-command) task.
+be encoded as a [`run_command()`](task-types/run-command.md) task.
 
 ## Task Environment Variables
 
@@ -88,13 +88,13 @@ always set.
 The `COND_SLOT` environment variable is set when the task _may_ be executing in
 parallel. When set, `COND_SLOT` will have a non-negative integer value that is
 less than the maximum number of parallel tasks allowed (set using the `--jobs`
-flag, see the reference for [`cond run`](cli/run)). For example, if `--jobs` was
-set to 3, `COND_SLOT` will only be either 0, 1, or 2.
+flag, see the reference for [`cond run`](cli/run.md)). For example, if `--jobs`
+was set to 3, `COND_SLOT` will only be either 0, 1, or 2.
 
 `COND_SLOT` will only be set if the task is parallelizable (specified by setting
 the `parallelizable` argument when defining the task, see
-[`run_experiment()`](task-type/run-experiment)). Conductor guarantees that all
-tasks running in parallel will have distinct values of `COND_SLOT`.
+[`run_experiment()`](task-types/run-experiment.md)). Conductor guarantees that
+all tasks running in parallel will have distinct values of `COND_SLOT`.
 
 One use case for `COND_SLOT` is to ensure tasks executing in parallel are
 scheduled on different CPU cores. For example, a task executable may request to
