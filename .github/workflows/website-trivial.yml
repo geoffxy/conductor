@@ -1,0 +1,21 @@
+# The purpose of this workflow is to "skip" the `build_website` job when the
+# changed code does not modify any files under `/website`.
+
+name: Test Website Build
+
+on:
+  push:
+    branches: [ master ]
+    paths-ignore:
+    - 'website/**'
+  pull_request:
+    branches: [ master ]
+    paths-ignore:
+    - 'website/**'
+
+jobs:
+  build_website:
+    name: Test Website Build
+    runs-on: ubuntu-20.04
+    steps:
+      - run: 'echo "No build required."'
