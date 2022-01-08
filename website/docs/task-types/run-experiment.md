@@ -149,14 +149,15 @@ of the current commit (i.e., an ancestor of `HEAD`), and (ii) "closest" to the
 current commit. Conductor defines closeness as the number of commits separating
 the repository's current commit (`HEAD`) and the task version's commit. If there
 are multiple closest task versions, Conductor selects the most recent one as
-determined by execution timestamp.
+determined by execution timestamp. If there are no "compatible" outputs,
+Conductor will execute the task.
 
 ### Projects Without Git
 
 If your project is not managed using Git (or has Conductor's Git integration
 explicitly disabled), Conductor will always select the most _recent_ version of
 the task's outputs. Recency is determined by when the task was executed (i.e., a
-timestamp). If there are no outputs available, the task will be executed.
+timestamp). If there are no outputs available, Conductor will execute the task.
 
 ## Usage Example
 
