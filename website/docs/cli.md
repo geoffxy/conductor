@@ -26,7 +26,7 @@ subcommand. Running `cond` without any arguments is equivalent to running `cond
 --help`.
 
 #### Usage
-```
+```bash
 $ cond [-h] [-v]
 ```
 

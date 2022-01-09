@@ -3,7 +3,7 @@ title: Run
 id: run
 ---
 
-```
+```bash
 $ cond run [-h] [-a] [-e] [-j [JOBS]] task_identifier
 ```
 
