@@ -31,6 +31,7 @@ module.exports = {
             'cli/clean',
           ],
         },
+        'configuration',
         'python-support-library',
       ],
     },
