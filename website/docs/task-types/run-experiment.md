@@ -34,7 +34,7 @@ using `bash`, with the location of the task's `COND` file as the shell's working
 directory. In other words, any relative paths in the command will be interpreted
 as relative to the directory containing the task's `COND` file.
 
-Conductor uses the exit code of the command to determine whether it suceeded or
+Conductor uses the exit code of the command to determine whether it succeeded or
 failed. If the command succeeds, it should exit with an exit code of `0`.
 Conductor interprets any non-zero exit code as a failure. If a task fails, it
 prevents any other tasks that depend on it from executing (see the reference for
