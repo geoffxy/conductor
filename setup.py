@@ -48,7 +48,7 @@ KEYWORDS = [
 ]
 
 CLASSIFIERS = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3 :: Only",
@@ -92,6 +92,7 @@ if __name__ == "__main__":
         author_email=find_meta("email"),
         maintainer=find_meta("author"),
         maintainer_email=find_meta("email"),
+        url=find_meta("url"),
         long_description=read(README_PATH),
         long_description_content_type="text/markdown",
         packages=PACKAGES,
