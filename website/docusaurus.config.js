@@ -3,7 +3,7 @@ module.exports = {
   title: 'Conductor',
   tagline: 'A simple and elegant research computing orchestrator.',
   url: 'https://www.geoffreyyu.com/conductor/',
-  baseUrl: '/',
+  baseUrl: '/conductor/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/ConductorFavicon64.png',
