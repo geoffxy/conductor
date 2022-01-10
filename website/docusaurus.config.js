@@ -46,8 +46,13 @@ module.exports = {
           editUrl:
             'https://github.com/geoffxy/conductor/edit/master/website/',
         },
+        blog: false,
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
+        },
+        gtag: {
+          trackingID: 'G-WVRJT3RWC2',
+          anonymizeIP: true,
         },
       },
     ],
