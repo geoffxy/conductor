@@ -223,6 +223,7 @@ class Executor:
                     next_task.store_error(ex)
                     next_task.set_state(TaskState.FAILED)
                     self._process_finished_task(next_task)
+                    self._print_task_failed(next_task)
                     if stop_on_first_error:
                         return True
 
@@ -243,6 +244,7 @@ class Executor:
         try:
             task.task.finish_execution(handle, ctx)
             task.set_state(TaskState.SUCCEEDED)
+            print("{} completed successfully.".format(task.task.identifier))
         except ConductorAbort:
             task.set_state(TaskState.ABORTED)
             # N.B. A slot may be leaked here, but it does not matter because we
@@ -252,6 +254,7 @@ class Executor:
             task.store_error(ex)
             task.set_state(TaskState.FAILED)
             error_occurred = True
+            self._print_task_failed(task)
 
         if handle.slot is not None:
             self._available_slots.append(handle.slot)
@@ -322,3 +325,6 @@ class Executor:
 
             assert failed_tasks[0].stored_error is not None
             raise failed_tasks[0].stored_error
+
+    def _print_task_failed(self, task: ExecutingTask):
+        print("{} failed.".format(task.task.identifier))
