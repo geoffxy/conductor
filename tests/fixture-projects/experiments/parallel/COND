@@ -66,3 +66,30 @@ run_experiment(
   parallelizable=True,
   deps=[":three-2"],
 )
+
+group(
+  name="deps_fail",
+  deps=[
+    ":deps_fail-0",
+    ":deps_fail-2",
+    ":deps_fail-4",
+  ],
+)
+
+run_experiment(
+  name="deps_fail-0",
+  run="./test.sh",
+  deps=[":three_may_fail-0"],
+)
+
+run_experiment(
+  name="deps_fail-2",
+  run="./test.sh",
+  deps=[":three_may_fail-2"],
+)
+
+run_experiment(
+  name="deps_fail-4",
+  run="./test.sh",
+  deps=[":three_may_fail-4"],
+)
