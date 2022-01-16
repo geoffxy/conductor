@@ -178,19 +178,19 @@ def test_run_parallel_partial_success(tmp_path: pathlib.Path):
 
 def test_run_parallel_stop_early(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
-    result = cond.run("//parallel:three_may_fail", jobs=3, stop_early=True)
+    result = cond.run("//parallel:deps_fail", jobs=2, stop_early=True)
     assert result.returncode != 0
 
-    # At most 3 jobs can start executing before we hit a failure.
+    # At most 2 jobs can start executing before we hit a failure.
     seen_result_dirs = 0
-    for i in range(6):
+    for i in range(0, 6, 2):
         maybe_dir = cond.find_task_output_dir(
             "//parallel:three_may_fail-{}".format(i), is_experiment=True
         )
         if maybe_dir is not None and maybe_dir.is_dir():
             seen_result_dirs += 1
 
-    assert seen_result_dirs <= 3
+    assert seen_result_dirs <= 2
 
 
 def test_run_parallel_with_deps(tmp_path: pathlib.Path):
