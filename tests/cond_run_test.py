@@ -253,6 +253,45 @@ def test_cond_run_invalid_experiment_options(tmp_path: pathlib.Path):
     assert result.returncode != 0
 
 
+def test_cond_run_command_options(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//options:test_command")
+    assert result.returncode == 0
+    assert cond.output_path.is_dir()
+
+    options_dir = cond.output_path / "options"
+    assert options_dir.is_dir()
+
+    # Locate the task output directory
+    task_output_dir = None
+    for file in options_dir.iterdir():
+        if file.name.startswith("test_command" + TASK_OUTPUT_DIR_SUFFIX):
+            task_output_dir = file
+            break
+    assert task_output_dir is not None
+
+    # Read the outputted file and make sure the arguments were visible to the
+    # underlying bash script.
+    seen_options = [
+        line.rstrip()
+        for line in open(task_output_dir / "all_options.txt", "r", encoding="UTF-8")
+    ]
+    assert len(seen_options) == 4
+    assert "--key=value" in seen_options
+    assert "--threads=2" in seen_options
+    assert "--retry=true" in seen_options
+    assert "--epsilon=0.05" in seen_options
+
+
+def test_cond_run_invalid_command_options(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    # These tasks have invalid options.
+    result = cond.run("//invalid-options:test-invalid-numeric-command")
+    assert result.returncode != 0
+    result = cond.run("//invalid-options:test-invalid-complex-command")
+    assert result.returncode != 0
+
+
 def test_cond_run_partial_success(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["partial-success"])
     # Expected to fail.

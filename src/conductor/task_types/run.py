@@ -21,8 +21,8 @@ from conductor.config import (
     EXP_OPTION_JSON_FILE_NAME,
     SLOT_ENV_VARIABLE_NAME,
 )
-from conductor.utils.experiment_arguments import ExperimentArguments
-from conductor.utils.experiment_options import ExperimentOptions
+from conductor.utils.run_arguments import RunArguments
+from conductor.utils.run_options import RunOptions
 from conductor.utils.output_handler import RecordType, OutputHandler
 from .base import TaskExecutionHandle, TaskType
 
@@ -38,12 +38,18 @@ class _RunSubprocess(TaskType):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        args: list,
+        options: dict,
         parallelizable: bool,
     ):
         super().__init__(
             identifier=identifier, cond_file_path=cond_file_path, deps=deps
         )
-        self._run = run
+        self._args = RunArguments.from_raw(identifier, args)
+        self._options = RunOptions.from_raw(identifier, options)
+        self._run = " ".join(
+            [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
+        )
         self._parallelizable = parallelizable
 
     def __repr__(self) -> str:
@@ -165,6 +171,8 @@ class RunCommand(_RunSubprocess):
         cond_file_path: pathlib.Path,
         deps: Sequence[TaskIdentifier],
         run: str,
+        args: list,
+        options: dict,
         parallelizable: bool,
     ):
         super().__init__(
@@ -172,6 +180,8 @@ class RunCommand(_RunSubprocess):
             cond_file_path=cond_file_path,
             deps=deps,
             run=run,
+            args=args,
+            options=options,
             parallelizable=parallelizable,
         )
 
@@ -199,15 +209,13 @@ class RunExperiment(_RunSubprocess):
         options: dict,
         parallelizable: bool,
     ):
-        self._args = ExperimentArguments.from_raw(identifier, args)
-        self._options = ExperimentOptions.from_raw(identifier, options)
         super().__init__(
             identifier=identifier,
             cond_file_path=cond_file_path,
             deps=deps,
-            run=" ".join(
-                [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
-            ),
+            run=run,
+            args=args,
+            options=options,
             parallelizable=parallelizable,
         )
         self._did_retrieve_version = False

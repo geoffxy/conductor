@@ -4,37 +4,35 @@ from typing import Dict, Union
 
 from conductor.config import EXP_OPTION_CMD_FORMAT
 from conductor.errors import (
-    ExperimentOptionsNonPrimitiveValue,
-    ExperimentOptionsNonStringKey,
+    RunOptionsNonPrimitiveValue,
+    RunOptionsNonStringKey,
 )
 from conductor.task_identifier import TaskIdentifier
 
 OptionValue = Union[str, bool, int, float]
 
 
-class ExperimentOptions:
+class RunOptions:
     """
     Represents key-value options that should be passed to a
-    `run_experiment()` task.
+    `run_experiment()` or `run_command()` task.
     """
 
     def __init__(self, options: Dict[str, OptionValue]):
         self._options = options
 
     @classmethod
-    def from_raw(
-        cls, identifier: TaskIdentifier, raw_options: dict
-    ) -> "ExperimentOptions":
+    def from_raw(cls, identifier: TaskIdentifier, raw_options: dict) -> "RunOptions":
         for key, value in raw_options.items():
             if not isinstance(key, str):
-                raise ExperimentOptionsNonStringKey(identifier=identifier)
+                raise RunOptionsNonStringKey(identifier=identifier)
             if (
                 not isinstance(value, str)
                 and not isinstance(value, bool)
                 and not isinstance(value, int)
                 and not isinstance(value, float)
             ):
-                raise ExperimentOptionsNonPrimitiveValue(identifier=identifier, key=key)
+                raise RunOptionsNonPrimitiveValue(identifier=identifier, key=key)
         return cls(raw_options)
 
     def empty(self) -> bool:

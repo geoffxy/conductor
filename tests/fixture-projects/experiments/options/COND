@@ -8,3 +8,14 @@ run_experiment(
     "epsilon": 0.05,
   },
 )
+
+run_command(
+  name="test_command",
+  run="./run.sh",
+  options={
+    "key": "value",
+    "threads": 2,
+    "retry": True,
+    "epsilon": 0.05,
+  },
+)

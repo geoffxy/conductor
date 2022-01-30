@@ -172,7 +172,7 @@ class CombineDuplicateDepName(ConductorError):
         )
 
 
-class ExperimentOptionsNonStringKey(ConductorError):
+class RunOptionsNonStringKey(ConductorError):
     error_code = 1012
 
     def __init__(self, **kwargs):
@@ -180,12 +180,12 @@ class ExperimentOptionsNonStringKey(ConductorError):
         self.identifier = kwargs["identifier"]
     
     def _message(self):
-        return "Encountered a non-string experiment option key when processing task '{identifier}'. All experiment option keys must be strings.".format(
+        return "Encountered a non-string option key when processing task '{identifier}'. All option keys must be strings.".format(
             identifier=self.identifier,
         )
 
 
-class ExperimentOptionsNonPrimitiveValue(ConductorError):
+class RunOptionsNonPrimitiveValue(ConductorError):
     error_code = 1013
 
     def __init__(self, **kwargs):
@@ -194,7 +194,7 @@ class ExperimentOptionsNonPrimitiveValue(ConductorError):
         self.identifier = kwargs["identifier"]
     
     def _message(self):
-        return "Encountered a non-primitive experiment option value for key '{key}' when processing task '{identifier}'. All experiment option values must be either a string, integer, floating point number, or boolean.".format(
+        return "Encountered a non-primitive option value for key '{key}' when processing task '{identifier}'. All option values must be either a string, integer, floating point number, or boolean.".format(
             key=self.key,
             identifier=self.identifier,
         )
@@ -228,7 +228,7 @@ class ExperimentGroupInvalidExperimentInstance(ConductorError):
         )
 
 
-class ExperimentArgumentsNonPrimitiveValue(ConductorError):
+class RunArgumentsNonPrimitiveValue(ConductorError):
     error_code = 1016
 
     def __init__(self, **kwargs):
@@ -236,7 +236,7 @@ class ExperimentArgumentsNonPrimitiveValue(ConductorError):
         self.identifier = kwargs["identifier"]
     
     def _message(self):
-        return "Encountered a non-primitive experiment argument when processing task '{identifier}'. All experiment arguments must be either a string, integer, floating point number, or boolean.".format(
+        return "Encountered a non-primitive argument when processing task '{identifier}'. All arguments must be either a string, integer, floating point number, or boolean.".format(
             identifier=self.identifier,
         )
 
@@ -503,11 +503,11 @@ __all__ = [
     "MissingCondFile",
     "DuplicateDependency",
     "CombineDuplicateDepName",
-    "ExperimentOptionsNonStringKey",
-    "ExperimentOptionsNonPrimitiveValue",
+    "RunOptionsNonStringKey",
+    "RunOptionsNonPrimitiveValue",
     "ExperimentGroupDuplicateName",
     "ExperimentGroupInvalidExperimentInstance",
-    "ExperimentArgumentsNonPrimitiveValue",
+    "RunArgumentsNonPrimitiveValue",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",
