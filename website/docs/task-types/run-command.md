@@ -4,7 +4,7 @@ id: run-command
 ---
 
 ```python
-run_command(name, run, parallelizable=False, deps=[])
+run_command(name, run, parallelizable=False, args=[], options={}, deps=[])
 ```
 
 A `run_command()` task runs the command specified in the `run` argument. The
@@ -53,6 +53,56 @@ task to execute while other tasks are also running.
 
 By default, tasks are not `parallelizable`, and so Conductor will not launch a
 new task until the previously launched task has completed (or failed).
+
+### `args`
+
+**Type:** List of primitive types (default: `[]`)
+
+A list of ordered arguments that should be passed to the command string
+specified in `run`. The arguments will be passed to the command in the order
+they are listed in `args`. The primitive types supported in `args` are strings,
+Booleans, integers, and floating point numbers.
+
+#### Example
+
+```python
+run_command(
+  name="example",
+  run="./run.sh",
+  args=["arg1", "arg2", 123, True, 0.3],
+)
+```
+
+Conductor will execute the task shown above by running `./run.sh arg1 arg2 123
+true 0.3` in `bash`.
+
+### `options`
+
+**Type:** Dictionary mapping string keys to primitive values (default: `{}`)
+
+A map of string keys to primitive values that should be passed to the command
+string specified in `run`. Conductor treats these options as command line
+"flags" and will pass them to the `run` command using `--key=value` syntax. Like
+`args`, the primitive types supported in `options` are strings, Booleans,
+integers, and floating point numbers. When `args` and `options` are both
+non-empty, `args` are always passed first before `options`.
+
+#### Example
+
+```python
+run_command(
+  name="example",
+  run="./run.sh",
+  args=["arg1"],
+  options={
+    "foo": 3,
+    "bar": True,
+  },
+)
+```
+
+Conductor will execute the task shown above by running `./run.sh arg1 --foo=3
+--bar=true` in `bash`.
 
 ### `deps`
 
