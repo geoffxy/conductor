@@ -11,6 +11,13 @@ from conductor.execution.plan import ExecutionPlan
 from conductor.execution.task import ExecutingTask
 from conductor.execution.task_state import TaskState
 from conductor.task_types.base import TaskExecutionHandle
+from conductor.utils.colored_output import (
+    print_bold,
+    print_cyan,
+    print_green,
+    print_red,
+    print_yellow,
+)
 from conductor.utils.sigchld import SigchldHelper
 from conductor.utils.time import time_to_readable_string
 
@@ -123,7 +130,7 @@ class Executor:
 
             # 1. Print out any cached tasks.
             for cached_task in plan.cached_tasks:
-                print(
+                print_cyan(
                     "Using cached results for {}.".format(
                         str(cached_task.task.identifier)
                     )
@@ -159,8 +166,10 @@ class Executor:
         except ConductorAbort:
             self._inflight_tasks.terminate_processes()
             elapsed = time.time() - start
-            print(
-                "🔸 Task aborted. (ran for {})".format(time_to_readable_string(elapsed))
+            print()
+            print_yellow(
+                "🔸 Task aborted. (ran for {})".format(time_to_readable_string(elapsed)),
+                bold=True,
             )
             print()
             raise
@@ -198,11 +207,11 @@ class Executor:
 
             if not next_task.exe_deps_succeeded():
                 # At least one dependency failed, so we need to skip this task.
-                print("Skipping {}.".format(str(next_task.task.identifier)))
+                print_yellow("Skipping {}.".format(str(next_task.task.identifier)))
                 next_task.set_state(TaskState.SKIPPED)
                 self._process_finished_task(next_task)
             else:
-                print("Running {}...".format(str(next_task.task.identifier)))
+                print_cyan("Running {}...".format(str(next_task.task.identifier)))
                 try:
                     slot = (
                         self._available_slots[-1]
@@ -244,7 +253,7 @@ class Executor:
         try:
             task.task.finish_execution(handle, ctx)
             task.set_state(TaskState.SUCCEEDED)
-            print("{} completed successfully.".format(task.task.identifier))
+            print_green("✓ {} completed successfully.".format(task.task.identifier))
         except ConductorAbort:
             task.set_state(TaskState.ABORTED)
             # N.B. A slot may be leaked here, but it does not matter because we
@@ -289,7 +298,10 @@ class Executor:
 
         # Print the final execution result (succeeded or failed).
         if all_succeeded and (main_task_executed or main_task_cached):
-            print("✨ Done! (ran for {})".format(time_to_readable_string(elapsed_time)))
+            print()
+            print_bold(
+                "✨ Done! (ran for {})".format(time_to_readable_string(elapsed_time))
+            )
 
         else:
             # At least one task must have failed.
@@ -301,13 +313,15 @@ class Executor:
                 elif exe_task.state == TaskState.FAILED:
                     failed_tasks.append(exe_task)
             assert len(failed_tasks) > 0
-            print(
+            print()
+            print_red(
                 "🔴 Task failed. (ran for {})".format(
                     time_to_readable_string(elapsed_time)
-                )
+                ),
+                bold=True,
             )
             print()
-            print("Failed task(s):")
+            print_bold("Failed task(s):")
             for failed in failed_tasks:
                 print("  {}".format(failed.task.identifier))
                 assert failed.stored_error is not None
@@ -318,7 +332,7 @@ class Executor:
                 )
             print()
             if len(skipped_tasks) > 0:
-                print("Skipped task(s) (one or more dependencies failed):")
+                print_bold("Skipped task(s) (one or more dependencies failed):")
                 for skipped in skipped_tasks:
                     print("  {}".format(skipped.task.identifier))
                 print()
@@ -327,4 +341,4 @@ class Executor:
             raise failed_tasks[0].stored_error
 
     def _print_task_failed(self, task: ExecutingTask):
-        print("{} failed.".format(task.task.identifier))
+        print_red("✗ {} failed.".format(task.task.identifier))
