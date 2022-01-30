@@ -5,11 +5,11 @@ import pathlib
 from typing import Dict
 
 from conductor.errors import (
-    ExperimentOptionsNonPrimitiveValue,
-    ExperimentOptionsNonStringKey,
+    RunOptionsNonPrimitiveValue,
+    RunOptionsNonStringKey,
 )
 from conductor.task_identifier import TaskIdentifier
-from conductor.utils.experiment_options import ExperimentOptions, OptionValue
+from conductor.utils.run_options import RunOptions, OptionValue
 
 
 def assert_serialized_cmdline(cmd_options: str, raw_options: Dict[str, OptionValue]):
@@ -43,7 +43,7 @@ def test_valid(tmp_path: pathlib.Path):
         "key2": 3.14159,
     }
     identifier = TaskIdentifier.from_str("//test:ident")
-    simple_options = ExperimentOptions.from_raw(identifier, simple)
+    simple_options = RunOptions.from_raw(identifier, simple)
     assert not simple_options.empty()
 
     # Test command line serialization
@@ -62,7 +62,7 @@ def test_single_option(tmp_path: pathlib.Path):
         "key": "value",
     }
     identifier = TaskIdentifier.from_str("//test:ident")
-    options = ExperimentOptions.from_raw(identifier, single)
+    options = RunOptions.from_raw(identifier, single)
     assert not options.empty()
 
     # Test command line serialization
@@ -79,7 +79,7 @@ def test_single_option(tmp_path: pathlib.Path):
 def test_empty():
     empty: Dict[str, OptionValue] = {}
     identifier = TaskIdentifier.from_str("//test:ident")
-    options = ExperimentOptions.from_raw(identifier, empty)
+    options = RunOptions.from_raw(identifier, empty)
     assert options.empty()
     assert options.serialize_cmdline() == ""
 
@@ -94,10 +94,10 @@ def test_non_string_key():
         "foo": "bar",
     }
     identifier = TaskIdentifier.from_str("//test:ident")
-    with pytest.raises(ExperimentOptionsNonStringKey):
-        ExperimentOptions.from_raw(identifier, numeric_key)
-    with pytest.raises(ExperimentOptionsNonStringKey):
-        ExperimentOptions.from_raw(identifier, tuple_key)
+    with pytest.raises(RunOptionsNonStringKey):
+        RunOptions.from_raw(identifier, numeric_key)
+    with pytest.raises(RunOptionsNonStringKey):
+        RunOptions.from_raw(identifier, tuple_key)
 
 
 def test_non_primitive_value():
@@ -113,7 +113,7 @@ def test_non_primitive_value():
     }
 
     identifier = TaskIdentifier.from_str("//test:ident")
-    with pytest.raises(ExperimentOptionsNonPrimitiveValue):
-        ExperimentOptions.from_raw(identifier, nested_value)
-    with pytest.raises(ExperimentOptionsNonPrimitiveValue):
-        ExperimentOptions.from_raw(identifier, tuple_value)
+    with pytest.raises(RunOptionsNonPrimitiveValue):
+        RunOptions.from_raw(identifier, nested_value)
+    with pytest.raises(RunOptionsNonPrimitiveValue):
+        RunOptions.from_raw(identifier, tuple_value)

@@ -2,25 +2,23 @@ import pathlib
 import json
 from typing import List, Union
 
-from conductor.errors import ExperimentArgumentsNonPrimitiveValue
+from conductor.errors import RunArgumentsNonPrimitiveValue
 from conductor.task_identifier import TaskIdentifier
 
 ArgumentValue = Union[str, bool, int, float]
 
 
-class ExperimentArguments:
+class RunArguments:
     """
     Represents positional arguments that should be passed to a
-    `run_experiment()` task.
+    `run_experiment()` or `run_command()` task.
     """
 
     def __init__(self, args: List[ArgumentValue]):
         self._args = args
 
     @classmethod
-    def from_raw(
-        cls, identifier: TaskIdentifier, raw_args: list
-    ) -> "ExperimentArguments":
+    def from_raw(cls, identifier: TaskIdentifier, raw_args: list) -> "RunArguments":
         for arg in raw_args:
             if (
                 not isinstance(arg, str)
@@ -28,7 +26,7 @@ class ExperimentArguments:
                 and not isinstance(arg, int)
                 and not isinstance(arg, float)
             ):
-                raise ExperimentArgumentsNonPrimitiveValue(identifier=identifier)
+                raise RunArgumentsNonPrimitiveValue(identifier=identifier)
         return cls(raw_args)
 
     def empty(self) -> bool:

@@ -53,17 +53,17 @@
     must have unique names.
 
 1012:
-  name: ExperimentOptionsNonStringKey
+  name: RunOptionsNonStringKey
   message: >-
-    Encountered a non-string experiment option key when processing task
-    '{identifier}'. All experiment option keys must be strings.
+    Encountered a non-string option key when processing task '{identifier}'. All
+    option keys must be strings.
 
 1013:
-  name: ExperimentOptionsNonPrimitiveValue
+  name: RunOptionsNonPrimitiveValue
   message: >-
-    Encountered a non-primitive experiment option value for key '{key}' when
-    processing task '{identifier}'. All experiment option values must be
-    either a string, integer, floating point number, or boolean.
+    Encountered a non-primitive option value for key '{key}' when processing
+    task '{identifier}'. All option values must be either a string, integer,
+    floating point number, or boolean.
 
 1014:
   name: ExperimentGroupDuplicateName
@@ -81,11 +81,11 @@
     ExperimentInstance named tuples.
 
 1016:
-  name: ExperimentArgumentsNonPrimitiveValue
+  name: RunArgumentsNonPrimitiveValue
   message: >-
-    Encountered a non-primitive experiment argument when processing task
-    '{identifier}'. All experiment arguments must be either a string, integer,
-    floating point number, or boolean.
+    Encountered a non-primitive argument when processing task '{identifier}'.
+    All arguments must be either a string, integer, floating point number, or
+    boolean.
 
 
 # Task graph loading errors (error code 2xxx)
