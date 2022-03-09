@@ -27,6 +27,10 @@ After installation, the `cond` executable should be available in your shell.
 cond --help
 ```
 
+Note that if you install Conductor locally on a Linux machine (e.g., using `pip
+install --user conductor-cli`), you may need to add `$HOME/.local/bin` to your
+`$PATH` to get access to the `cond` executable in your shell.
+
 ## Documentation and Getting Started
 A quick way to get started is to look at the example projects under the
 `examples` directory. For more details, please check out Conductor's reference
