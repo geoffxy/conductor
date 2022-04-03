@@ -120,12 +120,14 @@ class Executor:
         self._inflight_tasks = _InflightTasks()
         self._completed_tasks: List[ExecutingTask] = []
         self._running_parallel = False
+        self._num_tasks_to_run = 0
 
     def run_plan(
         self, plan: ExecutionPlan, ctx: Context, stop_on_first_error: bool = False
     ):
         try:
             self._reset()
+            self._num_tasks_to_run = plan.num_tasks_to_run
             start = time.time()
 
             # 1. Print out any cached tasks.
@@ -168,7 +170,7 @@ class Executor:
             elapsed = time.time() - start
             print()
             print_yellow(
-                "🔸 Task aborted. (ran for {})".format(time_to_readable_string(elapsed)),
+                "🔸 Task aborted. {}".format(self._get_elapsed_time_string(elapsed)),
                 bold=True,
             )
             print()
@@ -180,6 +182,7 @@ class Executor:
         self._inflight_tasks.clear()
         self._running_parallel = False
         self._available_slots = list(reversed(range(self._slots)))
+        self._num_tasks_to_run = 0
 
     def _launch_tasks_if_able(self, ctx: Context, stop_on_first_error: bool) -> bool:
         """
@@ -208,12 +211,20 @@ class Executor:
             if not next_task.exe_deps_succeeded():
                 # At least one dependency failed, so we need to skip this task.
                 print()
-                print_yellow("➜ Skipping {}.".format(str(next_task.task.identifier)))
+                print_yellow(
+                    "➜ Skipping {}. {}".format(
+                        str(next_task.task.identifier), self._get_progress_string()
+                    )
+                )
                 next_task.set_state(TaskState.SKIPPED)
                 self._process_finished_task(next_task)
             else:
                 print()
-                print_cyan("➜ Running {}...".format(str(next_task.task.identifier)))
+                print_cyan(
+                    "➜ Running {}... {}".format(
+                        str(next_task.task.identifier), self._get_progress_string()
+                    )
+                )
                 try:
                     slot = (
                         self._available_slots[-1]
@@ -301,9 +312,7 @@ class Executor:
         # Print the final execution result (succeeded or failed).
         if all_succeeded and (main_task_executed or main_task_cached):
             print()
-            print_bold(
-                "✨ Done! (ran for {})".format(time_to_readable_string(elapsed_time))
-            )
+            print_bold("✨ Done! {}".format(self._get_elapsed_time_string(elapsed_time)))
 
         else:
             # At least one task must have failed.
@@ -317,9 +326,7 @@ class Executor:
             assert len(failed_tasks) > 0
             print()
             print_red(
-                "🔴 Task failed. (ran for {})".format(
-                    time_to_readable_string(elapsed_time)
-                ),
+                "🔴 Task failed. {}".format(self._get_elapsed_time_string(elapsed_time)),
                 bold=True,
             )
             print()
@@ -344,3 +351,11 @@ class Executor:
 
     def _print_task_failed(self, task: ExecutingTask):
         print_red("✗ {} failed.".format(task.task.identifier))
+
+    def _get_progress_string(self):
+        return "({}/{})".format(
+            str(len(self._completed_tasks) + 1), self._num_tasks_to_run
+        )
+
+    def _get_elapsed_time_string(self, elapsed: float):
+        return "(Ran for {}.)".format(time_to_readable_string(elapsed))

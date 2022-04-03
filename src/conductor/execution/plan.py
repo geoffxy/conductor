@@ -25,6 +25,13 @@ class ExecutionPlan:
         # Tasks that do not need to be executed because they have relevant
         # cached results available.
         self.cached_tasks = cached_tasks
+        # The number of tasks we will need to run.
+        self.num_tasks_to_run = sum(
+            map(
+                lambda _: 1,
+                filter(lambda t: t.state == TaskState.QUEUED, self.exec_tasks.values()),
+            )
+        )
 
     @classmethod
     def for_task(
