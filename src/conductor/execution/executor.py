@@ -131,7 +131,7 @@ class Executor:
             # 1. Print out any cached tasks.
             for cached_task in plan.cached_tasks:
                 print_cyan(
-                    "Using cached results for {}.".format(
+                    "✓ Using cached results for {}.".format(
                         str(cached_task.task.identifier)
                     )
                 )
@@ -207,11 +207,13 @@ class Executor:
 
             if not next_task.exe_deps_succeeded():
                 # At least one dependency failed, so we need to skip this task.
-                print_yellow("Skipping {}.".format(str(next_task.task.identifier)))
+                print()
+                print_yellow("➜ Skipping {}.".format(str(next_task.task.identifier)))
                 next_task.set_state(TaskState.SKIPPED)
                 self._process_finished_task(next_task)
             else:
-                print_cyan("Running {}...".format(str(next_task.task.identifier)))
+                print()
+                print_cyan("➜ Running {}...".format(str(next_task.task.identifier)))
                 try:
                     slot = (
                         self._available_slots[-1]
