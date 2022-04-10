@@ -212,7 +212,7 @@ class Executor:
                 # At least one dependency failed, so we need to skip this task.
                 print()
                 print_yellow(
-                    "➜ Skipping {}. {}".format(
+                    "✱ Skipping {}. {}".format(
                         str(next_task.task.identifier), self._get_progress_string()
                     )
                 )
@@ -221,7 +221,7 @@ class Executor:
             else:
                 print()
                 print_cyan(
-                    "➜ Running {}... {}".format(
+                    "✱ Running {}... {}".format(
                         str(next_task.task.identifier), self._get_progress_string()
                     )
                 )
@@ -350,7 +350,7 @@ class Executor:
             raise failed_tasks[0].stored_error
 
     def _print_task_failed(self, task: ExecutingTask):
-        print_red("✗ {} failed.".format(task.task.identifier))
+        print_red("✘ {} failed.".format(task.task.identifier))
 
     def _get_progress_string(self):
         return "({}/{})".format(
