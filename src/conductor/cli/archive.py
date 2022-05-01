@@ -43,7 +43,7 @@ def register_command(subparsers):
         "--latest",
         action="store_true",
         help="If set, Conductor will only archive the latest output version of the "
-        "requested task(s). By default, Conductor will archive all ouptut versions of "
+        "requested task(s). By default, Conductor will archive all output versions of "
         "the archivable tasks.",
     )
     parser.set_defaults(func=main)
