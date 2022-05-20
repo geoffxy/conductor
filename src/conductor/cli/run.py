@@ -90,7 +90,7 @@ def validate_args(args, ctx: Context):
         raise CannotSetAgainAndThisCommit()
     if args.this_commit and not ctx.uses_git:
         raise ThisCommitUnsupported()
-    if ctx.git.current_commit is None:
+    if args.this_commit and ctx.current_commit is None:
         raise ThisCommitUnsupported()
 
 
