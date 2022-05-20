@@ -104,6 +104,8 @@ def main(args):
         require_prefix=False,
     )
     ctx.task_index.load_transitive_closure(task_identifier)
-    plan = ExecutionPlan.for_task(task_identifier, ctx, run_again=args.again)
+    plan = ExecutionPlan.for_task(
+        task_identifier, ctx, run_again=args.again, run_for_this_commit=args.this_commit
+    )
     executor = Executor(execution_slots=num_jobs)
     executor.run_plan(plan, ctx, stop_on_first_error=args.stop_early)

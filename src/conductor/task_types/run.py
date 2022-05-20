@@ -240,13 +240,40 @@ class RunExperiment(_RunSubprocess):
             f.task_output_dir(self.identifier, version=self._most_relevant_version)
         )
 
-    def should_run(self, ctx: "c.Context") -> bool:
+    def should_run(self, ctx: "c.Context", run_for_current_commit: bool) -> bool:
         """
         We use the presence a "most relevant" existing version to decide whether
         or not this task needs to execute.
         """
         self._ensure_most_relevant_existing_version_computed(ctx)
-        return self._most_relevant_version is None
+        if self._most_relevant_version is None:
+            # Must run because no relevant version exists.
+            return True
+        if not run_for_current_commit:
+            # There already is a most relevant version and we are not asked to
+            # run for the current commit.
+            return False
+
+        # We are being asked to run for the current commit. We must run if the
+        # most relevant version's commit does not match the current commit. If
+        # the most relevant version's commit does not match the current commit,
+        # then it must be "older" (this is based on how we define the most
+        # relevant version).
+        current_commit = ctx.current_commit
+        # If `run_for_current_commit` is True then there must be a current commit.
+        assert current_commit is not None
+        most_relevant_version_is_current_commit = (
+            self._most_relevant_version.commit_hash == current_commit.hash
+            and self._most_relevant_version.has_uncommitted_changes
+            == current_commit.has_changes
+        )
+        if most_relevant_version_is_current_commit:
+            # No need to re-run.
+            return False
+        else:
+            # Force a re-run and ensure the most relevant version is recomputed.
+            self._did_retrieve_version = False
+            return True
 
     def finish_execution(self, handle: TaskExecutionHandle, ctx: "c.Context") -> None:
         super().finish_execution(handle, ctx)
