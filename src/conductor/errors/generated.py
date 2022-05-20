@@ -490,6 +490,32 @@ class CannotSelectJobCount(ConductorError):
         )
 
 
+class CannotSetAgainAndThisCommit(ConductorError):
+    error_code = 5006
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "You cannot set both the --again and --this-commit flags.".format(
+
+        )
+
+
+class ThisCommitUnsupported(ConductorError):
+    error_code = 5007
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "Your project does not use Git or Git integration has been disabled. You cannot use the --this-commit flag when Git is disabled.".format(
+
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -527,4 +553,6 @@ __all__ = [
     "UnsupportedPlatform",
     "InvalidJobsCount",
     "CannotSelectJobCount",
+    "CannotSetAgainAndThisCommit",
+    "ThisCommitUnsupported",
 ]

@@ -1,7 +1,12 @@
 import multiprocessing
 
 from conductor.context import Context
-from conductor.errors import InvalidJobsCount, CannotSelectJobCount
+from conductor.errors import (
+    InvalidJobsCount,
+    CannotSelectJobCount,
+    CannotSetAgainAndThisCommit,
+    ThisCommitUnsupported,
+)
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
 from conductor.execution.plan import ExecutionPlan
@@ -30,6 +35,17 @@ def register_command(subparsers):
         help="Run all the relevant tasks again. Conductor by default will use cached "
         "results for certain tasks, if they exist. Setting this flag will make "
         "Conductor run all the relevant tasks again, regardless of the cache.",
+    )
+    parser.add_argument(
+        "-c",
+        "--this-commit",
+        action="store_true",
+        help="Run all relevant tasks that have not yet run against the current "
+        "commit. Conductor by default uses cached results for certain tasks, if they "
+        "exist. Setting this flag will make Conductor run all relevant tasks that do "
+        "not have cached entries for the current commit. This flag cannot be used if "
+        "your project is not managed by Git, or if Conductor's Git integration was "
+        "disabled.",
     )
     parser.add_argument(
         "-e",
@@ -69,10 +85,20 @@ def validate_and_retrieve_jobs_count(args) -> int:
         return args.jobs
 
 
+def validate_args(args, ctx: Context):
+    if args.again and args.this_commit:
+        raise CannotSetAgainAndThisCommit()
+    if args.this_commit and not ctx.uses_git:
+        raise ThisCommitUnsupported()
+    if ctx.git.current_commit is None:
+        raise ThisCommitUnsupported()
+
+
 @cli_command
 def main(args):
     num_jobs = validate_and_retrieve_jobs_count(args)
     ctx = Context.from_cwd()
+    validate_args(args, ctx)
     task_identifier = TaskIdentifier.from_str(
         args.task_identifier,
         require_prefix=False,
