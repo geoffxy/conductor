@@ -178,3 +178,14 @@
   message: >-
     Conductor could not automatically set the maximum number of parallel jobs.
     Please explicitly specify a number using the --jobs flag.
+
+5006:
+  name: CannotSetAgainAndThisCommit
+  message: "You cannot set both the --again and --this-commit flags."
+
+5007:
+  name: ThisCommitUnsupported
+  message: >-
+    Your project does not use Git, Git integration has been disabled, or there
+    are no commits in your repository. You cannot use the --this-commit flag
+    when Git is disabled nor when there are no commits available.

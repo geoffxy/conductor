@@ -49,6 +49,7 @@ class ConductorRunner:
         again: bool = False,
         stop_early: bool = False,
         jobs: Optional[int] = None,
+        this_commit: bool = False,
     ) -> subprocess.CompletedProcess:
         cmd = ["run", task_identifier]
         if again:
@@ -58,6 +59,8 @@ class ConductorRunner:
         if jobs is not None:
             cmd.append("--jobs")
             cmd.append(str(jobs))
+        if this_commit:
+            cmd.append("--this-commit")
         return self._run_command(cmd)
 
     def clean(self) -> subprocess.CompletedProcess:
@@ -148,4 +151,5 @@ FIXTURE_TEMPLATES = {
     "partial-success": pathlib.Path(_TESTS_DIR, "fixture-projects", "partial-success"),
     "lib-test": pathlib.Path(_TESTS_DIR, "fixture-projects", "lib-test"),
     "git-context": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-context"),
+    "git-commit": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-commit"),
 }
