@@ -8,10 +8,10 @@ from conductor.utils.user_code import cli_command
 from conductor.task_identifier import TaskIdentifier
 
 _EXPERIMENT_TASK_REGEX = re.compile(
-    "^(?P<name>[a-zA-Z0-9_-]+)\.task\.(?P<timestamp>[1-9][0-9]*)$"
+    r"^(?P<name>[a-zA-Z0-9_-]+)\.task\.(?P<timestamp>[1-9][0-9]*)$"
 )
 
-_REGULAR_TASK_REGEX = re.compile("^(?P<name>[a-zA-Z0-9_-]+)\.task$")
+_REGULAR_TASK_REGEX = re.compile(r"^(?P<name>[a-zA-Z0-9_-]+)\.task$")
 
 
 def register_command(subparsers):
@@ -31,7 +31,7 @@ def register_command(subparsers):
         "--verbose",
         action="store_true",
         help="Set this flag to have Conductor print the directories it is deleting as "
-        "they are deleted."
+        "they are deleted.",
     )
     parser.set_defaults(func=main)
 
