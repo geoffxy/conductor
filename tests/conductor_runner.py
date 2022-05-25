@@ -84,6 +84,16 @@ class ConductorRunner:
     def restore(self, archive_path: pathlib.Path) -> subprocess.CompletedProcess:
         return self._run_command(["restore", str(archive_path)])
 
+    def gc(
+        self, dry_run: bool = False, verbose: bool = False
+    ) -> subprocess.CompletedProcess:
+        cmd = ["gc"]
+        if dry_run:
+            cmd.append("--dry-run")
+        if verbose:
+            cmd.append("--verbose")
+        return self._run_command(cmd)
+
     def find_task_output_dir(
         self, task_identifier: str, is_experiment: bool = True
     ) -> Optional[pathlib.Path]:

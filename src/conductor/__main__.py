@@ -6,6 +6,7 @@ import conductor.cli.run
 import conductor.cli.archive
 import conductor.cli.restore
 import conductor.cli.clean
+import conductor.cli.gc
 
 
 def main():
@@ -28,6 +29,7 @@ def main():
     conductor.cli.archive.register_command(subparsers)
     conductor.cli.restore.register_command(subparsers)
     conductor.cli.clean.register_command(subparsers)
+    conductor.cli.gc.register_command(subparsers)
     args = parser.parse_args()
 
     if args.version:

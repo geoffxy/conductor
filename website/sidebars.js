@@ -29,6 +29,7 @@ module.exports = {
             'cli/archive',
             'cli/restore',
             'cli/clean',
+            'cli/gc',
           ],
         },
         'configuration',
