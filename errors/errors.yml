@@ -180,12 +180,12 @@
     Please explicitly specify a number using the --jobs flag.
 
 5006:
-  name: CannotSetAgainAndThisCommit
-  message: "You cannot set both the --again and --this-commit flags."
+  name: CannotSetAgainAndCommit
+  message: "You cannot set the --again flag while also setting --this-commit or --at-least."
 
 5007:
-  name: ThisCommitUnsupported
+  name: CommitFlagUnsupported
   message: >-
     Your project does not use Git, Git integration has been disabled, or there
-    are no commits in your repository. You cannot use the --this-commit flag
+    are no commits in your repository. You cannot use the --this-commit or --at-least flags
     when Git is disabled nor when there are no commits available.

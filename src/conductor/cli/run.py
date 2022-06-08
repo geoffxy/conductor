@@ -4,8 +4,8 @@ from conductor.context import Context
 from conductor.errors import (
     InvalidJobsCount,
     CannotSelectJobCount,
-    CannotSetAgainAndThisCommit,
-    ThisCommitUnsupported,
+    CannotSetAgainAndCommit,
+    CommitFlagUnsupported,
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
@@ -38,14 +38,21 @@ def register_command(subparsers):
     )
     parser.add_argument(
         "-c",
+        "--at-least",
+        type=str,
+        help="Run all relevant tasks that have not yet run against a commit that is "
+        "at least as new as the specified commit. You can specify a commit using a "
+        "hash, branch name, or tag. Conductor by default uses cached results for "
+        "certain tasks, if they exist. Setting this flag will make Conductor run "
+        "all relevant tasks that do not have cached entries for the current commit. "
+        "This flag cannot be used if your project is not managed by Git, or if "
+        "Conductor's Git integration was disabled.",
+    )
+    parser.add_argument(
         "--this-commit",
         action="store_true",
         help="Run all relevant tasks that have not yet run against the current "
-        "commit. Conductor by default uses cached results for certain tasks, if they "
-        "exist. Setting this flag will make Conductor run all relevant tasks that do "
-        "not have cached entries for the current commit. This flag cannot be used if "
-        "your project is not managed by Git, or if Conductor's Git integration was "
-        "disabled.",
+        "commit. Equivalent to setting --at-least=HEAD.",
     )
     parser.add_argument(
         "-e",
@@ -86,12 +93,13 @@ def validate_and_retrieve_jobs_count(args) -> int:
 
 
 def validate_args(args, ctx: Context):
-    if args.again and args.this_commit:
-        raise CannotSetAgainAndThisCommit()
-    if args.this_commit and not ctx.uses_git:
-        raise ThisCommitUnsupported()
-    if args.this_commit and ctx.current_commit is None:
-        raise ThisCommitUnsupported()
+    for_commit = (args.this_commit or args.at_least is not None)
+    if args.again and for_commit:
+        raise CannotSetAgainAndCommit()
+    if for_commit and not ctx.uses_git:
+        raise CommitFlagUnsupported()
+    if for_commit and ctx.current_commit is None:
+        raise CommitFlagUnsupported()
 
 
 @cli_command
