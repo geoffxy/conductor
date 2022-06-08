@@ -75,7 +75,7 @@ class TaskType:
                 stack.append(dep)
 
     # pylint: disable=unused-argument
-    def should_run(self, ctx: "c.Context", run_for_current_commit: bool) -> bool:
+    def should_run(self, ctx: "c.Context", at_least_commit: Optional[str]) -> bool:
         """
         Returns whether or not this task should be executed. If the task
         supports result caching, this method may return `False` to indicate

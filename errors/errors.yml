@@ -189,3 +189,11 @@
     Your project does not use Git, Git integration has been disabled, or there
     are no commits in your repository. You cannot use the --this-commit or --at-least flags
     when Git is disabled nor when there are no commits available.
+
+5008:
+  name: InvalidCommitSymbol
+  message: "The commit symbol passed to --at-least is not valid."
+
+5009:
+  name: CannotSetBothCommitFlags
+  message: "You cannot set both --this-commit and --at-least at the same time."

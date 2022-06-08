@@ -516,6 +516,32 @@ class CommitFlagUnsupported(ConductorError):
         )
 
 
+class InvalidCommitSymbol(ConductorError):
+    error_code = 5008
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The commit symbol passed to --at-least is not valid.".format(
+
+        )
+
+
+class CannotSetBothCommitFlags(ConductorError):
+    error_code = 5009
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "You cannot set both --this-commit and --at-least at the same time.".format(
+
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -555,4 +581,6 @@ __all__ = [
     "CannotSelectJobCount",
     "CannotSetAgainAndCommit",
     "CommitFlagUnsupported",
+    "InvalidCommitSymbol",
+    "CannotSetBothCommitFlags",
 ]

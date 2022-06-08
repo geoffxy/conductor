@@ -240,7 +240,7 @@ class RunExperiment(_RunSubprocess):
             f.task_output_dir(self.identifier, version=self._most_relevant_version)
         )
 
-    def should_run(self, ctx: "c.Context", run_for_current_commit: bool) -> bool:
+    def should_run(self, ctx: "c.Context", at_least_commit: Optional[str]) -> bool:
         """
         We use the presence a "most relevant" existing version to decide whether
         or not this task needs to execute.
@@ -249,25 +249,24 @@ class RunExperiment(_RunSubprocess):
         if self._most_relevant_version is None:
             # Must run because no relevant version exists.
             return True
-        if not run_for_current_commit:
+        if at_least_commit is None:
             # There already is a most relevant version and we are not asked to
-            # run for the current commit.
+            # run for at least some commit.
+            return False
+        if self._most_relevant_version.commit_hash == at_least_commit:
+            # No need to re-run. The most relevant version matches `at_least_commit`.
             return False
 
-        # We are being asked to run for the current commit. We must run if the
-        # most relevant version's commit does not match the current commit. If
-        # the most relevant version's commit does not match the current commit,
+        # We are being asked to ensure there is at least a version as new as
+        # `at_least_commit`. We must run if the most relevant version's commit
+        # is older than the given commit. If the most relevant version's commit
+        # is an ancestor of the given commit (and does not match the commit),
         # then it must be "older" (this is based on how we define the most
         # relevant version).
-        current_commit = ctx.current_commit
-        # If `run_for_current_commit` is True then there must be a current commit.
-        assert current_commit is not None
-        most_relevant_version_is_current_commit = (
-            self._most_relevant_version.commit_hash == current_commit.hash
-            and self._most_relevant_version.has_uncommitted_changes
-            == current_commit.has_changes
+        most_relevant_is_older = ctx.git.is_ancestor(
+            at_least_commit, self._most_relevant_version.commit_hash
         )
-        if most_relevant_version_is_current_commit:
+        if not most_relevant_is_older:
             # No need to re-run.
             return False
         else:

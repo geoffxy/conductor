@@ -98,3 +98,15 @@ class Git:
         if result.returncode != 0:
             raise RuntimeError("Failed to get the distance between commits.")
         return int(result.stdout.strip())
+
+    def rev_parse(self, commit_symbol: str) -> Optional[str]:
+        result = subprocess.run(
+            ["git", "rev-parse", commit_symbol],
+            cwd=self._project_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return None
+        return result.stdout.strip()

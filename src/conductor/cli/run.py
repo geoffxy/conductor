@@ -6,6 +6,8 @@ from conductor.errors import (
     CannotSelectJobCount,
     CannotSetAgainAndCommit,
     CommitFlagUnsupported,
+    InvalidCommitSymbol,
+    CannotSetBothCommitFlags,
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
@@ -93,7 +95,9 @@ def validate_and_retrieve_jobs_count(args) -> int:
 
 
 def validate_args(args, ctx: Context):
-    for_commit = (args.this_commit or args.at_least is not None)
+    for_commit = args.this_commit or args.at_least is not None
+    if args.again and args.at_least is not None:
+        raise CannotSetBothCommitFlags()
     if args.again and for_commit:
         raise CannotSetAgainAndCommit()
     if for_commit and not ctx.uses_git:
@@ -112,8 +116,19 @@ def main(args):
         require_prefix=False,
     )
     ctx.task_index.load_transitive_closure(task_identifier)
+
+    # Convert the specified commit to a hash, if needed.
+    commit = None
+    if args.this_commit or args.at_least is not None:
+        parsed_commit = ctx.git.rev_parse(
+            args.at_least if args.at_least is not None else "HEAD"
+        )
+        if parsed_commit is None:
+            raise InvalidCommitSymbol()
+        commit = parsed_commit
+
     plan = ExecutionPlan.for_task(
-        task_identifier, ctx, run_again=args.again, run_for_this_commit=args.this_commit
+        task_identifier, ctx, run_again=args.again, at_least_commit=commit
     )
     executor = Executor(execution_slots=num_jobs)
     executor.run_plan(plan, ctx, stop_on_first_error=args.stop_early)
