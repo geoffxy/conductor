@@ -227,3 +227,73 @@ def test_this_commit_three(tmp_path: pathlib.Path):
     res = cond.run("//:copy", this_commit=True)
     assert res.returncode == 0
     validate_copy_contents(out_dir, commit2_value)
+
+
+def test_invalid_commit_hash(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-commit"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+    # The commit symbol passed to `--at-least` is invalid.
+    res = cond.run("//:copy", at_least="invalid")
+    assert res.returncode != 0
+
+
+def test_invalid_both_flags(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-commit"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+    # Cannot set both the `--at-least` and `--this-commit` flags.
+    res = cond.run("//:copy", at_least="master", this_commit=True)
+    assert res.returncode != 0
+
+
+def test_invalid_again_at_least(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-commit"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+    # Cannot set both the `--at-least` and `--again` flags.
+    res = cond.run("//:copy", at_least="master", again=True)
+    assert res.returncode != 0
+
+
+def test_at_least(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-commit"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+
+    # Make commit 1.
+    run_git_command(repo_path, ["checkout", "-b", "commit1"])
+    commit1_value = 123
+    set_source_value(repo_path, commit1_value)
+
+    # Our fixture project will fail the `generate-1` task if this file is present.
+    fail_file = repo_path / "fail"
+    with open(fail_file, "w", encoding="UTF-8") as f:
+        f.write("\n")
+
+    # Run against commit 1. This should fail.
+    res = cond.run("//:copy")
+    assert res.returncode != 0
+
+    # Make commit 2.
+    run_git_command(repo_path, ["checkout", "master"])
+    run_git_command(repo_path, ["commit", "--allow-empty", "-m", "Second commit."])
+    run_git_command(repo_path, ["checkout", "-b", "commit2"])
+
+    commit2_value = 989
+    set_source_value(repo_path, commit2_value)
+
+    # Remove the failure file marker.
+    fail_file.unlink()
+
+    # Ensure we have results as new as at least `commit1`.
+    res = cond.run("//:copy", at_least="commit1")
+    assert res.returncode == 0
+
+    # Task should succeed. Only `generate-1` should have ran and so it will have
+    # `commit2_value`.
+    out_dir = cond.find_task_output_dir("//:copy", is_experiment=False)
+    assert out_dir is not None
+    validate_copy_contents(
+        out_dir, expected_value=commit1_value, task1_expected_value=commit2_value
+    )

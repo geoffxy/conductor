@@ -96,7 +96,7 @@ def validate_and_retrieve_jobs_count(args) -> int:
 
 def validate_args(args, ctx: Context):
     for_commit = args.this_commit or args.at_least is not None
-    if args.again and args.at_least is not None:
+    if args.this_commit and args.at_least is not None:
         raise CannotSetBothCommitFlags()
     if args.again and for_commit:
         raise CannotSetAgainAndCommit()
@@ -124,7 +124,7 @@ def main(args):
             args.at_least if args.at_least is not None else "HEAD"
         )
         if parsed_commit is None:
-            raise InvalidCommitSymbol()
+            raise InvalidCommitSymbol(symbol=args.at_least)
         commit = parsed_commit
 
     plan = ExecutionPlan.for_task(

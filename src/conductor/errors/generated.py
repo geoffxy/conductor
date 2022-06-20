@@ -521,11 +521,11 @@ class InvalidCommitSymbol(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
-
+        self.symbol = kwargs["symbol"]
     
     def _message(self):
-        return "The commit symbol passed to --at-least is not valid.".format(
-
+        return "The commit symbol '{symbol}' passed to --at-least is not valid.".format(
+            symbol=self.symbol,
         )
 
 

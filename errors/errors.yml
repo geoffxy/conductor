@@ -192,7 +192,7 @@
 
 5008:
   name: InvalidCommitSymbol
-  message: "The commit symbol passed to --at-least is not valid."
+  message: "The commit symbol '{symbol}' passed to --at-least is not valid."
 
 5009:
   name: CannotSetBothCommitFlags

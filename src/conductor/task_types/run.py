@@ -253,6 +253,10 @@ class RunExperiment(_RunSubprocess):
             # There already is a most relevant version and we are not asked to
             # run for at least some commit.
             return False
+        if self._most_relevant_version.commit_hash is None:
+            # Must re-run since the most relevant version does not have a commit
+            # hash and `at_least_commit` is set to some commit.
+            return True
         if self._most_relevant_version.commit_hash == at_least_commit:
             # No need to re-run. The most relevant version matches `at_least_commit`.
             return False
