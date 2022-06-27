@@ -4,8 +4,11 @@ from conductor.context import Context
 from conductor.errors import (
     InvalidJobsCount,
     CannotSelectJobCount,
-    CannotSetAgainAndThisCommit,
-    ThisCommitUnsupported,
+    CannotSetAgainAndCommit,
+    CommitFlagUnsupported,
+    InvalidCommitSymbol,
+    CannotSetBothCommitFlags,
+    AtLeastCommitNotAncestor,
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
@@ -38,14 +41,22 @@ def register_command(subparsers):
     )
     parser.add_argument(
         "-c",
+        "--at-least",
+        metavar="COMMIT",
+        type=str,
+        help="Run all relevant tasks that have not yet run against a commit that is "
+        "at least as new as the specified commit. You can specify a commit using a "
+        "hash, branch name, or tag. Conductor by default uses cached results for "
+        "certain tasks, if they exist. Setting this flag will make Conductor run "
+        "all relevant tasks that do not have cached entries for the current commit. "
+        "This flag cannot be used if your project is not managed by Git, or if "
+        "Conductor's Git integration was disabled.",
+    )
+    parser.add_argument(
         "--this-commit",
         action="store_true",
         help="Run all relevant tasks that have not yet run against the current "
-        "commit. Conductor by default uses cached results for certain tasks, if they "
-        "exist. Setting this flag will make Conductor run all relevant tasks that do "
-        "not have cached entries for the current commit. This flag cannot be used if "
-        "your project is not managed by Git, or if Conductor's Git integration was "
-        "disabled.",
+        "commit. Equivalent to setting --at-least=HEAD.",
     )
     parser.add_argument(
         "-e",
@@ -86,12 +97,15 @@ def validate_and_retrieve_jobs_count(args) -> int:
 
 
 def validate_args(args, ctx: Context):
-    if args.again and args.this_commit:
-        raise CannotSetAgainAndThisCommit()
-    if args.this_commit and not ctx.uses_git:
-        raise ThisCommitUnsupported()
-    if args.this_commit and ctx.current_commit is None:
-        raise ThisCommitUnsupported()
+    for_commit = args.this_commit or args.at_least is not None
+    if args.this_commit and args.at_least is not None:
+        raise CannotSetBothCommitFlags()
+    if args.again and for_commit:
+        raise CannotSetAgainAndCommit()
+    if for_commit and not ctx.uses_git:
+        raise CommitFlagUnsupported()
+    if for_commit and ctx.current_commit is None:
+        raise CommitFlagUnsupported()
 
 
 @cli_command
@@ -104,8 +118,25 @@ def main(args):
         require_prefix=False,
     )
     ctx.task_index.load_transitive_closure(task_identifier)
+
+    # Convert the specified commit to a hash, if needed.
+    commit = None
+    if args.this_commit or args.at_least is not None:
+        parsed_commit = ctx.git.rev_parse(
+            args.at_least if args.at_least is not None else "HEAD"
+        )
+        if parsed_commit is None:
+            raise InvalidCommitSymbol(symbol=args.at_least)
+        commit = parsed_commit
+
+        # Validate the commit hash. It must be an ancestor of the current commit.
+        assert ctx.current_commit is not None
+        commit_is_ancestor = ctx.git.is_ancestor(ctx.current_commit.hash, commit)
+        if not commit_is_ancestor:
+            raise AtLeastCommitNotAncestor()
+
     plan = ExecutionPlan.for_task(
-        task_identifier, ctx, run_again=args.again, run_for_this_commit=args.this_commit
+        task_identifier, ctx, run_again=args.again, at_least_commit=commit
     )
     executor = Executor(execution_slots=num_jobs)
     executor.run_plan(plan, ctx, stop_on_first_error=args.stop_early)

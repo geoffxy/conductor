@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from conductor.context import Context
 from conductor.execution.task import ExecutingTask
@@ -39,7 +39,7 @@ class ExecutionPlan:
         task_identifier: TaskIdentifier,
         ctx: Context,
         run_again: bool = False,
-        run_for_this_commit: bool = False,
+        at_least_commit: Optional[str] = None,
     ) -> "ExecutionPlan":
         exec_tasks: Dict[TaskIdentifier, ExecutingTask] = {}
         initial_tasks: List[ExecutingTask] = []
@@ -64,9 +64,7 @@ class ExecutionPlan:
 
                 # If we do not need to run the task, we do not need to consider
                 # its dependencies.
-                if not run_again and not etask.task.should_run(
-                    ctx, run_for_this_commit
-                ):
+                if not run_again and not etask.task.should_run(ctx, at_least_commit):
                     etask.set_state(TaskState.SUCCEEDED_CACHED)
                     cached_tasks.append(etask)
                     etask.decrement_deps_of_waiting_on()

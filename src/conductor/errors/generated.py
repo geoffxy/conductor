@@ -490,7 +490,7 @@ class CannotSelectJobCount(ConductorError):
         )
 
 
-class CannotSetAgainAndThisCommit(ConductorError):
+class CannotSetAgainAndCommit(ConductorError):
     error_code = 5006
 
     def __init__(self, **kwargs):
@@ -498,12 +498,12 @@ class CannotSetAgainAndThisCommit(ConductorError):
 
     
     def _message(self):
-        return "You cannot set both the --again and --this-commit flags.".format(
+        return "You cannot set the --again flag while also setting --this-commit or --at-least.".format(
 
         )
 
 
-class ThisCommitUnsupported(ConductorError):
+class CommitFlagUnsupported(ConductorError):
     error_code = 5007
 
     def __init__(self, **kwargs):
@@ -511,7 +511,46 @@ class ThisCommitUnsupported(ConductorError):
 
     
     def _message(self):
-        return "Your project does not use Git or Git integration has been disabled. You cannot use the --this-commit flag when Git is disabled.".format(
+        return "Your project does not use Git, Git integration has been disabled, or there are no commits in your repository. You cannot use the --this-commit or --at-least flags when Git is disabled nor when there are no commits available.".format(
+
+        )
+
+
+class InvalidCommitSymbol(ConductorError):
+    error_code = 5008
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.symbol = kwargs["symbol"]
+    
+    def _message(self):
+        return "The commit symbol '{symbol}' passed to --at-least is not valid.".format(
+            symbol=self.symbol,
+        )
+
+
+class CannotSetBothCommitFlags(ConductorError):
+    error_code = 5009
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "You cannot set both --this-commit and --at-least at the same time.".format(
+
+        )
+
+
+class AtLeastCommitNotAncestor(ConductorError):
+    error_code = 5010
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The commit passed to --at-least is not an ancestor of the current commit.".format(
 
         )
 
@@ -553,6 +592,9 @@ __all__ = [
     "UnsupportedPlatform",
     "InvalidJobsCount",
     "CannotSelectJobCount",
-    "CannotSetAgainAndThisCommit",
-    "ThisCommitUnsupported",
+    "CannotSetAgainAndCommit",
+    "CommitFlagUnsupported",
+    "InvalidCommitSymbol",
+    "CannotSetBothCommitFlags",
+    "AtLeastCommitNotAncestor",
 ]
