@@ -542,7 +542,7 @@ class CannotSetBothCommitFlags(ConductorError):
         )
 
 
-class SpecifiedCommitTooNew(ConductorError):
+class AtLeastCommitNotAncestor(ConductorError):
     error_code = 5010
 
     def __init__(self, **kwargs):
@@ -550,7 +550,7 @@ class SpecifiedCommitTooNew(ConductorError):
 
     
     def _message(self):
-        return "The commit passed to --at-least is newer than the current commit.".format(
+        return "The commit passed to --at-least is not an ancestor of the current commit.".format(
 
         )
 
@@ -596,5 +596,5 @@ __all__ = [
     "CommitFlagUnsupported",
     "InvalidCommitSymbol",
     "CannotSetBothCommitFlags",
-    "SpecifiedCommitTooNew",
+    "AtLeastCommitNotAncestor",
 ]

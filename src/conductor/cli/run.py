@@ -8,7 +8,7 @@ from conductor.errors import (
     CommitFlagUnsupported,
     InvalidCommitSymbol,
     CannotSetBothCommitFlags,
-    SpecifiedCommitTooNew,
+    AtLeastCommitNotAncestor,
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
@@ -42,6 +42,7 @@ def register_command(subparsers):
     parser.add_argument(
         "-c",
         "--at-least",
+        metavar="COMMIT",
         type=str,
         help="Run all relevant tasks that have not yet run against a commit that is "
         "at least as new as the specified commit. You can specify a commit using a "
@@ -128,14 +129,11 @@ def main(args):
             raise InvalidCommitSymbol(symbol=args.at_least)
         commit = parsed_commit
 
-        # Validate the commit hash. It cannot be newer than the current commit
-        # (we do not support this scenario).
+        # Validate the commit hash. It must be an ancestor of the current commit.
         assert ctx.current_commit is not None
-        at_least_is_too_new = commit != ctx.current_commit.hash and ctx.git.is_ancestor(
-            commit, ctx.current_commit.hash
-        )
-        if at_least_is_too_new:
-            raise SpecifiedCommitTooNew()
+        commit_is_ancestor = ctx.git.is_ancestor(ctx.current_commit.hash, commit)
+        if not commit_is_ancestor:
+            raise AtLeastCommitNotAncestor()
 
     plan = ExecutionPlan.for_task(
         task_identifier, ctx, run_again=args.again, at_least_commit=commit
