@@ -542,6 +542,19 @@ class CannotSetBothCommitFlags(ConductorError):
         )
 
 
+class SpecifiedCommitTooNew(ConductorError):
+    error_code = 5010
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "The commit passed to --at-least is newer than the current commit.".format(
+
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -583,4 +596,5 @@ __all__ = [
     "CommitFlagUnsupported",
     "InvalidCommitSymbol",
     "CannotSetBothCommitFlags",
+    "SpecifiedCommitTooNew",
 ]

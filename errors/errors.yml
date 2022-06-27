@@ -197,3 +197,7 @@
 5009:
   name: CannotSetBothCommitFlags
   message: "You cannot set both --this-commit and --at-least at the same time."
+
+5010:
+  name: SpecifiedCommitTooNew
+  message: "The commit passed to --at-least is newer than the current commit."
