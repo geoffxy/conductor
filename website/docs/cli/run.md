@@ -4,7 +4,7 @@ id: run
 ---
 
 ```bash
-$ cond run [-h] [-a] [-c] [-e] [-j [JOBS]] task_identifier
+$ cond run [-h] [-a] [-c COMMIT] [--this-commit] [-e] [-j [JOBS]] task_identifier
 ```
 
 Runs the task identified by `task_identifier`, along with its dependencies.
@@ -33,12 +33,13 @@ By default, Conductor will use cached results for certain tasks if they exist
 Setting this flag will make Conductor run all the relevant tasks again,
 regardless of the cache.
 
-### `-c` or `--this-commit`
+### `-c` or `--at-least`
 
 Setting this flag will make Conductor run all the relevant tasks that _do not_
-have a cached version for the current commit (see the reference for
-[`run_experiment()`](task-types/run-experiment.md) for details on Conductor's
-caching semantics).
+have a cached version that is at least as new as the specified commit (see the
+reference for [`run_experiment()`](task-types/run-experiment.md) for details on
+Conductor's caching semantics). You can specify a commit using a hash, branch,
+or tag. The specified commit must be an ancestor of the current commit.
 
 This flag cannot be used with `--again` (the two flags are not compatible). This
 flag also cannot be used if (i) Conductor's Git integration [is
@@ -51,6 +52,12 @@ always re-run all the relevant tasks, regardless of the cache. With
 cached version that matches your repository's current commit (i.e., the value of
 `HEAD`). This is useful when you need to restart dependent tasks that failed or
 were aborted.
+
+### `--this-commit`
+
+Setting this flag is equivalent to setting `--at-least=HEAD`. This flag cannot
+be used with `--again`. If you set `--this-commit`, you also cannot set
+`--at-least`.
 
 ### `-e` or `--stop-early`
 
@@ -86,6 +93,9 @@ $ cond run //experiments:benchmark
 
 # Run //experiments:benchmark, regardless if it has cached results available.
 $ cond run --again //experiments:benchmark
+
+# Run //experiments:benchmark if there are no cached results at least as new as commit abc123.
+$ cond run --at-least=abc123 //experiments:benchmark
 
 # Run //experiments:benchmark if there are no cached results for the current commit.
 $ cond run --this-commit //experiments:benchmark
