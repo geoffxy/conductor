@@ -11,7 +11,6 @@ from conductor.errors import (
     TaskFailed,
     TaskNonZeroExit,
     ConductorAbort,
-    SpecifiedCommitTooNew,
 )
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
@@ -265,16 +264,6 @@ class RunExperiment(_RunSubprocess):
         if self._most_relevant_version.commit_hash == at_least_commit:
             # No need to re-run. The most relevant version matches `at_least_commit`.
             return False
-
-        # Raise an error if `at_least_commit` is newer than the current commit
-        # (we do not support this scenario).
-        assert ctx.current_commit is not None
-        at_least_is_too_new = (
-            at_least_commit != ctx.current_commit.hash
-            and ctx.git.is_ancestor(at_least_commit, ctx.current_commit.hash)
-        )
-        if at_least_is_too_new:
-            raise SpecifiedCommitTooNew()
 
         # We are being asked to ensure there is at least a version as new as
         # `at_least_commit`. We must run if the most relevant version's commit

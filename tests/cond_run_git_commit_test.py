@@ -297,3 +297,32 @@ def test_at_least(tmp_path: pathlib.Path):
     validate_copy_contents(
         out_dir, expected_value=commit1_value, task1_expected_value=commit2_value
     )
+
+
+def test_at_least_too_new(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["git-commit"])
+    repo_path = tmp_path / "root"
+    set_up_git_repository(repo_path)
+
+    # Make commit 1 and run the task.
+    run_git_command(repo_path, ["checkout", "-b", "commit1"])
+    commit1_value = 123
+    set_source_value(repo_path, commit1_value)
+
+    res = cond.run("//:copy")
+    assert res.returncode == 0
+    out_dir = cond.find_task_output_dir("//:copy", is_experiment=False)
+    assert out_dir is not None
+    validate_copy_contents(out_dir, commit1_value)
+
+    # Make commit 2.
+    run_git_command(repo_path, ["checkout", "master"])
+    run_git_command(repo_path, ["commit", "--allow-empty", "-m", "Second commit."])
+    run_git_command(repo_path, ["checkout", "-b", "commit2"])
+
+    # Set the current commit to commit 1.
+    run_git_command(repo_path, ["checkout", "commit1"])
+
+    # This should fail because `commit2` is newer than the current commit.
+    res = cond.run("//:copy", at_least="commit2")
+    assert res.returncode != 0

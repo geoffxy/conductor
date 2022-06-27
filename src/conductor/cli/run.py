@@ -8,6 +8,7 @@ from conductor.errors import (
     CommitFlagUnsupported,
     InvalidCommitSymbol,
     CannotSetBothCommitFlags,
+    SpecifiedCommitTooNew,
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
@@ -126,6 +127,15 @@ def main(args):
         if parsed_commit is None:
             raise InvalidCommitSymbol(symbol=args.at_least)
         commit = parsed_commit
+
+        # Validate the commit hash. It cannot be newer than the current commit
+        # (we do not support this scenario).
+        assert ctx.current_commit is not None
+        at_least_is_too_new = commit != ctx.current_commit.hash and ctx.git.is_ancestor(
+            commit, ctx.current_commit.hash
+        )
+        if at_least_is_too_new:
+            raise SpecifiedCommitTooNew()
 
     plan = ExecutionPlan.for_task(
         task_identifier, ctx, run_again=args.again, at_least_commit=commit
