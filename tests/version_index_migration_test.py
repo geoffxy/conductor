@@ -1,6 +1,6 @@
 import pathlib
 import sqlite3
-from typing import Iterable
+from typing import Iterable, Tuple
 import conductor.execution.version_index_queries as q
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE, VERSION_INDEX_NAME
 from conductor.execution.version_index import VersionIndex
@@ -68,7 +68,9 @@ def test_v1_to_v2_upgrade_e2e(tmp_path: pathlib.Path):
         assert expected[1] == actual[1].timestamp
 
 
-def create_v1_version_index(filepath: pathlib.Path, entries: Iterable[Iterable]):
+def create_v1_version_index(
+    filepath: pathlib.Path, entries: Iterable[Tuple[str, int, str]]
+):
     conn = sqlite3.connect(filepath)
     conn.execute(q.v1_create_table)
     conn.execute(q.set_format_version.format(version=1))
