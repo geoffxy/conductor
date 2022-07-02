@@ -555,6 +555,19 @@ class AtLeastCommitNotAncestor(ConductorError):
         )
 
 
+class NoTaskOutputPath(ConductorError):
+    error_code = 5011
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.task_identifier = kwargs["task_identifier"]
+    
+    def _message(self):
+        return "There is no relevant output path for '{task_identifier}'. For most tasks, this just means that you need to run the task first.".format(
+            task_identifier=self.task_identifier,
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -597,4 +610,5 @@ __all__ = [
     "InvalidCommitSymbol",
     "CannotSetBothCommitFlags",
     "AtLeastCommitNotAncestor",
+    "NoTaskOutputPath",
 ]

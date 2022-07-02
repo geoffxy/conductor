@@ -75,29 +75,14 @@ class TaskIndex:
                         task_identifier.path_to_cond_file(self._project_root)
                     )
 
-                rel_path = identifier.path_to_cond_file()
-                if rel_path not in self._loaded_raw_tasks:
-                    self._loaded_raw_tasks[
-                        rel_path
-                    ] = self._task_loader.parse_cond_file(
-                        identifier.path_to_cond_file(self._project_root),
-                    )
-
-                if identifier.name not in self._loaded_raw_tasks[rel_path]:
-                    raise TaskNotFound(
-                        task_identifier=str(identifier)
-                    ).add_file_context(
-                        task_identifier.path_to_cond_file(self._project_root)
-                    ).add_extra_context(
+                try:
+                    self.load_single_task(identifier)
+                except TaskNotFound as e:
+                    raise e.add_extra_context(
                         "This error occurred when resolving the transitive dependencies of task '{}'.".format(
                             str(task_identifier)
                         )
                     )
-
-                raw_task = self._loaded_raw_tasks[rel_path][identifier.name]
-                self._loaded_tasks[identifier] = self._materialize_raw_task(
-                    identifier, raw_task
-                )
 
                 identifiers_to_load.append((identifier, 1))
                 curr_path.add(identifier)
@@ -106,6 +91,26 @@ class TaskIndex:
                     if dep in visited_identifiers:
                         continue
                     identifiers_to_load.append((dep, 0))
+
+    def load_single_task(self, identifier: TaskIdentifier):
+        """
+        Loads only the task specified by `identifier`.
+        """
+        rel_path = identifier.path_to_cond_file()
+        if rel_path not in self._loaded_raw_tasks:
+            self._loaded_raw_tasks[rel_path] = self._task_loader.parse_cond_file(
+                identifier.path_to_cond_file(self._project_root),
+            )
+
+        if identifier.name not in self._loaded_raw_tasks[rel_path]:
+            raise TaskNotFound(task_identifier=str(identifier)).add_file_context(
+                identifier.path_to_cond_file(self._project_root)
+            )
+
+        raw_task = self._loaded_raw_tasks[rel_path][identifier.name]
+        self._loaded_tasks[identifier] = self._materialize_raw_task(
+            identifier, raw_task
+        )
 
     def _materialize_raw_task(
         self, identifier: TaskIdentifier, raw_task: Dict

@@ -201,3 +201,9 @@
 5010:
   name: AtLeastCommitNotAncestor
   message: "The commit passed to --at-least is not an ancestor of the current commit."
+
+5011:
+  name: NoTaskOutputPath
+  message: >-
+    There is no relevant output path for '{task_identifier}'. For most tasks,
+    this just means that you need to run the task first.

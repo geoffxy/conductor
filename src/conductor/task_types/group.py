@@ -30,3 +30,7 @@ class Group(TaskType):
     def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
         # Nothing special needs to be done here.
         pass
+
+    def get_output_path(self, ctx: "c.Context") -> Optional[pathlib.Path]:
+        # This task does not have any outputs.
+        return None
