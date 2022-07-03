@@ -14,6 +14,13 @@ def register_command(subparsers):
         type=str,
         help="The task whose output path to print.",
     )
+    parser.add_argument(
+        "-p",
+        "--project",
+        action="store_true",
+        help="If set, Conductor will print the output path relative to the project "
+        "root.",
+    )
     parser.set_defaults(func=main)
 
 
@@ -29,4 +36,7 @@ def main(args):
     output_path = task.get_output_path(ctx)
     if output_path is None or not output_path.exists():
         raise NoTaskOutputPath(task_identifier=str(task_identifier))
-    print(output_path)
+    if args.project:
+        print(output_path.relative_to(ctx.project_root))
+    else:
+        print(output_path)
