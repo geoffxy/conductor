@@ -28,6 +28,7 @@ module.exports = {
             'cli/run',
             'cli/archive',
             'cli/restore',
+            'cli/where',
             'cli/clean',
             'cli/gc',
           ],

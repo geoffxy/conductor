@@ -98,6 +98,16 @@ class ConductorRunner:
             cmd.append("--verbose")
         return self._run_command(cmd)
 
+    def where(
+        self, task_identifier: str, project: bool = False, non_existent_ok: bool = False
+    ):
+        cmd = ["where", task_identifier]
+        if project:
+            cmd.append("--project")
+        if non_existent_ok:
+            cmd.append("--non-existent-ok")
+        return self._run_command(cmd)
+
     def find_task_output_dir(
         self, task_identifier: str, is_experiment: bool = True
     ) -> Optional[pathlib.Path]:
