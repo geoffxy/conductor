@@ -206,11 +206,22 @@ class Executor:
 
             # Parallelizable tasks are prioritized (dequeued first).
             next_task = self._ready_to_run.dequeue_next()
+            prev_running_parallel = self._running_parallel
             self._running_parallel = next_task.task.parallelizable
+
+            # For output cosmetics. We add empty lines between task outputs to
+            # help distinguish their outputs. But this extra empty line is not
+            # useful when more than one task is running in parallel. So once
+            # Conductor switches to running tasks in parallel, we want to stop
+            # printing the extra newline character.
+            avoid_leading_newline = (
+                prev_running_parallel and self._running_parallel and self._slots > 1
+            )
 
             if not next_task.exe_deps_succeeded():
                 # At least one dependency failed, so we need to skip this task.
-                print()
+                if not avoid_leading_newline:
+                    print()
                 print_yellow(
                     "✱ Skipping {}. {}".format(
                         str(next_task.task.identifier), self._get_progress_string()
@@ -219,7 +230,8 @@ class Executor:
                 next_task.set_state(TaskState.SKIPPED)
                 self._process_finished_task(next_task)
             else:
-                print()
+                if not avoid_leading_newline:
+                    print()
                 print_cyan(
                     "✱ Running {}... {}".format(
                         str(next_task.task.identifier), self._get_progress_string()
