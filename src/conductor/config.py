@@ -62,3 +62,6 @@ EXP_OPTION_JSON_FILE_NAME = "options.json"
 
 # The name of the experiment arguments serialized JSON file.
 EXP_ARGS_JSON_FILE_NAME = "args.json"
+
+# COND files can only include files with this extension.
+COND_INCLUDE_EXTENSION = ".cond"
