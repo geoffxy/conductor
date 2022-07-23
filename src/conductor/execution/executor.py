@@ -121,6 +121,7 @@ class Executor:
         self._completed_tasks: List[ExecutingTask] = []
         self._running_parallel = False
         self._num_tasks_to_run = 0
+        self._num_tasks_dequeued = 0
 
     def run_plan(
         self, plan: ExecutionPlan, ctx: Context, stop_on_first_error: bool = False
@@ -183,6 +184,7 @@ class Executor:
         self._running_parallel = False
         self._available_slots = list(reversed(range(self._slots)))
         self._num_tasks_to_run = 0
+        self._num_tasks_dequeued = 0
 
     def _launch_tasks_if_able(self, ctx: Context, stop_on_first_error: bool) -> bool:
         """
@@ -208,6 +210,7 @@ class Executor:
             next_task = self._ready_to_run.dequeue_next()
             prev_running_parallel = self._running_parallel
             self._running_parallel = next_task.task.parallelizable
+            self._num_tasks_dequeued += 1
 
             # For output cosmetics. We add empty lines between task outputs to
             # help distinguish their outputs. But this extra empty line is not
@@ -365,9 +368,7 @@ class Executor:
         print_red("✘ {} failed.".format(task.task.identifier))
 
     def _get_progress_string(self):
-        return "({}/{})".format(
-            str(len(self._completed_tasks) + 1), self._num_tasks_to_run
-        )
+        return "({}/{})".format(str(self._num_tasks_dequeued), self._num_tasks_to_run)
 
     def _get_elapsed_time_string(self, elapsed: float):
         return "(Ran for {}.)".format(time_to_readable_string(elapsed))
