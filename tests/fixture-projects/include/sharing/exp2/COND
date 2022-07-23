@@ -1,0 +1,8 @@
+include("../common.cond")
+include("../common2.cond")
+
+run_experiment(
+  name="exp2",
+  run="../echo.sh",
+  args=["exp2", (VALUE1 + VALUE2)],
+)
