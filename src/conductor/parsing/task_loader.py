@@ -1,4 +1,5 @@
 import pathlib
+from typing import Any, Dict, Optional
 from conductor.config import COND_INCLUDE_EXTENSION
 from conductor.task_types import raw_task_types
 from conductor.errors import (
@@ -18,8 +19,8 @@ from conductor.task_types.stdlib import STDLIB_FILES
 class TaskLoader:
     def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
-        self._tasks = None
-        self._current_cond_file_path = None
+        self._tasks: Optional[Dict[str, Dict]] = None
+        self._current_cond_file_path: Optional[pathlib.Path] = None
         self._conductor_scope = self._compile_scope()
         self._curr_exec_scope = None
 
@@ -27,7 +28,7 @@ class TaskLoader:
         """
         Parses all the tasks in a single COND file.
         """
-        tasks = {}
+        tasks: Dict[str, Dict] = {}
         self._tasks = tasks
         self._current_cond_file_path = cond_file_path
         try:
@@ -38,26 +39,30 @@ class TaskLoader:
             exec(code, self._curr_exec_scope)
             return tasks
         except ConductorError as ex:
-            ex.add_file_context_if_missing(file_path=cond_file_path)
+            ex.add_file_context_if_missing(
+                file_path=self._to_project_path(cond_file_path)
+            )
             raise ex
         except SyntaxError as ex:
             syntax_err = TaskSyntaxError()
             syntax_err.add_file_context(
-                file_path=cond_file_path,
+                file_path=self._to_project_path(cond_file_path),
                 line_number=ex.lineno,
             )
             raise syntax_err from ex
         except NameError as ex:
             name_err = ParsingUnknownNameError(error_message=str(ex))
-            name_err.add_file_context(file_path=cond_file_path)
+            name_err.add_file_context(file_path=self._to_project_path(cond_file_path))
             raise name_err from ex
         except FileNotFoundError as ex:
             missing_file_err = MissingCondFile()
-            missing_file_err.add_file_context(file_path=cond_file_path)
+            missing_file_err.add_file_context(
+                file_path=self._to_project_path(cond_file_path)
+            )
             raise missing_file_err from ex
         except Exception as ex:
             run_err = TaskParseError(error_details=str(ex))
-            run_err.add_file_context(file_path=cond_file_path)
+            run_err.add_file_context(file_path=self._to_project_path(cond_file_path))
             raise run_err from ex
         finally:
             self._tasks = None
@@ -95,6 +100,9 @@ class TaskLoader:
         return shim
 
     def _run_include(self, candidate_path: str):
+        assert self._current_cond_file_path is not None
+        assert self._curr_exec_scope is not None
+
         # 1. Validate `candidate_path`.
         if not candidate_path.endswith(COND_INCLUDE_EXTENSION):
             raise IncludeFileInvalidExtension(included_file=candidate_path)
@@ -106,8 +114,8 @@ class TaskLoader:
             include_path = self._current_cond_file_path.parent.joinpath(candidate_path)
         try:
             include_path = include_path.resolve(strict=True)
-        except FileNotFoundError:
-            raise IncludeFileNotFound(included_file=candidate_path)
+        except FileNotFoundError as ex:
+            raise IncludeFileNotFound(included_file=candidate_path) from ex
 
         # 3. Make sure `include_path` is inside our project.
         if not include_path.is_relative_to(self._project_root):
@@ -118,28 +126,36 @@ class TaskLoader:
         # in the included file.
         with open(include_path, encoding="UTF-8") as file:
             include_code = file.read()
-        scope = {}
+        scope: Dict[str, Any] = {}
         try:
+            # pylint: disable=exec-used
             exec(include_code, {}, scope)
         except SyntaxError as ex:
             syntax_err = TaskSyntaxError()
             syntax_err.add_file_context(
-                file_path=include_path,
+                file_path=self._to_project_path(include_path),
                 line_number=ex.lineno,
             ).add_extra_context(
                 "This error occurred while parsing a file included by {}.".format(
-                    self._current_cond_file_path
+                    self._to_project_path(self._current_cond_file_path)
                 )
             )
             raise syntax_err from ex
         except Exception as ex:
             run_err = TaskParseError(error_details=str(ex))
-            run_err.add_file_context(file_path=include_path).add_extra_context(
+            run_err.add_file_context(
+                file_path=self._to_project_path(include_path)
+            ).add_extra_context(
                 "This error occurred while parsing a file included by {}.".format(
-                    self._current_cond_file_path,
+                    self._to_project_path(self._current_cond_file_path)
                 )
             )
             raise run_err from ex
 
         # 5. Update the current scope with the new symbols.
         self._curr_exec_scope.update(scope)
+
+    def _to_project_path(self, path: pathlib.Path) -> str:
+        """Converts the given path to a path that is relative to the project root."""
+        rel_path = path.relative_to(self._project_root)
+        return "//{}".format(rel_path)

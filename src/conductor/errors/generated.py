@@ -14,7 +14,7 @@ class TaskParseError(ConductorError):
         self.error_details = kwargs["error_details"]
     
     def _message(self):
-        return "An error occurred when parsing a COND file or a file that it includes: '{error_details}'.".format(
+        return "An error occurred when parsing a COND file or a file that it includes: {error_details}.".format(
             error_details=self.error_details,
         )
 

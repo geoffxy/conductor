@@ -1,7 +1,7 @@
 # Task parsing errors (error code 1xxx)
 1000:
   name: TaskParseError
-  message: "An error occurred when parsing a COND file or a file that it includes: '{error_details}'."
+  message: "An error occurred when parsing a COND file or a file that it includes: {error_details}."
 
 1001:
   name: MissingTaskParameter
