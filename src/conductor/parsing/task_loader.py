@@ -24,6 +24,14 @@ class TaskLoader:
         self._conductor_scope = self._compile_scope()
         self._curr_exec_scope = None
 
+        # We cache the results from evaluating `include()`s so that if a file is
+        # included across multiple `COND` files, we do not repeatedly evaluate
+        # the file. The code being included is expected to be deterministic.
+        #
+        # Key is the absolute path to the file (e.g. /home/user/path/to/file.cond).
+        # Value is the resulting scope object.
+        self._include_cache: Dict[str, Any] = {}
+
     def parse_cond_file(self, cond_file_path: pathlib.Path):
         """
         Parses all the tasks in a single COND file.
@@ -121,7 +129,12 @@ class TaskLoader:
         if not include_path.is_relative_to(self._project_root):
             raise IncludeFileNotInProject(included_file=candidate_path)
 
-        # 4. Run the included file. We purposely use a separate scope so that
+        # 4. Check if the file is in our cache. If so, just use the cached results.
+        if str(include_path) in self._include_cache:
+            self._curr_exec_scope.update(self._include_cache[str(include_path)])
+            return
+
+        # 5. Run the included file. We purposely use a separate scope so that
         # the Conductor task symbols (e.g., run_experiment()) are not available
         # in the included file.
         with open(include_path, encoding="UTF-8") as file:
@@ -152,8 +165,11 @@ class TaskLoader:
             )
             raise run_err from ex
 
-        # 5. Update the current scope with the new symbols.
+        # 6. Update the current scope with the new symbols.
         self._curr_exec_scope.update(scope)
+
+        # 7. Update the cache.
+        self._curr_exec_scope[str(include_path)] = scope
 
     def _to_project_path(self, path: pathlib.Path) -> str:
         """Converts the given path to a path that is relative to the project root."""
