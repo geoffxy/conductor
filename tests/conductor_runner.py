@@ -176,4 +176,5 @@ FIXTURE_TEMPLATES = {
     "lib-test": pathlib.Path(_TESTS_DIR, "fixture-projects", "lib-test"),
     "git-context": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-context"),
     "git-commit": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-commit"),
+    "include": pathlib.Path(_TESTS_DIR, "fixture-projects", "include"),
 }

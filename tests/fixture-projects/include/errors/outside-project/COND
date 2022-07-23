@@ -1,0 +1,6 @@
+include("../../experiments/include_test.cond")
+
+run_command(
+  name="main",
+  run="exit 0",
+)
