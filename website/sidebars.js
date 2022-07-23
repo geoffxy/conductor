@@ -22,6 +22,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Directives',
+          link: {type: 'doc', id: 'directives'},
           collapsed: false,
           items: [
             'directives/include',

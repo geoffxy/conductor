@@ -55,7 +55,7 @@ REPETITIONS = 3
 THREADS = 2 * 8
 ```
 
-```python title=experiments/baseline/COND
+```python title=experiments/baseline/COND {2}
 # Include `common.cond` using a relative path.
 include("../common.cond")
 
@@ -69,7 +69,7 @@ run_experiment(
 )
 ```
 
-```python title=experiments/new_system/COND
+```python title=experiments/new_system/COND {2}
 # Include `common.cond` using a path relative to the project root.
 include("//experiments/common.cond")
 
