@@ -126,8 +126,13 @@ class TaskLoader:
             raise IncludeFileNotFound(included_file=candidate_path) from ex
 
         # 3. Make sure `include_path` is inside our project.
-        if not include_path.is_relative_to(self._project_root):
-            raise IncludeFileNotInProject(included_file=candidate_path)
+        # If `include_path` is not relative to `self._project_root` then the
+        # method will raise a `ValueError`. For compatibility with Python 3.8,
+        # we do not use `is_relative_to()` (it is a Python 3.9+ method).
+        try:
+            include_path.relative_to(self._project_root)
+        except ValueError as ex:
+            raise IncludeFileNotInProject(included_file=candidate_path) from ex
 
         # 4. Check if the file is in our cache. If so, just use the cached results.
         if str(include_path) in self._include_cache:
