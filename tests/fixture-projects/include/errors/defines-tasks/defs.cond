@@ -1,0 +1,10 @@
+# Cannot define tasks in an included file.
+run_command(
+  name="testing",
+  run="exit 0",
+)
+
+run_experiment(
+  name="testing2",
+  run="exit 0",
+)

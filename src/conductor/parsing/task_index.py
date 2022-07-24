@@ -16,7 +16,7 @@ from conductor.task_types.base import TaskType
 class TaskIndex:
     def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
-        self._task_loader = TaskLoader()
+        self._task_loader = TaskLoader(project_root)
         # Keyed by the relative path to the COND file
         self._loaded_raw_tasks: Dict[pathlib.Path, Dict[str, Dict]] = {}
         # Keyed by task identifier

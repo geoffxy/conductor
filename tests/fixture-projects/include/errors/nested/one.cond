@@ -1,0 +1,2 @@
+# Cannot call include again inside an included file.
+include("two.cond")

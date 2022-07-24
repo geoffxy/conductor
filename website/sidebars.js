@@ -21,6 +21,15 @@ module.exports = {
         },
         {
           type: 'category',
+          label: 'Directives',
+          link: {type: 'doc', id: 'directives'},
+          collapsed: false,
+          items: [
+            'directives/include',
+          ],
+        },
+        {
+          type: 'category',
           label: 'Command Line Interface',
           link: {type: 'doc', id: 'cli'},
           collapsed: false,

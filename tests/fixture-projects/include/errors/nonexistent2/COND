@@ -1,0 +1,6 @@
+include("//errors/nonexistent2/nosuchfile.cond")
+
+run_command(
+  name="main",
+  run="exit 0",
+)

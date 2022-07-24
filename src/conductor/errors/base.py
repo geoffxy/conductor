@@ -17,6 +17,11 @@ class ConductorError(RuntimeError):
         self.file_context = FileContext(file_path, line_number)
         return self
 
+    def add_file_context_if_missing(self, file_path, line_number=None):
+        if self.file_context is not None:
+            return self
+        return self.add_file_context(file_path, line_number)
+
     def add_extra_context(self, context_string):
         self.extra_context = context_string
         return self

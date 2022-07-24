@@ -1,0 +1,7 @@
+combine(
+  name="both",
+  deps=[
+    "//sharing/exp1:exp1",
+    "//sharing/exp2:exp2",
+  ],
+)

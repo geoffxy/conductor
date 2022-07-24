@@ -1,7 +1,7 @@
 # Task parsing errors (error code 1xxx)
 1000:
   name: TaskParseError
-  message: "An unknown error occurred when parsing a COND file."
+  message: "An error occurred when parsing a COND file or a file that it includes: {error_details}."
 
 1001:
   name: MissingTaskParameter
@@ -29,7 +29,8 @@
 
 1007:
   name: TaskSyntaxError
-  message: "Encountered a syntax error when parsing a COND file."
+  message: >-
+    Encountered a syntax error when parsing a COND file or a file that it includes.
 
 1008:
   name: ParsingUnknownNameError
@@ -87,6 +88,12 @@
     All arguments must be either a string, integer, floating point number, or
     boolean.
 
+1017:
+  name: IncludeFileInvalidExtension
+  message: >-
+    Encountered an include() of '{included_file}', which does not have a '.cond'
+    extension. Conductor only supports including .cond files.
+
 
 # Task graph loading errors (error code 2xxx)
 2001:
@@ -104,6 +111,14 @@
 2004:
   name: UnsupportedVersionIndexFormat
   message: "Detected an unsupported version index ({version}). Please make sure that you are using the latest version of Conductor."
+
+2005:
+  name: IncludeFileNotFound
+  message: Encountered an include() of '{included_file}'. However, that file does not exist.
+
+2006:
+  name: IncludeFileNotInProject
+  message: Encountered an include() of '{included_file}'. However, that file is not inside the project.
 
 
 # Execution errors (error code 3xxx)

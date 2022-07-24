@@ -11,11 +11,11 @@ class TaskParseError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
-
+        self.error_details = kwargs["error_details"]
     
     def _message(self):
-        return "An unknown error occurred when parsing a COND file.".format(
-
+        return "An error occurred when parsing a COND file or a file that it includes: {error_details}.".format(
+            error_details=self.error_details,
         )
 
 
@@ -111,7 +111,7 @@ class TaskSyntaxError(ConductorError):
 
     
     def _message(self):
-        return "Encountered a syntax error when parsing a COND file.".format(
+        return "Encountered a syntax error when parsing a COND file or a file that it includes.".format(
 
         )
 
@@ -241,6 +241,19 @@ class RunArgumentsNonPrimitiveValue(ConductorError):
         )
 
 
+class IncludeFileInvalidExtension(ConductorError):
+    error_code = 1017
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.included_file = kwargs["included_file"]
+    
+    def _message(self):
+        return "Encountered an include() of '{included_file}', which does not have a '.cond' extension. Conductor only supports including .cond files.".format(
+            included_file=self.included_file,
+        )
+
+
 class TaskNotFound(ConductorError):
     error_code = 2001
 
@@ -290,6 +303,32 @@ class UnsupportedVersionIndexFormat(ConductorError):
     def _message(self):
         return "Detected an unsupported version index ({version}). Please make sure that you are using the latest version of Conductor.".format(
             version=self.version,
+        )
+
+
+class IncludeFileNotFound(ConductorError):
+    error_code = 2005
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.included_file = kwargs["included_file"]
+    
+    def _message(self):
+        return "Encountered an include() of '{included_file}'. However, that file does not exist.".format(
+            included_file=self.included_file,
+        )
+
+
+class IncludeFileNotInProject(ConductorError):
+    error_code = 2006
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.included_file = kwargs["included_file"]
+    
+    def _message(self):
+        return "Encountered an include() of '{included_file}'. However, that file is not inside the project.".format(
+            included_file=self.included_file,
         )
 
 
@@ -586,10 +625,13 @@ __all__ = [
     "ExperimentGroupDuplicateName",
     "ExperimentGroupInvalidExperimentInstance",
     "RunArgumentsNonPrimitiveValue",
+    "IncludeFileInvalidExtension",
     "TaskNotFound",
     "MissingProjectRoot",
     "CyclicDependency",
     "UnsupportedVersionIndexFormat",
+    "IncludeFileNotFound",
+    "IncludeFileNotInProject",
     "TaskNonZeroExit",
     "TaskFailed",
     "OutputDirTaken",
