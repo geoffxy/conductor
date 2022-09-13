@@ -49,6 +49,7 @@ def main(args):
         raise ArchiveFileInvalid()
 
     try:
+        archive_version_index = None
         staging_path = ctx.output_path / ARCHIVE_STAGING
         staging_path.mkdir(exist_ok=True)
         extract_archive(archive_file, staging_path)
