@@ -51,6 +51,7 @@ class ConductorRunner:
         jobs: Optional[int] = None,
         this_commit: bool = False,
         at_least: Optional[str] = None,
+        check: bool = False,
     ) -> subprocess.CompletedProcess:
         cmd = ["run", task_identifier]
         if again:
@@ -65,6 +66,8 @@ class ConductorRunner:
         if at_least is not None:
             cmd.append("--at-least")
             cmd.append(at_least)
+        if check:
+            cmd.append("--check")
         return self._run_command(cmd)
 
     def clean(self) -> subprocess.CompletedProcess:

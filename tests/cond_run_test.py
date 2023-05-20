@@ -162,6 +162,21 @@ def test_cond_run_combine_duplicates(tmp_path: pathlib.Path):
     assert result.returncode != 0
 
 
+def test_cond_run_check_no_run(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, EXAMPLE_TEMPLATES["hello_world"])
+    result = cond.run("//:hello_world", check=True)
+    assert result.returncode == 0
+    assert cond.output_path.exists()
+    # Conductor should not actually run the task when --check is set.
+    assert count_task_outputs(cond.output_path) == 0
+
+
+def test_cond_run_check_error(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["combine-test"])
+    result = cond.run("//duplicate-names:test", check=True)
+    assert result.returncode != 0
+
+
 def test_cond_run_record_output(tmp_path: pathlib.Path):
     # This test tests Conductor's ability to record the stdout/stderr output of
     # a `run_experiment()` task.

@@ -80,6 +80,12 @@ If this flag is used without specifying a value, Conductor will set `JOBS` to be
 the number of virtual CPUs detected in the machine. This flag behaves
 analogously to the `-j` flag in `make`.
 
+### `--check`
+
+When set, Conductor will parse and validate all tasks that would be executed but
+it will not actually execute the tasks. This flag is useful for checking that
+tasks are defined correctly in `COND` files.
+
 ### `-h` or `--help`
 
 Prints a help message that provides details about how to use the `cond run`

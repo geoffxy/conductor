@@ -1,4 +1,5 @@
 import multiprocessing
+import sys
 
 from conductor.context import Context
 from conductor.errors import (
@@ -14,6 +15,7 @@ from conductor.task_identifier import TaskIdentifier
 from conductor.execution.executor import Executor
 from conductor.execution.plan import ExecutionPlan
 from conductor.utils.user_code import cli_command
+from conductor.utils.colored_output import print_bold
 
 
 # Value used to indicate when Conductor should select the maximum number of
@@ -78,6 +80,13 @@ def register_command(subparsers):
         "If this flag is used without specifying a value, Conductor will set "
         "this number to be the number of virtual CPUs detected in this machine.",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="When set, Conductor will parse and validate all tasks that would be "
+        "executed but it will not actually execute the tasks. This flag is useful "
+        "for checking that tasks are defined correctly in COND files.",
+    )
     parser.set_defaults(func=main)
 
 
@@ -118,6 +127,13 @@ def main(args):
         require_prefix=False,
     )
     ctx.task_index.load_transitive_closure(task_identifier)
+
+    if args.check:
+        print_bold(
+            "✓ Task(s) are OK. Skipping execution because --check was set.",
+            file=sys.stderr,
+        )
+        return
 
     # Convert the specified commit to a hash, if needed.
     commit = None
