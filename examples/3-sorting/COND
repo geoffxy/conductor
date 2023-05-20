@@ -1,0 +1,51 @@
+from itertools import product
+
+run_experiment(
+  name="isort",
+  run="python3 sort.py",
+  options={
+    "method": "isort",
+    "size": 100,
+  },
+)
+
+run_experiment_group(
+  name="sweep",
+  run="python3 sort.py",
+  experiments=[
+    ExperimentInstance(
+      name="sweep-{}-{}".format(method, size),
+      options={
+        "method": method,
+        "size": size,
+      },
+    )
+    for method, size in product(["isort", "msort"], [25, 50, 100, 200, 400])
+  ],
+)
+
+run_command(
+  name="combine",
+  run="python3 combine.py",
+  deps=[":sweep"],
+)
+
+run_command(
+  name="compare_figure",
+  run="python3 plot_compare.py",
+  deps=[":combine"],
+)
+
+run_command(
+  name="compare_bar_figure",
+  run="python3 plot_compare_bar.py",
+  deps=[":combine"],
+)
+
+group(
+  name="figures",
+  deps=[
+    ":compare_figure",
+    ":compare_bar_figure",
+  ],
+)
