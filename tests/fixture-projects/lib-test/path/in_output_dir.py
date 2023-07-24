@@ -1,3 +1,4 @@
+import os
 import pathlib
 import conductor.lib as cond
 
@@ -8,7 +9,8 @@ def main():
     assert file_in_output_dir != my_file
 
     output_dir = cond.get_output_path()
-    assert file_in_output_dir.is_relative_to(output_dir)
+    # Or use pathlib.Path.is_relative_to() on Python 3.9+.
+    assert os.path.commonpath([file_in_output_dir, output_dir]) == str(output_dir)
 
 
 if __name__ == "__main__":
