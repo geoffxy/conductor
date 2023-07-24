@@ -21,3 +21,8 @@ run_command(
   name="output_path",
   run="python3 output_path.py",
 )
+
+run_command(
+  name="in_output_dir",
+  run="python3 in_output_dir.py",
+)
