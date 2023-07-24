@@ -1,6 +1,6 @@
 import os
 import pathlib
-from typing import List
+from typing import List, Union
 
 from conductor.config import (
     DEPS_ENV_VARIABLE_NAME,
@@ -38,7 +38,7 @@ def get_output_path() -> pathlib.Path:
     return pathlib.Path(os.environ[OUTPUT_ENV_VARIABLE_NAME])
 
 
-def in_output_dir(file_path: pathlib.Path) -> pathlib.Path:
+def in_output_dir(file_path: Union[pathlib.Path, str]) -> pathlib.Path:
     """
     If the current script is being run by Conductor, this function amends
     `file_path` to make it fall under where Conductor's task outputs should be
@@ -49,5 +49,7 @@ def in_output_dir(file_path: pathlib.Path) -> pathlib.Path:
     """
     if OUTPUT_ENV_VARIABLE_NAME in os.environ:
         return get_output_path() / file_path
+    elif not isinstance(file_path, pathlib.Path):
+        return pathlib.Path(file_path)
     else:
         return file_path

@@ -90,3 +90,18 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+### `in_output_dir()`
+
+```python
+def in_output_dir(file_path: path.Path | str) -> pathlib.Path
+```
+
+If the current script is being run by Conductor, this function amends
+`file_path` to make it fall under where Conductor's task outputs should be
+stored. Otherwise, this function returns `file_path` unchanged (but as a
+`pathlib.Path`).
+
+This is meant to be useful for scripts that may be run independently of
+Conductor. Note that `file_path` should be a relative path.
+
