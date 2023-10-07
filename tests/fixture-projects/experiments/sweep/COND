@@ -21,3 +21,26 @@ run_experiment_group(
     for threads in range(1, 5)
   ],
 )
+
+run_experiment_group(
+  name="chained-test",
+  run="./run_check_file.sh",
+  experiments=[
+    ExperimentInstance(
+      name="chained-test-1",
+      args=["chained", "1"],
+      parallelizable=True,
+    ),
+    ExperimentInstance(
+      name="chained-test-2",
+      args=["chained", "2"],
+      parallelizable=True,
+    ),
+    ExperimentInstance(
+      name="chained-test-3",
+      args=["chained", "3"],
+      parallelizable=True,
+    ),
+  ],
+  chain_experiments=True,
+)
