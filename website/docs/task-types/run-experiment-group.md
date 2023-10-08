@@ -4,7 +4,7 @@ id: run-experiment-group
 ---
 
 ```python
-run_experiment_group(name, run, experiments=[], deps=[])
+run_experiment_group(name, run, experiments=[], chain_experiments=False, deps=[])
 ```
 
 A `run_experiment_group()` task lets you specify a list of experiments that
@@ -70,6 +70,20 @@ the experiment's enclosing `run_experiment_group()`.
 
 :::
 
+### `chain_experiments`
+
+**Type:** Boolean (optional)
+
+If set to `True`, Conductor will add dependency constraints between the
+experiment instances listed in `experiments`. Conductor adds the dependencies in
+the order the experiment instances are defined, creating a "dependency chain."
+See the usage example at the bottom of this page for an example of what this
+argument does.
+
+This argument is useful when you want to run different experiment _groups_
+concurrently, but do not want the experiments within one group to run
+concurrently.
+
 ### `deps`
 
 **Type:** List of task identifiers (default: `[]`)
@@ -108,6 +122,7 @@ run_experiment_group(
     # comprehension when defining your experiments.
     for threads in range(1, 3)
   ],
+  chain_experiments=True,
   deps=[
     ":compile",
   ],
@@ -124,7 +139,9 @@ run_experiment(
     "threads": 1,
   },
   parallelizable=False,
-  deps=[":compile"],
+  deps=[
+    ":compile",
+  ],
 )
 
 run_experiment(
@@ -134,7 +151,10 @@ run_experiment(
     "threads": 2,
   },
   parallelizable=False,
-  deps=[":compile"],
+  deps=[
+    ":compile",
+    ":sweep-1",
+  ],
 )
 
 combine(

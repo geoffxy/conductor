@@ -414,3 +414,10 @@ def test_cond_run_multiple_failures_stop_early(tmp_path: pathlib.Path):
     # The top level `run_experiment_group()` task is technically not a Conductor experiment task.
     sweep_out = cond.find_task_output_dir("//multiple:sweep", is_experiment=False)
     assert sweep_out is None
+
+
+def test_cond_run_chained(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    # The task checks that chaining occurs.
+    result = cond.run("//sweep:chained-test", jobs=5)
+    assert result.returncode == 0
