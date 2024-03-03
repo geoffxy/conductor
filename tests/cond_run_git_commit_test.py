@@ -25,7 +25,7 @@ def set_up_git_repository(tmp_path: pathlib.Path):
     def run(args: Iterable[Any]):
         run_git_command(tmp_path, args)
 
-    run(["init"])
+    run(["init", "--initial-branch", "master"])
     run(["add", "COND", "cond_config.toml", "copy.py", "generate.sh"])
     run(["commit", "-m", "First commit."])
 
