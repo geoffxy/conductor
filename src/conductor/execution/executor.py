@@ -327,7 +327,9 @@ class Executor:
         # Print the final execution result (succeeded or failed).
         if all_succeeded and (main_task_executed or main_task_cached):
             print()
-            print_bold("✨ Done! {}".format(self._get_elapsed_time_string(elapsed_time)))
+            print_bold(
+                "✨ Done! {}".format(self._get_elapsed_time_string(elapsed_time))
+            )
 
         else:
             # At least one task must have failed.
@@ -341,7 +343,9 @@ class Executor:
             assert len(failed_tasks) > 0
             print()
             print_red(
-                "🔴 Task failed. {}".format(self._get_elapsed_time_string(elapsed_time)),
+                "🔴 Task failed. {}".format(
+                    self._get_elapsed_time_string(elapsed_time)
+                ),
                 bold=True,
             )
             print()
