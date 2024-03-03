@@ -82,9 +82,9 @@ class VersionIndex:
             result = conn.execute(q.get_max_timestamp).fetchone()
             return VersionIndex(
                 conn=conn,
-                last_timestamp=result[0]
-                if result is not None and result[0] is not None
-                else 0,
+                last_timestamp=(
+                    result[0] if result is not None and result[0] is not None else 0
+                ),
             )
 
         # Need to create the DB
