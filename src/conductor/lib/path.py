@@ -58,7 +58,9 @@ def in_output_dir(file_path: Union[pathlib.Path, str]) -> pathlib.Path:
 
 
 def where(
-    identifier: str, relative_to_project_root: bool = False, non_existent_ok: bool = False
+    identifier: str,
+    relative_to_project_root: bool = False,
+    non_existent_ok: bool = False,
 ) -> Optional[pathlib.Path]:
     """
     Returns the output location path of the given task identifier. If this
