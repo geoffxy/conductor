@@ -1,6 +1,7 @@
 from typing import Dict
 
 from .combine import Combine
+from .environment import Environment
 from .group import Group
 from .raw import RawTaskType
 from .run import RunCommand, RunExperiment
@@ -43,6 +44,27 @@ _raw_task_types = [
         schema={"name": str, "deps": [str]},
         defaults={"deps": []},
         full_type=Combine,
+    ),
+    RawTaskType(
+        name="environment",
+        schema={
+            "name": str,
+            "create": str,
+            "start": str,
+            "stop": str,
+            "destroy": str,
+            "project_root": str,
+            "mirrored_files": bool,
+        },
+        defaults={
+            "create": "",
+            "start": "",
+            "stop": "",
+            "destroy": "",
+            "project_root": "",
+            "mirrored_files": False,
+        },
+        full_type=Environment,
     ),
 ]
 
