@@ -1,7 +1,6 @@
-from conductor.context import Context
 from conductor.errors import NoTaskOutputPath
-from conductor.task_identifier import TaskIdentifier
 from conductor.utils.user_code import cli_command
+from conductor.lib.path import where
 
 
 def register_command(subparsers):
@@ -34,17 +33,11 @@ def register_command(subparsers):
 
 @cli_command
 def main(args):
-    ctx = Context.from_cwd()
-    task_identifier = TaskIdentifier.from_str(
+    result = where(
         args.task_identifier,
-        require_prefix=False,
+        relative_to_project_root=args.project,
+        non_existent_ok=args.non_existent_ok,
     )
-    ctx.task_index.load_single_task(task_identifier)
-    task = ctx.task_index.get_task(task_identifier)
-    output_path = task.get_output_path(ctx)
-    if output_path is None or (not output_path.exists() and not args.non_existent_ok):
-        raise NoTaskOutputPath(task_identifier=str(task_identifier))
-    if args.project:
-        print(output_path.relative_to(ctx.project_root))
-    else:
-        print(output_path)
+    if result is None:
+        raise NoTaskOutputPath(task_identifier=args.task_identifier)
+    print(result)

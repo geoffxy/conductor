@@ -105,3 +105,26 @@ stored. Otherwise, this function returns `file_path` unchanged (but as a
 This is meant to be useful for scripts that may be run independently of
 Conductor. Note that `file_path` should be a relative path.
 
+### `where()`
+
+```python
+def where(
+    identifier: str,
+    relative_to_project_root: bool = False,
+    non_existent_ok: bool = False,
+) -> Optional[pathlib.Path]
+```
+
+Returns the output location path of the given task identifier. This function
+will only work when executed from inside a Conductor project (i.e., in a path
+that is under the project root). This function is useful when retrieving
+experimental results in scripts or notebooks.
+
+If this function returns `None`, it indicates no output location is available
+(e.g., the task has not run before).
+
+If `relative_to_project_root` is set to `True`, this will return a relative path
+to the project root. Otherwise, it returns an absolute path.
+
+If `non_existent_ok` is set to `True`, this will return the task's output path
+even if the path does not yet exist.
