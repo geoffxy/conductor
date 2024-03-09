@@ -10,9 +10,8 @@ $ cond where [-h] [-p] [-f] task_identifier
 This command prints the path to where the specified task's outputs are stored.
 
 If the task is versioned (i.e., it is an experiment task), this command will
-print the output path associated with the [most relevant
-version](task-types/run-experiment.md#versioning-and-caching-semantics). If no
-relevant version exists, this command will return an error.
+print the output path associated with the [most relevant version](task-types/run-experiment.md#versioning-and-caching-semantics).
+If no relevant version exists, this command will return an error.
 
 Sometimes, no output path will exist. This could be because the task was never
 executed, or because the task never produces outputs (e.g.,

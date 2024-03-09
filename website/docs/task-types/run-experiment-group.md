@@ -59,8 +59,7 @@ ExperimentInstance(name, args=[], options={}, parallelizable=False)
 ```
 
 The arguments that `ExperimentInstance()` takes have the same semantics as the
-arguments listed in the [`run_experiment()`
-reference](task-types/run-experiment.md).
+arguments listed in the [`run_experiment()` reference](task-types/run-experiment.md).
 
 :::note
 

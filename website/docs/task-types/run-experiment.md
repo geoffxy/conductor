@@ -8,7 +8,7 @@ run_experiment(name, run, parallelizable=False, args=[], options={}, deps=[])
 ```
 
 A `run_experiment()` task runs the command specified in the `run` argument. The
-task's output files are [versioned](#versioning-semantics) and
+task's output files are [versioned](#versioning-and-caching-semantics) and
 [archivable](cli/archive.md).
 
 All files that this task produces should be written to the path given in the

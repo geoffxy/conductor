@@ -2,7 +2,7 @@
 module.exports = {
   title: 'Conductor',
   tagline: 'A simple and elegant research computing orchestrator.',
-  url: 'https://www.geoffreyyu.com/conductor/',
+  url: 'https://www.geoffreyyu.com/',
   baseUrl: '/conductor/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -31,9 +31,9 @@ module.exports = {
       copyright: `Copyright © ${new Date().getFullYear()} Geoffrey Yu.`,
     },
     prism: {
-      theme: require('prism-react-renderer/themes/github'),
-      darkTheme: require('prism-react-renderer/themes/palenight'),
-      additionalLanguages: ['toml'],
+      theme: require('prism-react-renderer').themes.github,
+      darkTheme: require('prism-react-renderer').themes.palenight,
+      additionalLanguages: ['toml', 'bash'],
     },
   },
   presets: [
