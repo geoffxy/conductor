@@ -42,9 +42,9 @@ Conductor's caching semantics). You can specify a commit using a hash, branch,
 or tag. The specified commit must be an ancestor of the current commit.
 
 This flag cannot be used with `--again` (the two flags are not compatible). This
-flag also cannot be used if (i) Conductor's Git integration [is
-disabled](configuration.md), (ii) your project is not managed by Git, or (iii)
-if your repository is bare (there are no commits).
+flag also cannot be used if (i) Conductor's Git integration [is disabled](/docs/configuration.md),
+(ii) your project is not managed by Git, or (iii) if your repository is bare
+(there are no commits).
 
 How does this flag differ from `--again`? When you set `--again`, Conductor will
 always re-run all the relevant tasks, regardless of the cache. With
