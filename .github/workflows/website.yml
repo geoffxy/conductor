@@ -12,21 +12,22 @@ on:
     branches: [ master ]
     paths:
     - 'website/**'
+  workflow_dispatch: {}
 
 jobs:
   build_website:
     name: Test Website Build
     timeout-minutes: 30
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
-    - name: Set Up Node 16
-      uses: actions/setup-node@v2
+    - name: Set Up Node 20
+      uses: actions/setup-node@v4
       with:
-        node-version: '16'
+        node-version: '20'
 
     - name: Run Website Build Script
       run: ./tools/build-website.sh --install-deps

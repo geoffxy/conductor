@@ -37,6 +37,7 @@ DEV_REQUIRES = [
     "pytest",
     "pytest-timeout",
     "pyyaml",
+    "setuptools",
 ]
 
 KEYWORDS = [

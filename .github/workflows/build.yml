@@ -9,22 +9,25 @@ on:
     branches: [ master ]
     paths-ignore:
     - 'website/**'
+  workflow_dispatch: {}
 
 jobs:
   build:
     name: Build and Test
     timeout-minutes: 30
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        # Ubuntu 20.04 LTS bundles Python 3.8
+        # Ubuntu 22.04 LTS bundles Python 3.10
+        python-version: ['3.8', '3.10', '3.12']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
