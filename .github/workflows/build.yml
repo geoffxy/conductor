@@ -9,6 +9,7 @@ on:
     branches: [ master ]
     paths-ignore:
     - 'website/**'
+  workflow_dispatch: {}
 
 jobs:
   build:
