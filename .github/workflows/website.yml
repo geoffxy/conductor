@@ -18,7 +18,7 @@ jobs:
     name: Test Website Build
     timeout-minutes: 30
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
