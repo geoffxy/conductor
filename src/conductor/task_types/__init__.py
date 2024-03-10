@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from .combine import Combine
 from .environment import Environment
@@ -53,15 +53,11 @@ _raw_task_types = [
             "start": str,
             "stop": str,
             "destroy": str,
-            "project_root": str,
+            "project_root": Optional[str],
             "mirrored_files": bool,
         },
         defaults={
-            "create": "",
-            "start": "",
-            "stop": "",
-            "destroy": "",
-            "project_root": "",
+            "project_root": None,
             "mirrored_files": False,
         },
         full_type=Environment,

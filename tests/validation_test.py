@@ -1,4 +1,5 @@
 import pytest
+from typing import Optional
 
 from conductor.errors import (
     InvalidTaskParameterType,
@@ -19,6 +20,12 @@ def simple_schema_validator():
 @pytest.fixture
 def schema_with_lists_validator():
     schema = {"prop": str, "strlist": [str], "intlist": [int]}
+    return generate_type_validator("Task", schema)
+
+
+@pytest.fixture
+def schema_with_optional_validator():
+    schema = {"prop": str, "prop2": Optional[str]}
     return generate_type_validator("Task", schema)
 
 
@@ -76,3 +83,20 @@ def test_list_wrong_type(schema_with_lists_validator):
         schema_with_lists_validator(
             {"prop": "hello", "strlist": [123, False, True], "intlist": [1, 2, 3]}
         )
+
+
+def test_optional_not_included(schema_with_optional_validator):
+    schema_with_optional_validator({"prop": "hello"})
+
+
+def test_optional_included_as_none(schema_with_optional_validator):
+    schema_with_optional_validator({"prop": "hello", "prop2": None})
+
+
+def test_optional_included_incorrectly(schema_with_optional_validator):
+    with pytest.raises(InvalidTaskParameterType):
+        schema_with_optional_validator({"prop": "hello", "prop2": 2})
+
+
+def test_optional_included(schema_with_optional_validator):
+    schema_with_optional_validator({"prop": "hello", "prop2": "world"})
