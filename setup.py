@@ -40,6 +40,11 @@ DEV_REQUIRES = [
     "setuptools",
 ]
 
+ENVS_REQUIRES = [
+    "fabric",
+    "grpcio",
+]
+
 KEYWORDS = [
     "research",
     "experiment runner",
@@ -103,6 +108,7 @@ if __name__ == "__main__":
         install_requires=INSTALL_REQUIRES,
         extras_require={
             "dev": DEV_REQUIRES,
+            "envs": ENVS_REQUIRES,
         },
         entry_points=ENTRY_POINTS,
         classifiers=CLASSIFIERS,

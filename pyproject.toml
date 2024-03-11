@@ -26,3 +26,8 @@ exclude = '''
   | src/conductor/errors/generated.py
 )
 '''
+
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = "fabric.*"
+ignore_missing_imports = true
