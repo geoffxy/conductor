@@ -12,7 +12,7 @@ versions will not be guaranteed.
 ------------------------------------------------------------------------------
 
 ## Installation
-Conductor requires Python 3.8+ and is currently only supported on macOS and
+Conductor requires Python 3.10+ and is currently only supported on macOS and
 Linux machines. It has been tested on macOS 10.14 and Ubuntu 20.04.
 
 Conductor is available on PyPI and so it can be installed using `pip`.
