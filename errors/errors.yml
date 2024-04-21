@@ -138,6 +138,10 @@
   name: ConductorAbort
   message: "Conductor's execution has been aborted by the user."
 
+3005:
+  name: MaestroInstallError
+  message: "An error occurred when installing Maestro in a remote environment: {error_message}"
+
 
 # Archive and restore errors (error code 4xxx)
 4001:

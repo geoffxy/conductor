@@ -386,6 +386,19 @@ class ConductorAbort(ConductorError):
         )
 
 
+class MaestroInstallError(ConductorError):
+    error_code = 3005
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.error_message = kwargs["error_message"]
+    
+    def _message(self):
+        return "An error occurred when installing Maestro in a remote environment: {error_message}".format(
+            error_message=self.error_message,
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -636,6 +649,7 @@ __all__ = [
     "TaskFailed",
     "OutputDirTaken",
     "ConductorAbort",
+    "MaestroInstallError",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",
