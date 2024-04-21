@@ -65,3 +65,11 @@ EXP_ARGS_JSON_FILE_NAME = "args.json"
 
 # COND files can only include files with this extension.
 COND_INCLUDE_EXTENSION = ".cond"
+
+###
+### Conductor Environment Configs
+###
+
+MAESTRO_ROOT = ".conductor-maestro"
+
+MAESTRO_PYTHON_VERSION = "3.10.12"
