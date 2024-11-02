@@ -12,8 +12,7 @@ class Operation:
     converted to operations for execution.
     """
 
-    # TODO: This class will replace `conductor.execution.Task` after the refactor.
-    # TODO: TaskState will be renamed to OperationState after the refactor.
+    # NOTE: TaskState will be renamed to OperationState after the refactor.
 
     def __init__(self, initial_state: TaskState) -> None:
         self._state = initial_state
@@ -41,7 +40,7 @@ class Operation:
 
     # Execution-related methods.
 
-    def start_execution(self) -> TaskExecutionHandle:
+    def start_execution(self, ctx: Context, slot: Optional[int]) -> TaskExecutionHandle:
         raise NotImplementedError
 
     def finish_execution(self, handle: TaskExecutionHandle, ctx: Context) -> None:
