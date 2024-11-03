@@ -51,6 +51,7 @@ class _RunSubprocess(TaskType):
         )
         self._args = RunArguments.from_raw(identifier, args)
         self._options = RunOptions.from_raw(identifier, options)
+        self._raw_run = run
         self._run = " ".join(
             [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
         )
@@ -79,6 +80,18 @@ class _RunSubprocess(TaskType):
     @property
     def parallelizable(self) -> bool:
         return self._parallelizable
+
+    @property
+    def raw_run(self) -> str:
+        return self._raw_run
+
+    @property
+    def args(self) -> RunArguments:
+        return self._args
+
+    @property
+    def options(self) -> RunOptions:
+        return self._options
 
     def start_execution(
         self, ctx: "c.Context", slot: Optional[int]
@@ -114,7 +127,7 @@ class _RunSubprocess(TaskType):
             process = subprocess.Popen(
                 [self._run],
                 shell=True,
-                cwd=self._get_working_path(ctx),
+                cwd=self.get_working_path(ctx),
                 executable="/bin/bash",
                 stdout=stdout_output.popen_arg(),
                 stderr=stderr_output.popen_arg(),
@@ -300,6 +313,11 @@ class RunExperiment(_RunSubprocess):
             self.identifier, self._most_relevant_version
         )
         ctx.version_index.commit_changes()
+
+    def create_new_version(self, ctx: "c.Context") -> Version:
+        self._create_new_version(ctx)
+        assert self._most_relevant_version is not None
+        return self._most_relevant_version
 
     def _create_new_version(self, ctx: "c.Context") -> None:
         # N.B. If this task fails, the value of `most_relevant_version` will be

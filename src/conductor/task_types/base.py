@@ -129,7 +129,7 @@ class TaskType:
             deps_output_paths.append(path)
         return deps_output_paths
 
-    def _get_working_path(self, ctx: "c.Context") -> pathlib.Path:
+    def get_working_path(self, ctx: "c.Context") -> pathlib.Path:
         return pathlib.Path(ctx.project_root, self._identifier.path)
 
 
