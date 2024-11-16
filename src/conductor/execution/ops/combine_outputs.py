@@ -5,7 +5,7 @@ from conductor.context import Context
 from conductor.execution.ops.operation import Operation
 from conductor.execution.task_state import TaskState
 from conductor.task_identifier import TaskIdentifier
-from conductor.task_types.base import TaskExecutionHandle
+from conductor.task_types.base import TaskExecutionHandle, TaskType
 
 
 class CombineOutputs(Operation):
@@ -13,14 +13,24 @@ class CombineOutputs(Operation):
         self,
         *,
         initial_state: TaskState,
+        task: TaskType,
         identifier: TaskIdentifier,
         output_path: pathlib.Path,
         deps_output_paths: Sequence[pathlib.Path],
     ) -> None:
         super().__init__(initial_state)
         self._identifier = identifier
+        self._task = task
         self._output_path = output_path
         self._deps_output_paths = deps_output_paths
+
+    @property
+    def associated_task(self) -> Optional[TaskType]:
+        return self._task
+
+    @property
+    def main_task(self) -> Optional[TaskType]:
+        return self._task
 
     def start_execution(self, ctx: Context, slot: Optional[int]) -> TaskExecutionHandle:
         self._output_path.mkdir(parents=True, exist_ok=True)

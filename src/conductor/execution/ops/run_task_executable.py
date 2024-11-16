@@ -25,7 +25,7 @@ from conductor.errors import (
 from conductor.execution.ops.operation import Operation
 from conductor.execution.task_state import TaskState
 from conductor.execution.version_index import Version
-from conductor.task_types.base import TaskExecutionHandle
+from conductor.task_types.base import TaskExecutionHandle, TaskType
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.output_handler import RecordType, OutputHandler
 from conductor.utils.run_arguments import RunArguments
@@ -38,6 +38,7 @@ class RunTaskExecutable(Operation):
         *,
         initial_state: TaskState,
         identifier: TaskIdentifier,
+        task: TaskType,
         run: str,
         args: RunArguments,
         options: RunOptions,
@@ -51,6 +52,7 @@ class RunTaskExecutable(Operation):
     ) -> None:
         super().__init__(initial_state)
         self._identifier = identifier
+        self._task = task
         self._args = args
         self._options = options
         self._run = " ".join(
@@ -63,6 +65,14 @@ class RunTaskExecutable(Operation):
         self._version_to_record = version_to_record
         self._serialize_args_options = serialize_args_options
         self._parallelizable = parallelizable
+
+    @property
+    def associated_task(self) -> Optional[TaskType]:
+        return self._task
+
+    @property
+    def main_task(self) -> Optional[TaskType]:
+        return self._task
 
     def start_execution(self, ctx: Context, slot: Optional[int]) -> TaskExecutionHandle:
         try:

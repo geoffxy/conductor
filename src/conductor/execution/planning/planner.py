@@ -36,6 +36,7 @@ class ExecutionPlanner:
         initial_operations: List[Operation] = []
         cached_tasks: List[TaskType] = []
         task_to_run = self._ctx.task_index.get_task(task_id)
+        num_tasks_to_run = 0
 
         # First pass (depth first):
         # 1. Prune tasks that do not need to execute (due to having cached results).
@@ -80,6 +81,7 @@ class ExecutionPlanner:
                     # just need to propagate the dependencies forward.
                     for dep in lt.deps:
                         lt.output_ops.extend(dep.output_ops)
+                    num_tasks_to_run += 1
 
                 else:
                     # These task types always produce at least one `Operation`.
@@ -90,6 +92,7 @@ class ExecutionPlanner:
                         new_op: Operation = RunTaskExecutable(
                             initial_state=TaskState.QUEUED,
                             identifier=lt.task.identifier,
+                            task=lt.task,
                             run=lt.task.raw_run,
                             args=lt.task.args,
                             options=lt.task.options,
@@ -107,6 +110,7 @@ class ExecutionPlanner:
                         assert output_path is not None
                         new_op = RunTaskExecutable(
                             initial_state=TaskState.QUEUED,
+                            task=lt.task,
                             identifier=lt.task.identifier,
                             run=lt.task.raw_run,
                             args=lt.task.args,
@@ -125,6 +129,7 @@ class ExecutionPlanner:
                         assert output_path is not None
                         new_op = CombineOutputs(
                             initial_state=TaskState.QUEUED,
+                            task=lt.task,
                             identifier=lt.task.identifier,
                             output_path=output_path,
                             deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
@@ -149,9 +154,15 @@ class ExecutionPlanner:
 
                     all_ops.append(new_op)
 
+                    # N.B. Right now there's a 1-to-1 correspondence between
+                    # tasks and operations. But with remote execution, this will
+                    # change.
+                    num_tasks_to_run += 1
+
         return ExecutionPlan2(
             task_to_run=task_to_run,
             all_ops=all_ops,
             initial_ops=initial_operations,
             cached_tasks=cached_tasks,
+            num_tasks_to_run=num_tasks_to_run,
         )

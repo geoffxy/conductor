@@ -18,8 +18,10 @@ class ExecutionPlan2:
         all_ops: List[Operation],
         initial_ops: List[Operation],
         cached_tasks: List[TaskType],
+        num_tasks_to_run: int,
     ) -> None:
         self.task_to_run = task_to_run
         self.all_ops = all_ops
         self.initial_ops = initial_ops
         self.cached_tasks = cached_tasks
+        self.num_tasks_to_run = num_tasks_to_run
