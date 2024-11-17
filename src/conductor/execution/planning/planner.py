@@ -2,6 +2,7 @@ from typing import Dict, List, Optional
 
 from conductor.context import Context
 from conductor.execution.ops.combine_outputs import CombineOutputs
+from conductor.execution.ops.noop import NoOp
 from conductor.execution.ops.operation import Operation
 from conductor.execution.ops.run_task_executable import RunTaskExecutable
 from conductor.execution.planning.lowering import LoweringTask, LoweringState
@@ -76,88 +77,89 @@ class ExecutionPlanner:
                     stack.append(dep)
 
             elif lt.state == LoweringState.SECOND_VISIT:
-                if isinstance(lt.task, Group):
+                # These task types always produce at least one `Operation`.
+                if isinstance(lt.task, RunExperiment):
+                    exp_version = lt.task.create_new_version(self._ctx)
+                    output_path = lt.task.get_output_path(self._ctx)
+                    assert output_path is not None
+                    new_op: Operation = RunTaskExecutable(
+                        initial_state=TaskState.QUEUED,
+                        identifier=lt.task.identifier,
+                        task=lt.task,
+                        run=lt.task.raw_run,
+                        args=lt.task.args,
+                        options=lt.task.options,
+                        working_path=lt.task.get_working_path(self._ctx),
+                        output_path=output_path,
+                        deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
+                        record_output=True,
+                        version_to_record=exp_version,
+                        serialize_args_options=True,
+                        parallelizable=lt.task.parallelizable,
+                    )
+
+                elif isinstance(lt.task, RunCommand):
+                    output_path = lt.task.get_output_path(self._ctx)
+                    assert output_path is not None
+                    new_op = RunTaskExecutable(
+                        initial_state=TaskState.QUEUED,
+                        task=lt.task,
+                        identifier=lt.task.identifier,
+                        run=lt.task.raw_run,
+                        args=lt.task.args,
+                        options=lt.task.options,
+                        working_path=lt.task.get_working_path(self._ctx),
+                        output_path=output_path,
+                        deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
+                        record_output=False,
+                        version_to_record=None,
+                        serialize_args_options=False,
+                        parallelizable=lt.task.parallelizable,
+                    )
+
+                elif isinstance(lt.task, Combine):
+                    output_path = lt.task.get_output_path(self._ctx)
+                    assert output_path is not None
+                    new_op = CombineOutputs(
+                        initial_state=TaskState.QUEUED,
+                        task=lt.task,
+                        identifier=lt.task.identifier,
+                        output_path=output_path,
+                        deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
+                    )
+
+                elif isinstance(lt.task, Group):
                     # No operation needed because there is nothing to run; we
                     # just need to propagate the dependencies forward.
-                    for dep in lt.deps:
-                        lt.output_ops.extend(dep.output_ops)
-                    num_tasks_to_run += 1
+                    new_op = NoOp(
+                        initial_state=TaskState.QUEUED,
+                        identifier=lt.task.identifier,
+                        task=lt.task,
+                    )
 
                 else:
-                    # These task types always produce at least one `Operation`.
-                    if isinstance(lt.task, RunExperiment):
-                        exp_version = lt.task.create_new_version(self._ctx)
-                        output_path = lt.task.get_output_path(self._ctx)
-                        assert output_path is not None
-                        new_op: Operation = RunTaskExecutable(
-                            initial_state=TaskState.QUEUED,
-                            identifier=lt.task.identifier,
-                            task=lt.task,
-                            run=lt.task.raw_run,
-                            args=lt.task.args,
-                            options=lt.task.options,
-                            working_path=lt.task.get_working_path(self._ctx),
-                            output_path=output_path,
-                            deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
-                            record_output=True,
-                            version_to_record=exp_version,
-                            serialize_args_options=True,
-                            parallelizable=lt.task.parallelizable,
-                        )
+                    # This indicates a bug: we added a new task type but did
+                    # not update the planner.
+                    raise NotImplementedError(f"Unsupported task type: {lt.task}")
 
-                    elif isinstance(lt.task, RunCommand):
-                        output_path = lt.task.get_output_path(self._ctx)
-                        assert output_path is not None
-                        new_op = RunTaskExecutable(
-                            initial_state=TaskState.QUEUED,
-                            task=lt.task,
-                            identifier=lt.task.identifier,
-                            run=lt.task.raw_run,
-                            args=lt.task.args,
-                            options=lt.task.options,
-                            working_path=lt.task.get_working_path(self._ctx),
-                            output_path=output_path,
-                            deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
-                            record_output=False,
-                            version_to_record=None,
-                            serialize_args_options=False,
-                            parallelizable=lt.task.parallelizable,
-                        )
+                # Hook the new dependency into the graph.
+                for dep in lt.deps:
+                    for dep_op in dep.output_ops:
+                        new_op.add_exe_dep(dep_op)
+                        dep_op.add_dep_of(new_op)
+                lt.output_ops.append(new_op)
 
-                    elif isinstance(lt.task, Combine):
-                        output_path = lt.task.get_output_path(self._ctx)
-                        assert output_path is not None
-                        new_op = CombineOutputs(
-                            initial_state=TaskState.QUEUED,
-                            task=lt.task,
-                            identifier=lt.task.identifier,
-                            output_path=output_path,
-                            deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
-                        )
+                # If this operation has no dependencies, it is part of
+                # `initial_operations`.
+                if len(new_op.exe_deps) == 0:
+                    initial_operations.append(new_op)
 
-                    else:
-                        # This indicates a bug: we added a new task type but did
-                        # not update the planner.
-                        raise NotImplementedError(f"Unsupported task type: {lt.task}")
+                all_ops.append(new_op)
 
-                    # Hook the new dependency into the graph.
-                    for dep in lt.deps:
-                        for dep_op in dep.output_ops:
-                            new_op.add_exe_dep(dep_op)
-                            dep_op.add_dep_of(new_op)
-                    lt.output_ops.append(new_op)
-
-                    # If this operation has no dependencies, it is part of
-                    # `initial_operations`.
-                    if len(new_op.exe_deps) == 0:
-                        initial_operations.append(new_op)
-
-                    all_ops.append(new_op)
-
-                    # N.B. Right now there's a 1-to-1 correspondence between
-                    # tasks and operations. But with remote execution, this will
-                    # change.
-                    num_tasks_to_run += 1
+                # N.B. Right now there's a 1-to-1 correspondence between
+                # tasks and operations. But with remote execution, this will
+                # change.
+                num_tasks_to_run += 1
 
         return ExecutionPlan2(
             task_to_run=task_to_run,
