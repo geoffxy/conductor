@@ -120,12 +120,19 @@ class ExecutionPlanner:
                 elif isinstance(lt.task, Combine):
                     output_path = lt.task.get_output_path(self._ctx)
                     assert output_path is not None
+                    # Pairs of `(dependency task id, output path)`.
+                    dep_output_paths = []
+                    for task_dep_id in lt.task.deps:
+                        task = self._ctx.task_index.get_task(task_dep_id)
+                        task_output_path = task.get_output_path(self._ctx)
+                        if task_output_path is not None:
+                            dep_output_paths.append((task_dep_id, task_output_path))
                     new_op = CombineOutputs(
                         initial_state=TaskState.QUEUED,
                         task=lt.task,
                         identifier=lt.task.identifier,
                         output_path=output_path,
-                        deps_output_paths=lt.task.get_deps_output_paths(self._ctx),
+                        deps_output_paths=dep_output_paths,
                     )
 
                 elif isinstance(lt.task, Group):

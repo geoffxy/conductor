@@ -399,6 +399,19 @@ class MaestroInstallError(ConductorError):
         )
 
 
+class CombineOutputFileConflict(ConductorError):
+    error_code = 3006
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.output_file = kwargs["output_file"]
+    
+    def _message(self):
+        return "The output file or directory '{output_file}' already exists and cannot be overwritten by the combine() task.".format(
+            output_file=self.output_file,
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -650,6 +663,7 @@ __all__ = [
     "OutputDirTaken",
     "ConductorAbort",
     "MaestroInstallError",
+    "CombineOutputFileConflict",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",
