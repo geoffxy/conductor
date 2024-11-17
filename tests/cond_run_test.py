@@ -114,7 +114,6 @@ def test_cond_run_combine(tmp_path: pathlib.Path):
         file1 = combine_task_output_dir / "echo1" / "file1.txt"
         assert file1.is_file()
         assert (combine_task_output_dir / "echo2" / "file2.txt").is_file()
-        file1.unlink()
 
     run_assertions()
     # Should be able to re-run the task without any problems
