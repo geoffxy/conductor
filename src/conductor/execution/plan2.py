@@ -25,3 +25,7 @@ class ExecutionPlan2:
         self.initial_ops = initial_ops
         self.cached_tasks = cached_tasks
         self.num_tasks_to_run = num_tasks_to_run
+
+    def reset_waiting_on(self) -> None:
+        for op in self.all_ops:
+            op.reset_waiting_on()

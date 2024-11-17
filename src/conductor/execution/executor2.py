@@ -129,6 +129,7 @@ class Executor2:
     ):
         try:
             self._reset()
+            plan.reset_waiting_on()
             self._num_tasks_to_run = plan.num_tasks_to_run
             start = time.time()
 

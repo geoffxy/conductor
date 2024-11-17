@@ -149,7 +149,7 @@ class ExecutionPlanner:
 
                     # If this operation has no dependencies, it is part of
                     # `initial_operations`.
-                    if len(lt.deps) == 0:
+                    if len(new_op.exe_deps) == 0:
                         initial_operations.append(new_op)
 
                     all_ops.append(new_op)
