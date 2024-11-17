@@ -164,3 +164,7 @@ class RunTaskExecutable(Operation):
                 self._identifier, self._version_to_record
             )
             ctx.version_index.commit_changes()
+
+    @property
+    def parallelizable(self) -> bool:
+        return self._parallelizable
