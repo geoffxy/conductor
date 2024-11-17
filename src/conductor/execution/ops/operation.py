@@ -38,6 +38,22 @@ class Operation:
         """
         return None
 
+    @property
+    def main_task(self) -> Optional[TaskType]:
+        """
+        The main task that this operation is associated with, if any. This is
+        used in tracking execution progress.
+        """
+        return None
+
+    @property
+    def parallelizable(self) -> bool:
+        """
+        Is `True` if this operation can be executed in parallel with other
+        operations.
+        """
+        return False
+
     # Execution-related methods.
 
     def start_execution(self, ctx: Context, slot: Optional[int]) -> TaskExecutionHandle:

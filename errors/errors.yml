@@ -142,6 +142,10 @@
   name: MaestroInstallError
   message: "An error occurred when installing Maestro in a remote environment: {error_message}"
 
+3006:
+  name: CombineOutputFileConflict
+  message: "The output file or directory '{output_file}' already exists and cannot be overwritten by the combine() task."
+
 
 # Archive and restore errors (error code 4xxx)
 4001:
