@@ -26,7 +26,3 @@ class OperationState(enum.Enum):
 
     # The task was aborted (will stop executing the rest of the tasks).
     ABORTED = 5
-
-    # States used during preprocessing (see `execution.plan.ExecutionPlan`).
-    PREPROCESS_FIRST = 6
-    PREPROCESS_SECOND = 7
