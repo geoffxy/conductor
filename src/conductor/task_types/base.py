@@ -83,24 +83,6 @@ class TaskType:
         """
         return True
 
-    def start_execution(
-        self, ctx: "c.Context", slot: Optional[int]
-    ) -> "TaskExecutionHandle":
-        """
-        Start executing this task. Returns a handle that represents the
-        execution. After the execution finishes, callers must invoke
-        `finish_execution()`.
-        """
-        # Task execution may be asynchronous. Ideally we should adopt something
-        # like `asyncio` for a cleaner abstraction. To avoid significant
-        # architectural changes, our async abstraction here is coupled with
-        # `execution.executor.Executor`, which actually waits for asynchronous
-        # tasks to complete.
-        raise NotImplementedError
-
-    def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
-        raise NotImplementedError
-
     def get_output_path(
         self,
         ctx: "c.Context",

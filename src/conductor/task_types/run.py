@@ -1,34 +1,13 @@
-import subprocess
 import pathlib
-import os
-import signal
-import sys
 from typing import Sequence, Optional
 
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
-from conductor.errors import (
-    TaskFailed,
-    TaskNonZeroExit,
-    ConductorAbort,
-)
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
-from conductor.config import (
-    OUTPUT_ENV_VARIABLE_NAME,
-    DEPS_ENV_VARIABLE_NAME,
-    DEPS_ENV_PATH_SEPARATOR,
-    TASK_NAME_ENV_VARIABLE_NAME,
-    STDOUT_LOG_FILE,
-    STDERR_LOG_FILE,
-    EXP_ARGS_JSON_FILE_NAME,
-    EXP_OPTION_JSON_FILE_NAME,
-    SLOT_ENV_VARIABLE_NAME,
-)
 from conductor.utils.run_arguments import RunArguments
 from conductor.utils.run_options import RunOptions
-from conductor.utils.output_handler import RecordType, OutputHandler
-from .base import TaskExecutionHandle, TaskType
+from .base import TaskType
 
 
 class _RunSubprocess(TaskType):
@@ -92,82 +71,6 @@ class _RunSubprocess(TaskType):
     @property
     def options(self) -> RunOptions:
         return self._options
-
-    def start_execution(
-        self, ctx: "c.Context", slot: Optional[int]
-    ) -> TaskExecutionHandle:
-        try:
-            self._create_new_version(ctx)
-            output_path = self.get_output_path(ctx)
-            assert output_path is not None
-            output_path.mkdir(parents=True, exist_ok=True)
-
-            env_vars = {
-                **os.environ,
-                OUTPUT_ENV_VARIABLE_NAME: str(output_path),
-                DEPS_ENV_VARIABLE_NAME: DEPS_ENV_PATH_SEPARATOR.join(
-                    map(str, self.get_deps_output_paths(ctx))
-                ),
-                TASK_NAME_ENV_VARIABLE_NAME: self.identifier.name,
-            }
-            if slot is not None:
-                env_vars[SLOT_ENV_VARIABLE_NAME] = str(slot)
-
-            if self.record_output:
-                if slot is None:
-                    record_type = RecordType.Teed
-                else:
-                    record_type = RecordType.OnlyLogged
-            else:
-                record_type = RecordType.NotRecorded
-
-            stdout_output = OutputHandler(output_path / STDOUT_LOG_FILE, record_type)
-            stderr_output = OutputHandler(output_path / STDERR_LOG_FILE, record_type)
-
-            process = subprocess.Popen(
-                [self._run],
-                shell=True,
-                cwd=self.get_working_path(ctx),
-                executable="/bin/bash",
-                stdout=stdout_output.popen_arg(),
-                stderr=stderr_output.popen_arg(),
-                env=env_vars,
-                start_new_session=True,
-            )
-
-            stdout_output.maybe_tee(process.stdout, sys.stdout, ctx)
-            stderr_output.maybe_tee(process.stderr, sys.stderr, ctx)
-
-            handle = TaskExecutionHandle.from_async_process(pid=process.pid)
-            handle.stdout = stdout_output
-            handle.stderr = stderr_output
-            return handle
-
-        except ConductorAbort:
-            # Send SIGTERM to the entire process group (i.e., the subprocess
-            # and its child processes).
-            if process is not None:
-                group_id = os.getpgid(process.pid)
-                if group_id >= 0:
-                    os.killpg(group_id, signal.SIGTERM)
-            if self.record_output:
-                ctx.tee_processor.shutdown()
-            raise
-
-        except OSError as ex:
-            raise TaskFailed(task_identifier=self.identifier).add_extra_context(str(ex))
-
-    def finish_execution(self, handle: "TaskExecutionHandle", ctx: "c.Context") -> None:
-        assert handle.stdout is not None
-        assert handle.stderr is not None
-        handle.stdout.finish()
-        handle.stderr.finish()
-
-        assert handle.returncode is not None
-        if handle.returncode != 0:
-            raise TaskNonZeroExit(
-                task_identifier=self.identifier, code=handle.returncode
-            )
 
     def _create_new_version(self, ctx: "c.Context") -> None:
         # N.B. Only `RunExperiment` is versioned.
@@ -294,25 +197,6 @@ class RunExperiment(_RunSubprocess):
             # Force a re-run and ensure the most relevant version is recomputed.
             self._did_retrieve_version = False
             return True
-
-    def finish_execution(self, handle: TaskExecutionHandle, ctx: "c.Context") -> None:
-        super().finish_execution(handle, ctx)
-
-        # Record the experiment args and options, if any were specified.
-        output_path = self.get_output_path(ctx)
-        assert output_path is not None
-
-        if not self._args.empty():
-            self._args.serialize_json(output_path / EXP_ARGS_JSON_FILE_NAME)
-        if not self._options.empty():
-            self._options.serialize_json(output_path / EXP_OPTION_JSON_FILE_NAME)
-
-        # Commit the new version into the version index.
-        assert self._most_relevant_version is not None
-        ctx.version_index.insert_output_version(
-            self.identifier, self._most_relevant_version
-        )
-        ctx.version_index.commit_changes()
 
     def create_new_version(self, ctx: "c.Context") -> Version:
         self._create_new_version(ctx)
