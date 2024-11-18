@@ -1,7 +1,7 @@
 import enum
 
 
-class TaskState(enum.Enum):
+class OperationState(enum.Enum):
     """
     Used to track the progress of tasks when they are executed.
     """

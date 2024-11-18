@@ -7,7 +7,7 @@ from conductor.execution.ops.operation import Operation
 from conductor.execution.ops.run_task_executable import RunTaskExecutable
 from conductor.execution.planning.lowering import LoweringTask, LoweringState
 from conductor.execution.plan import ExecutionPlan
-from conductor.execution.task_state import TaskState
+from conductor.execution.operation_state import OperationState
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
 from conductor.task_types.group import Group
@@ -83,7 +83,7 @@ class ExecutionPlanner:
                     output_path = lt.task.get_output_path(self._ctx)
                     assert output_path is not None
                     new_op: Operation = RunTaskExecutable(
-                        initial_state=TaskState.QUEUED,
+                        initial_state=OperationState.QUEUED,
                         identifier=lt.task.identifier,
                         task=lt.task,
                         run=lt.task.raw_run,
@@ -102,7 +102,7 @@ class ExecutionPlanner:
                     output_path = lt.task.get_output_path(self._ctx)
                     assert output_path is not None
                     new_op = RunTaskExecutable(
-                        initial_state=TaskState.QUEUED,
+                        initial_state=OperationState.QUEUED,
                         task=lt.task,
                         identifier=lt.task.identifier,
                         run=lt.task.raw_run,
@@ -128,7 +128,7 @@ class ExecutionPlanner:
                         if task_output_path is not None:
                             dep_output_paths.append((task_dep_id, task_output_path))
                     new_op = CombineOutputs(
-                        initial_state=TaskState.QUEUED,
+                        initial_state=OperationState.QUEUED,
                         task=lt.task,
                         identifier=lt.task.identifier,
                         output_path=output_path,
@@ -139,7 +139,7 @@ class ExecutionPlanner:
                     # No operation needed because there is nothing to run; we
                     # just need to propagate the dependencies forward.
                     new_op = NoOp(
-                        initial_state=TaskState.QUEUED,
+                        initial_state=OperationState.QUEUED,
                         identifier=lt.task.identifier,
                         task=lt.task,
                     )

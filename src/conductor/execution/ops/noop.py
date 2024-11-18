@@ -2,7 +2,7 @@ from typing import Optional
 
 from conductor.context import Context
 from conductor.execution.ops.operation import Operation
-from conductor.execution.task_state import TaskState
+from conductor.execution.operation_state import OperationState
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType, TaskExecutionHandle
 
@@ -14,7 +14,11 @@ class NoOp(Operation):
     """
 
     def __init__(
-        self, *, initial_state: TaskState, identifier: TaskIdentifier, task: TaskType
+        self,
+        *,
+        initial_state: OperationState,
+        identifier: TaskIdentifier,
+        task: TaskType,
     ) -> None:
         super().__init__(initial_state)
         self._identifier = identifier

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from conductor.context import Context
 from conductor.errors.base import ConductorError
-from conductor.execution.task_state import TaskState
+from conductor.execution.operation_state import OperationState
 from conductor.task_types.base import TaskType, TaskExecutionHandle
 
 
@@ -12,9 +12,7 @@ class Operation:
     converted to operations for execution.
     """
 
-    # NOTE: TaskState will be renamed to OperationState after the refactor.
-
-    def __init__(self, initial_state: TaskState) -> None:
+    def __init__(self, initial_state: OperationState) -> None:
         self._state = initial_state
         self._stored_error: Optional[ConductorError] = None
 
@@ -65,7 +63,7 @@ class Operation:
     # Execution state methods.
 
     @property
-    def state(self) -> TaskState:
+    def state(self) -> OperationState:
         return self._state
 
     @property
@@ -84,7 +82,7 @@ class Operation:
     def waiting_on(self) -> int:
         return self._waiting_on
 
-    def set_state(self, state: TaskState) -> None:
+    def set_state(self, state: OperationState) -> None:
         self._state = state
 
     def add_exe_dep(self, exe_dep: "Operation") -> None:
@@ -106,12 +104,12 @@ class Operation:
 
     def succeeded(self) -> bool:
         return (
-            self.state == TaskState.SUCCEEDED
-            or self.state == TaskState.SUCCEEDED_CACHED
+            self.state == OperationState.SUCCEEDED
+            or self.state == OperationState.SUCCEEDED_CACHED
         )
 
     def not_yet_executed(self) -> bool:
-        return self.state == TaskState.QUEUED
+        return self.state == OperationState.QUEUED
 
     def exe_deps_succeeded(self) -> bool:
         """

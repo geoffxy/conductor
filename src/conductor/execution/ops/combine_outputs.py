@@ -5,7 +5,7 @@ from typing import Optional, Sequence, Tuple
 from conductor.context import Context
 from conductor.errors import CombineOutputFileConflict
 from conductor.execution.ops.operation import Operation
-from conductor.execution.task_state import TaskState
+from conductor.execution.operation_state import OperationState
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskExecutionHandle, TaskType
 
@@ -14,7 +14,7 @@ class CombineOutputs(Operation):
     def __init__(
         self,
         *,
-        initial_state: TaskState,
+        initial_state: OperationState,
         task: TaskType,
         identifier: TaskIdentifier,
         output_path: pathlib.Path,

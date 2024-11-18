@@ -23,7 +23,7 @@ from conductor.errors import (
     ConductorAbort,
 )
 from conductor.execution.ops.operation import Operation
-from conductor.execution.task_state import TaskState
+from conductor.execution.operation_state import OperationState
 from conductor.execution.version_index import Version
 from conductor.task_types.base import TaskExecutionHandle, TaskType
 from conductor.task_identifier import TaskIdentifier
@@ -36,7 +36,7 @@ class RunTaskExecutable(Operation):
     def __init__(
         self,
         *,
-        initial_state: TaskState,
+        initial_state: OperationState,
         identifier: TaskIdentifier,
         task: TaskType,
         run: str,

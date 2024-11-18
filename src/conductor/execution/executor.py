@@ -9,7 +9,7 @@ from conductor.context import Context
 from conductor.errors import ConductorError, ConductorAbort
 from conductor.execution.ops.operation import Operation
 from conductor.execution.plan import ExecutionPlan
-from conductor.execution.task_state import TaskState
+from conductor.execution.operation_state import OperationState
 from conductor.task_types.base import TaskExecutionHandle
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.colored_output import (
@@ -234,7 +234,7 @@ class Executor:
                             self._get_progress_string(),
                         )
                     )
-                next_op.set_state(TaskState.SKIPPED)
+                next_op.set_state(OperationState.SKIPPED)
                 self._process_finished_op(next_op)
             else:
                 if next_op.main_task is not None:
@@ -258,13 +258,13 @@ class Executor:
                     if slot is not None:
                         self._available_slots.pop()
                 except ConductorAbort:
-                    next_op.set_state(TaskState.ABORTED)
+                    next_op.set_state(OperationState.ABORTED)
                     # N.B. A slot may be leaked here, but it does not matter
                     # because we are aborting the execution.
                     raise
                 except ConductorError as ex:
                     next_op.store_error(ex)
-                    next_op.set_state(TaskState.FAILED)
+                    next_op.set_state(OperationState.FAILED)
                     self._process_finished_op(next_op)
                     self._print_op_failed(next_op)
                     if stop_on_first_error:
@@ -286,19 +286,19 @@ class Executor:
         handle, op = self._inflight_ops.wait_for_next_op()
         try:
             op.finish_execution(handle, ctx)
-            op.set_state(TaskState.SUCCEEDED)
+            op.set_state(OperationState.SUCCEEDED)
             if op.main_task is not None:
                 print_green(
                     "✓ {} completed successfully.".format(op.main_task.identifier)
                 )
         except ConductorAbort:
-            op.set_state(TaskState.ABORTED)
+            op.set_state(OperationState.ABORTED)
             # N.B. A slot may be leaked here, but it does not matter because we
             # are aborting the execution.
             raise
         except ConductorError as ex:
             op.store_error(ex)
-            op.set_state(TaskState.FAILED)
+            op.set_state(OperationState.FAILED)
             error_occurred = True
             self._print_op_failed(op)
 
@@ -349,9 +349,9 @@ class Executor:
             for op in self._completed_ops:
                 if op.main_task is None:
                     continue
-                if op.state == TaskState.SKIPPED:
+                if op.state == OperationState.SKIPPED:
                     skipped_tasks.append(op.main_task.identifier)
-                elif op.state == TaskState.FAILED:
+                elif op.state == OperationState.FAILED:
                     failed_task_ops.append(op)
             assert len(failed_task_ops) > 0
             print()

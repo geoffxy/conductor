@@ -9,8 +9,6 @@ class ExecutionPlan:
     Represents a plan for executing a task, including its dependencies.
     """
 
-    # NOTE: This will replace `ExecutionPlan` after the refactor.
-
     def __init__(
         self,
         *,
