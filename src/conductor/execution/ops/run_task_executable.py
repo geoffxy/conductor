@@ -22,10 +22,11 @@ from conductor.errors import (
     TaskNonZeroExit,
     ConductorAbort,
 )
+from conductor.execution.handle import OperationExecutionHandle
 from conductor.execution.ops.operation import Operation
 from conductor.execution.operation_state import OperationState
 from conductor.execution.version_index import Version
-from conductor.task_types.base import TaskExecutionHandle, TaskType
+from conductor.task_types.base import TaskType
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.output_handler import RecordType, OutputHandler
 from conductor.utils.run_arguments import RunArguments
@@ -74,7 +75,9 @@ class RunTaskExecutable(Operation):
     def main_task(self) -> Optional[TaskType]:
         return self._task
 
-    def start_execution(self, ctx: Context, slot: Optional[int]) -> TaskExecutionHandle:
+    def start_execution(
+        self, ctx: Context, slot: Optional[int]
+    ) -> OperationExecutionHandle:
         try:
             self._output_path.mkdir(parents=True, exist_ok=True)
 
@@ -118,7 +121,7 @@ class RunTaskExecutable(Operation):
             stdout_output.maybe_tee(process.stdout, sys.stdout, ctx)
             stderr_output.maybe_tee(process.stderr, sys.stderr, ctx)
 
-            handle = TaskExecutionHandle.from_async_process(pid=process.pid)
+            handle = OperationExecutionHandle.from_async_process(pid=process.pid)
             handle.stdout = stdout_output
             handle.stderr = stderr_output
             return handle
@@ -139,7 +142,7 @@ class RunTaskExecutable(Operation):
                 str(ex)
             )
 
-    def finish_execution(self, handle: "TaskExecutionHandle", ctx: Context) -> None:
+    def finish_execution(self, handle: OperationExecutionHandle, ctx: Context) -> None:
         assert handle.stdout is not None
         assert handle.stderr is not None
         handle.stdout.finish()

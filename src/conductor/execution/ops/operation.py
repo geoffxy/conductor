@@ -2,8 +2,9 @@ from typing import List, Optional
 
 from conductor.context import Context
 from conductor.errors.base import ConductorError
+from conductor.execution.handle import OperationExecutionHandle
 from conductor.execution.operation_state import OperationState
-from conductor.task_types.base import TaskType, TaskExecutionHandle
+from conductor.task_types.base import TaskType
 
 
 class Operation:
@@ -54,10 +55,12 @@ class Operation:
 
     # Execution-related methods.
 
-    def start_execution(self, ctx: Context, slot: Optional[int]) -> TaskExecutionHandle:
+    def start_execution(
+        self, ctx: Context, slot: Optional[int]
+    ) -> OperationExecutionHandle:
         raise NotImplementedError
 
-    def finish_execution(self, handle: TaskExecutionHandle, ctx: Context) -> None:
+    def finish_execution(self, handle: OperationExecutionHandle, ctx: Context) -> None:
         raise NotImplementedError
 
     # Execution state methods.

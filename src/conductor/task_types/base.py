@@ -4,7 +4,6 @@ from typing import Callable, Dict, Sequence, Optional
 import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.task_identifier import TaskIdentifier
-from conductor.utils.output_handler import OutputHandler
 
 
 class TaskType:
@@ -113,31 +112,3 @@ class TaskType:
 
     def get_working_path(self, ctx: "c.Context") -> pathlib.Path:
         return pathlib.Path(ctx.project_root, self._identifier.path)
-
-
-class TaskExecutionHandle:
-    """
-    Represents a possibly asynchronously executing task.
-    """
-
-    def __init__(
-        self,
-        pid: Optional[int],
-    ):
-        self.pid: Optional[int] = pid
-        self.stdout: Optional[OutputHandler] = None
-        self.stderr: Optional[OutputHandler] = None
-        self.returncode: Optional[int] = None
-        self.slot: Optional[int] = None
-
-    @classmethod
-    def from_async_process(cls, pid: int):
-        return cls(pid)
-
-    @classmethod
-    def from_sync_execution(cls):
-        return cls(pid=None)
-
-    @property
-    def is_sync(self) -> bool:
-        return self.pid is None

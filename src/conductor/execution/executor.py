@@ -7,10 +7,10 @@ from typing import Dict, List, Iterable, Tuple, Deque
 
 from conductor.context import Context
 from conductor.errors import ConductorError, ConductorAbort
+from conductor.execution.handle import OperationExecutionHandle
 from conductor.execution.ops.operation import Operation
 from conductor.execution.plan import ExecutionPlan
 from conductor.execution.operation_state import OperationState
-from conductor.task_types.base import TaskExecutionHandle
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.colored_output import (
     print_bold,
@@ -57,10 +57,10 @@ class _ReadyToRunQueue:
 
 class _InflightOperations:
     def __init__(self) -> None:
-        self._processes: Dict[int, Tuple[TaskExecutionHandle, Operation]] = {}
-        self._sync_ops: List[Tuple[TaskExecutionHandle, Operation]] = []
+        self._processes: Dict[int, Tuple[OperationExecutionHandle, Operation]] = {}
+        self._sync_ops: List[Tuple[OperationExecutionHandle, Operation]] = []
 
-    def add_op(self, handle: TaskExecutionHandle, op: Operation) -> None:
+    def add_op(self, handle: OperationExecutionHandle, op: Operation) -> None:
         if handle.is_sync:
             self._sync_ops.append((handle, op))
         else:
@@ -73,7 +73,7 @@ class _InflightOperations:
     def has_sync_ops(self) -> bool:
         return len(self._sync_ops) > 0
 
-    def wait_for_next_op(self) -> Tuple[TaskExecutionHandle, Operation]:
+    def wait_for_next_op(self) -> Tuple[OperationExecutionHandle, Operation]:
         if len(self._sync_ops) > 0:
             return self._sync_ops.pop()
 
