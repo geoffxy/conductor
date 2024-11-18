@@ -12,7 +12,7 @@ from conductor.errors import (
     AtLeastCommitNotAncestor,
 )
 from conductor.task_identifier import TaskIdentifier
-from conductor.execution.executor2 import Executor2
+from conductor.execution.executor import Executor
 from conductor.execution.planning.planner import ExecutionPlanner
 from conductor.utils.user_code import cli_command
 from conductor.utils.colored_output import print_bold
@@ -155,5 +155,5 @@ def main(args):
     plan = ep.create_plan_for(
         task_identifier, run_again=args.again, at_least_commit=commit
     )
-    executor = Executor2(execution_slots=num_jobs)
+    executor = Executor(execution_slots=num_jobs)
     executor.run_plan(plan, ctx, stop_on_first_error=args.stop_early)

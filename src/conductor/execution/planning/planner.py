@@ -6,7 +6,7 @@ from conductor.execution.ops.noop import NoOp
 from conductor.execution.ops.operation import Operation
 from conductor.execution.ops.run_task_executable import RunTaskExecutable
 from conductor.execution.planning.lowering import LoweringTask, LoweringState
-from conductor.execution.plan2 import ExecutionPlan2
+from conductor.execution.plan import ExecutionPlan
 from conductor.execution.task_state import TaskState
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
@@ -24,9 +24,9 @@ class ExecutionPlanner:
         task_id: TaskIdentifier,
         run_again: bool = False,
         at_least_commit: Optional[str] = None,
-    ) -> "ExecutionPlan2":
+    ) -> "ExecutionPlan":
         """
-        Creates an `ExecutionPlan2` for the given task.
+        Creates an `ExecutionPlan` for the given task.
 
         This function converts the task graph into a physical operation graph,
         eliminating tasks that do not need to execute (due to having cached
@@ -168,7 +168,7 @@ class ExecutionPlanner:
                 # change.
                 num_tasks_to_run += 1
 
-        return ExecutionPlan2(
+        return ExecutionPlan(
             task_to_run=task_to_run,
             all_ops=all_ops,
             initial_ops=initial_operations,
