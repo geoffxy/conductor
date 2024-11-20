@@ -1,6 +1,6 @@
-import time
 from fabric import Connection
 from conductor.envs.tunneled_ssh_connection import TunneledSshConnection
+from conductor.envs.install_maestro import install_maestro
 
 
 class EnvManagerImpl:
@@ -10,7 +10,7 @@ class EnvManagerImpl:
         tunnel = TunneledSshConnection(c, port=7023)
         tunnel.open()
         print("Tunnel opened.")
-        time.sleep(3)
+        install_maestro(c)
         tunnel.close()
         print("Tunnel closed.")
         c.close()

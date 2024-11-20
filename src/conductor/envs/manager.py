@@ -33,3 +33,9 @@ class EnvManager:
 
     def run_test(self, host: str, user: str) -> None:
         self._impl.run_test(host, user)
+
+
+if __name__ == "__main__":
+    mgr = EnvManager.create()
+    assert mgr is not None
+    mgr.run_test("aperture", "geoffxy")

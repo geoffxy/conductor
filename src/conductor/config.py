@@ -73,3 +73,6 @@ COND_INCLUDE_EXTENSION = ".cond"
 MAESTRO_ROOT = ".conductor-maestro"
 
 MAESTRO_PYTHON_VERSION = "3.10.12"
+
+# TODO: This needs to be updated for each released version.
+MAESTRO_COND_WHEEL = "conductor_cli-0.7.0+dev-py3-none-any.whl"
