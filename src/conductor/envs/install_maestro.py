@@ -2,12 +2,17 @@ import importlib.resources as pkg_resources
 
 from fabric.connection import Connection
 
+import conductor
 import conductor.envs.resources as env_resources
-from conductor.config import MAESTRO_ROOT, MAESTRO_PYTHON_VERSION, MAESTRO_COND_WHEEL
+from conductor.config import (
+    MAESTRO_PYTHON_VERSION,
+    MAESTRO_COND_WHEEL_TEMPLATE,
+    MAESTRO_VENV_NAME,
+)
 from conductor.errors import MaestroInstallError
 
 
-def install_maestro(c: Connection) -> None:
+def install_maestro(c: Connection, maestro_root: str) -> None:
     """
     Installs Maestro in the remote environment connected to by `c`.
     """
@@ -27,26 +32,21 @@ def install_maestro(c: Connection) -> None:
     #   this works in a generic EC2 environment and inside a Docker container.
 
     try:
-        installer = _MaestroInstaller.create(c)
+        installer = _MaestroInstaller(c, maestro_root)
         installer.ensure_root_dir()
         installer.ensure_pyenv_installed()
         installer.install_python()
+        installer.ensure_virtualenv()
         installer.install_conductor_wheel()
     except Exception as ex:
         raise MaestroInstallError(error_message=str(ex)) from ex
 
 
 class _MaestroInstaller:
-    @classmethod
-    def create(cls, c: Connection) -> "_MaestroInstaller":
-        result = c.run("echo $HOME")
-        home_dir = result.stdout.strip()
-        return cls(c, home_dir)
-
-    def __init__(self, c: Connection, home_dir: str) -> None:
+    def __init__(self, c: Connection, maestro_root: str) -> None:
         self._c = c
         # This is an absolute path in the remote environment.
-        self._maestro_root = f"{home_dir}/{MAESTRO_ROOT}"
+        self._maestro_root = maestro_root
         self._pyenv_root = f"{self._maestro_root}/pyenv"
         self._pyenv_env = {
             "PYENV_ROOT": self._pyenv_root,
@@ -95,19 +95,39 @@ class _MaestroInstaller:
             env=self._pyenv_env,
         )
 
-    def install_conductor_wheel(self) -> None:
-        result = self._c.run(
-            f"ls {self._maestro_root}/{MAESTRO_COND_WHEEL}", warn=True, hide="both"
+    def ensure_virtualenv(self) -> None:
+        # Check if the virtualenv already exists.
+        venv_location = f"{self._maestro_root}/{MAESTRO_VENV_NAME}"
+        result = self._c.run(f"ls {venv_location}", warn=True, hide="both")
+        if result.ok:
+            # Assume the venv exists.
+            return
+        self._c.run(
+            f"{self._pyenv_root}/bin/pyenv exec python3 -m venv {venv_location}",
+            env=self._pyenv_env,
         )
-        if not result.ok:
-            # Transfer the wheel.
-            wheel = pkg_resources.files(env_resources).joinpath(MAESTRO_COND_WHEEL)
-            with pkg_resources.as_file(wheel) as path:
-                self._c.put(path, f"{self._maestro_root}/{MAESTRO_COND_WHEEL}")
-        # TODO: Check if the wheel is up-to-date.
-        # TODO: Install in virtualenv.
+
+    def install_conductor_wheel(self) -> None:
+        # Check if Conductor is already installed.
+        result = self._c.run(
+            f"{self._maestro_root}/{MAESTRO_VENV_NAME}/bin/python3 -c 'import conductor; print(conductor.__version__)'",
+            warn=True,
+            hide="both",
+        )
+        if result.ok:
+            installed_version = result.stdout.strip()
+            if installed_version == conductor.__version__:
+                return
+            # Otherwise, we need to reinstall.
+
+        wheel_file = MAESTRO_COND_WHEEL_TEMPLATE.format(version=conductor.__version__)
+        # Transfer the wheel.
+        wheel = pkg_resources.files(env_resources).joinpath(wheel_file)
+        with pkg_resources.as_file(wheel) as path:
+            self._c.put(path, f"{self._maestro_root}/{wheel_file}")
         # Install.
         self._c.run(
-            f"{self._pyenv_root}/bin/pyenv exec pip3 install "
-            f"{self._maestro_root}/{MAESTRO_COND_WHEEL}"
+            f"{self._maestro_root}/{MAESTRO_VENV_NAME}/bin/pip3 install "
+            f"'{self._maestro_root}/{wheel_file}[envs]'",
+            hide="both",
         )
