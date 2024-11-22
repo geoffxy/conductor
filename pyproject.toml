@@ -24,10 +24,15 @@ exclude = '''
   )/
   | src/conductor/__init__.py
   | src/conductor/errors/generated.py
+  | src/conductor/envs/proto_gen/
 )
 '''
 
 [tool.mypy]
+exclude = [
+  'src/conductor/envs/proto_gen/*',
+]
+
 [[tool.mypy.overrides]]
 module = "fabric.*"
 ignore_missing_imports = true

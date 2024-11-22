@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package conductor;
+
+// Conductor's remote daemon service (Maestro).
+service Maestro {
+  // A temporary RPC for testing purposes.
+  rpc Ping(PingRequest) returns (PingResponse) {}
+
+  // Tell the daemon to shut down.
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
+}
+
+message PingRequest {
+  string message = 1;
+}
+
+message PingResponse {
+  string message = 1;
+}
+
+message ShutdownRequest {
+  string key = 1;
+}
+
+message ShutdownResponse {
+  string message = 1;
+}
