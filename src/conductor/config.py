@@ -71,9 +71,10 @@ COND_INCLUDE_EXTENSION = ".cond"
 ###
 
 MAESTRO_ROOT = ".conductor-maestro"
+MAESTRO_VENV_NAME = "condenv"
+MAESTRO_LOG_FILE = "maestro.log"
+MAESTRO_COND_WHEEL_TEMPLATE = "conductor_cli-{version}-py3-none-any.whl"
 
 MAESTRO_PYTHON_VERSION = "3.10.12"
 
-MAESTRO_COND_WHEEL_TEMPLATE = "conductor_cli-{version}-py3-none-any.whl"
-
-MAESTRO_VENV_NAME = "condenv"
+MAESTRO_PORT = 7585
