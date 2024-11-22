@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script is used to release a new version of the Skyline CLI.
+# This script is used to release a new version of the Conductor CLI.
 
 set -e
 
