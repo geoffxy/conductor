@@ -74,5 +74,6 @@ MAESTRO_ROOT = ".conductor-maestro"
 MAESTRO_VENV_NAME = "condenv"
 MAESTRO_LOG_FILE = "maestro.log"
 MAESTRO_COND_WHEEL_TEMPLATE = "conductor_cli-{version}-py3-none-any.whl"
+MAESTRO_BUNDLE_LOCATION = "bundles"
 
 MAESTRO_PYTHON_VERSION = "3.10.12"

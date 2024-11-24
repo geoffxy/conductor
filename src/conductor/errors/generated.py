@@ -412,6 +412,19 @@ class CombineOutputFileConflict(ConductorError):
         )
 
 
+class MissingEnvSupport(ConductorError):
+    error_code = 3007
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "This feature requires support for Conductor environments. Please install Conductor with the [env] features.".format(
+
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -677,6 +690,7 @@ __all__ = [
     "ConductorAbort",
     "MaestroInstallError",
     "CombineOutputFileConflict",
+    "MissingEnvSupport",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",

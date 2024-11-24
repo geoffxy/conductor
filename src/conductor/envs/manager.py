@@ -1,7 +1,7 @@
 from typing import Any, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from conductor.envs.maestro.client import MaestroGrpcClient
+    from conductor.envs.remote_env import RemoteEnv
 
 
 class EnvManager:
@@ -34,11 +34,11 @@ class EnvManager:
 
         self._impl: mgr_impl.EnvManagerImpl = impl
 
-    def start_remote_env(self, name: str, host: str, user: str) -> "MaestroGrpcClient":
+    def start_remote_env(self, name: str, host: str, user: str) -> "RemoteEnv":
         return self._impl.start_remote_env(name, host, user)
 
-    def get_client(self, name: str) -> "MaestroGrpcClient":
-        return self._impl.get_client(name)
+    def get_remote_env(self, name: str) -> "RemoteEnv":
+        return self._impl.get_remote_env(name)
 
     def shutdown_remote_env(self, name: str) -> None:
         return self._impl.shutdown_remote_env(name)

@@ -57,6 +57,7 @@ class RemoteEnv:
             connection=conn,
             tunnel=tunnel,
             daemon=daemon,
+            maestro_root=maestro_root,
         )
 
     def __init__(
@@ -68,6 +69,7 @@ class RemoteEnv:
         connection: Connection,
         tunnel: TunneledSshConnection,
         daemon: Any,
+        maestro_root: pathlib.Path,
     ) -> None:
         self._host = host
         self._port = port
@@ -75,6 +77,7 @@ class RemoteEnv:
         self._connection = connection
         self._tunnel = tunnel
         self._daemon = daemon
+        self._maestro_root = maestro_root
         self._client: Optional[MaestroGrpcClient] = None
 
     def client(self) -> MaestroGrpcClient:
@@ -86,6 +89,16 @@ class RemoteEnv:
             self._client = MaestroGrpcClient("localhost", self._port)
             self._client.connect()
         return self._client
+
+    def transfer_file(
+        self, local_path: pathlib.Path, remote_path: pathlib.Path
+    ) -> None:
+        """
+        Transfers a file from the local machine to the remote environment. The
+        remote path should be a relative path. This method will place the file
+        under the Maestro root.
+        """
+        self._connection.put(str(local_path), str(self._maestro_root / remote_path))
 
     def shutdown(self) -> None:
         """

@@ -110,3 +110,16 @@ class Git:
         if result.returncode != 0:
             return None
         return result.stdout.strip()
+
+    def create_bundle(self, symbol: str, bundle_path: pathlib.Path) -> bool:
+        """
+        Creates a bundle file containing the specified commit symbol (e.g.,
+        hash, tag, branch) and saves it to `bundle_path`. Returns `True` if the
+        operation was successful.
+        """
+        result = subprocess.run(
+            ["git", "bundle", "create", str(bundle_path), symbol],
+            cwd=self._project_root,
+            check=False,
+        )
+        return result.returncode == 0
