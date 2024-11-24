@@ -45,6 +45,7 @@ DEV_REQUIRES = [
 ENVS_REQUIRES = [
     "fabric",
     "grpcio",
+    "protobuf",
 ]
 
 KEYWORDS = [

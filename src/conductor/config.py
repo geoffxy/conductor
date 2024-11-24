@@ -76,5 +76,3 @@ MAESTRO_LOG_FILE = "maestro.log"
 MAESTRO_COND_WHEEL_TEMPLATE = "conductor_cli-{version}-py3-none-any.whl"
 
 MAESTRO_PYTHON_VERSION = "3.10.12"
-
-MAESTRO_PORT = 7585
