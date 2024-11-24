@@ -2,7 +2,7 @@ import pathlib
 from typing import Optional
 
 from conductor.context import Context
-from conductor.errors import MissingEnvSupport
+from conductor.errors import MissingEnvSupport, EnvsRequireGit
 from conductor.execution.handle import OperationExecutionHandle
 from conductor.execution.ops.operation import Operation
 from conductor.execution.operation_state import OperationState
@@ -23,6 +23,8 @@ class TransferRepo(Operation):
     ) -> OperationExecutionHandle:
         if ctx.envs is None:
             raise MissingEnvSupport()
+        if not ctx.git.is_used():
+            raise EnvsRequireGit()
 
         # Create a bundle of the current repository.
         repo_name = ctx.project_root.name
