@@ -7,7 +7,7 @@ import signal
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
 
 from conductor.envs.maestro.daemon import Maestro
-from conductor.envs.maestro.grpc import MaestroGrpc
+from conductor.envs.maestro.grpc_service import MaestroGrpc
 from conductor.utils.logging import set_up_logging
 from conductor.config import MAESTRO_ROOT, MAESTRO_LOG_FILE
 
@@ -56,7 +56,10 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Start the Conductor Maestro daemon.")
     parser.add_argument(
-        "--root", type=str, help="The root directory for the Maestro daemon."
+        "--root",
+        type=str,
+        required=True,
+        help="The root directory for the Maestro daemon.",
     )
     parser.add_argument(
         "--interface", type=str, default="localhost", help="The interface to bind to."
@@ -80,17 +83,20 @@ def main():
     event_loop.set_exception_handler(handle_exception)
 
     try:
+        maestro_root = pathlib.Path(args.root)
+        logger.info("Using Maestro root directory: %s", str(maestro_root))
         logger.info("Starting Maestro daemon on %s:%d...", args.interface, args.port)
-        maestro = Maestro(maestro_root=args.root)
+        maestro = Maestro(maestro_root)
         task = event_loop.create_task(start_maestro(maestro, args.interface, args.port))
         event_loop.run_until_complete(task)
     except asyncio.CancelledError:
-        logger.info("Daemon shutdown cancellation processed.")
+        logger.info("Maestro daemon is shutting down...")
     finally:
         wait_task = event_loop.create_task(wait_for_all_tasks())
         event_loop.run_until_complete(wait_task)
         event_loop.stop()
         event_loop.close()
+        logger.info("Maestro daemon has shut down successfully.")
 
 
 if __name__ == "__main__":

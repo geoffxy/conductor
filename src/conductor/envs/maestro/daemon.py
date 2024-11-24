@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import pathlib
 import subprocess
 from conductor.envs.maestro.interface import MaestroInterface
 
@@ -12,7 +13,7 @@ class Maestro(MaestroInterface):
     environment and executes tasks when requested by the main Conductor process.
     """
 
-    def __init__(self, maestro_root: str) -> None:
+    def __init__(self, maestro_root: pathlib.Path) -> None:
         self._maestro_root = maestro_root
 
     async def ping(self, message: str) -> str:
