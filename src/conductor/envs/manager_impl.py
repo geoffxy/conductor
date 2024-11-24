@@ -1,5 +1,6 @@
 import time
 import pathlib
+from typing import Dict
 
 from fabric import Connection
 
@@ -7,42 +8,30 @@ from conductor.envs.tunneled_ssh_connection import TunneledSshConnection
 from conductor.envs.install_maestro import ensure_maestro_installed
 from conductor.config import MAESTRO_ROOT, MAESTRO_VENV_NAME
 from conductor.envs.maestro.client import MaestroGrpcClient
+from conductor.envs.remote_env import RemoteEnv
 
 
 class EnvManagerImpl:
-    def run_test(self, host: str, user: str) -> None:
-        c = Connection(host=host, user=user)
-        c.open()
-        port = 7583
-        tunnel = TunneledSshConnection(c, port=port)
-        tunnel.open()
-        print("Tunnel opened.")
-        maestro_root = self._compute_maestro_root(c)
-        ensure_maestro_installed(c, maestro_root)
-        print("Test launching daemon.")
-        daemon = c.run(
-            f"{maestro_root}/{MAESTRO_VENV_NAME}/bin/python3 -m "
-            f"conductor.envs.maestro.start_maestro --root {maestro_root} --port {port} --debug",
-            asynchronous=True,
-        )
-        print("Daemon launched.")
-        time.sleep(3)
-        try:
-            with MaestroGrpcClient("localhost", port) as client:
-                print("Test pinging daemon.")
-                response = client.ping("ping")
-                print("Ping response:", response)
-                print("Sending shutdown")
-                response = client.shutdown("shutdown")
-                print("Shutdown response:", response)
-            daemon.join()
-        finally:
-            tunnel.close()
-            print("Tunnel closed.")
-            c.close()
-            print("Connection closed.")
+    def __init__(self) -> None:
+        self._active_envs: Dict[str, RemoteEnv] = {}
 
-    def _compute_maestro_root(self, c: Connection) -> pathlib.Path:
-        result = c.run("echo $HOME")
-        home_dir = result.stdout.strip()
-        return pathlib.Path(home_dir) / MAESTRO_ROOT
+    def start_remote_env(self, name: str, host: str, user: str) -> MaestroGrpcClient:
+        if name in self._active_envs:
+            # This is a internal error as we should not be trying to start an
+            # environment more than once.
+            raise ValueError(f"Environment with name {name} already exists.")
+        remote_env = RemoteEnv.start(host, user)
+        self._active_envs[name] = remote_env
+        return remote_env.client()
+
+    def get_client(self, name: str) -> MaestroGrpcClient:
+        return self._active_envs[name].client()
+
+    def shutdown_remote_env(self, name: str) -> None:
+        try:
+            self._active_envs[name].shutdown()
+            del self._active_envs[name]
+        except KeyError:
+            # This is a internal error as we should not be trying to stop an
+            # environment that does not exist.
+            raise ValueError(f"Environment with name {name} does not exist.")

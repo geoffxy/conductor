@@ -1,4 +1,7 @@
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from conductor.envs.maestro.client import MaestroGrpcClient
 
 
 class EnvManager:
@@ -31,11 +34,21 @@ class EnvManager:
 
         self._impl: mgr_impl.EnvManagerImpl = impl
 
-    def run_test(self, host: str, user: str) -> None:
-        self._impl.run_test(host, user)
+    def start_remote_env(self, name: str, host: str, user: str) -> "MaestroGrpcClient":
+        return self._impl.start_remote_env(name, host, user)
+
+    def get_client(self, name: str) -> "MaestroGrpcClient":
+        return self._impl.get_client(name)
+
+    def shutdown_remote_env(self, name: str) -> None:
+        return self._impl.shutdown_remote_env(name)
 
 
 if __name__ == "__main__":
     mgr = EnvManager.create()
     assert mgr is not None
-    mgr.run_test("aperture", "geoffxy")
+    env_name = "test_aperture"
+    client = mgr.start_remote_env(env_name, "aperture", "geoffxy")
+    pong = client.ping("ping")
+    print("Received ping response:", pong)
+    mgr.shutdown_remote_env(env_name)
