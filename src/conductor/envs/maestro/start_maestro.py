@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import grpc
+import sys
 import logging
 import pathlib
 import signal
@@ -22,6 +23,11 @@ async def start_maestro(maestro: Maestro, interface: str, port: int) -> None:
         await grpc_server.start()
         logger.info("The Conductor Maestro daemon has successfully started.")
         logger.info("Listening on port %d.", port)
+        # Write a null byte to stdout to signal that the Maestro daemon is ready
+        # to accept connections.
+        sys.stdout.write("\0")
+        sys.stdout.flush()
+        logger.info("Signaled readiness to accept connections.")
         await grpc_server.wait_for_termination()
     finally:
         # Not ideal, but we need to manually call this method to ensure
