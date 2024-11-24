@@ -2,6 +2,11 @@ import conductor.envs.proto_gen.maestro_pb2_grpc as rpc
 import conductor.envs.proto_gen.maestro_pb2 as pb
 from conductor.envs.maestro.interface import MaestroInterface
 
+# pylint: disable=no-member
+# See https://github.com/protocolbuffers/protobuf/issues/10372
+
+# pylint: disable=invalid-overridden-method
+
 
 class MaestroGrpc(rpc.MaestroServicer):
     """

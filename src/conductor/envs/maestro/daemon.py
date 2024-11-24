@@ -18,7 +18,7 @@ class Maestro(MaestroInterface):
 
     async def ping(self, message: str) -> str:
         logger.info("Received ping message: %s", message)
-        result = subprocess.run(["uname", "-a"], capture_output=True)
+        result = subprocess.run(["uname", "-a"], capture_output=True, check=False)
         return result.stdout.decode("utf-8").strip()
 
     async def shutdown(self, key: str) -> str:

@@ -26,7 +26,7 @@ class RemoteEnv:
         # Open the SSH connection and set up the tunnel.
         conn = Connection(host=host, user=user)
         conn.open()
-        # TODO: Cycle through ports until we find one that is open.
+        # NOTE: Need to cycle through ports until we find one that is open.
         port = 7583
         tunnel = TunneledSshConnection(conn, port=port)
         tunnel.open()
@@ -103,6 +103,7 @@ class RemoteEnv:
         # N.B. This has to be closed after all the Fabric resources are closed.
         self._out_pipe.close()
 
+    @staticmethod
     def _compute_maestro_root(c: Connection) -> pathlib.Path:
         result = c.run("echo $HOME")
         home_dir = result.stdout.strip()

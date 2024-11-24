@@ -45,7 +45,7 @@ async def shutdown_daemon():
     await asyncio.gather(*tasks, return_exceptions=True)
 
 
-def handle_exception(event_loop, context):
+def handle_exception(event_loop, context):  # pylint: disable=unused-argument
     message = context.get("exception", context["message"])
     logger.error("Encountered exception: %s", message)
     logger.error("%s", context)

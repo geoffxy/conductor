@@ -1,12 +1,5 @@
-import time
-import pathlib
 from typing import Dict
 
-from fabric import Connection
-
-from conductor.envs.tunneled_ssh_connection import TunneledSshConnection
-from conductor.envs.install_maestro import ensure_maestro_installed
-from conductor.config import MAESTRO_ROOT, MAESTRO_VENV_NAME
 from conductor.envs.maestro.client import MaestroGrpcClient
 from conductor.envs.remote_env import RemoteEnv
 
@@ -31,7 +24,7 @@ class EnvManagerImpl:
         try:
             self._active_envs[name].shutdown()
             del self._active_envs[name]
-        except KeyError:
+        except KeyError as ex:
             # This is a internal error as we should not be trying to stop an
             # environment that does not exist.
-            raise ValueError(f"Environment with name {name} does not exist.")
+            raise ValueError(f"Environment with name {name} does not exist.") from ex

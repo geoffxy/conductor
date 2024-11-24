@@ -39,11 +39,13 @@ class MaestroGrpcClient:
 
     def ping(self, message: str) -> str:
         assert self._stub is not None
+        # pylint: disable-next=no-member
         msg = pb.PingRequest(message=message)
         return self._stub.Ping(msg).message
 
     def shutdown(self, key: str) -> str:
         assert self._stub is not None
+        # pylint: disable-next=no-member
         msg = pb.ShutdownRequest(key=key)
         return self._stub.Shutdown(msg).message
 
