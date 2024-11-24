@@ -98,7 +98,10 @@ class RemoteEnv:
         remote path should be a relative path. This method will place the file
         under the Maestro root.
         """
-        self._connection.put(str(local_path), str(self._maestro_root / remote_path))
+        # Make sure the path (including parent directories) exists.
+        full_remote_path = self._maestro_root / remote_path
+        self._connection.run(f"mkdir -p {str(full_remote_path.parent)}", hide=True)
+        self._connection.put(str(local_path), str(full_remote_path))
 
     def shutdown(self) -> None:
         """
@@ -118,6 +121,6 @@ class RemoteEnv:
 
     @staticmethod
     def _compute_maestro_root(c: Connection) -> pathlib.Path:
-        result = c.run("echo $HOME")
+        result = c.run("echo $HOME", hide=True)
         home_dir = result.stdout.strip()
         return pathlib.Path(home_dir) / MAESTRO_ROOT
