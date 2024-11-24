@@ -42,13 +42,3 @@ class EnvManager:
 
     def shutdown_remote_env(self, name: str) -> None:
         return self._impl.shutdown_remote_env(name)
-
-
-if __name__ == "__main__":
-    mgr = EnvManager.create()
-    assert mgr is not None
-    env_name = "test_aperture"
-    client = mgr.start_remote_env(env_name, "aperture", "geoffxy")
-    pong = client.ping("ping")
-    print("Received ping response:", pong)
-    mgr.shutdown_remote_env(env_name)
