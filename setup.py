@@ -31,6 +31,7 @@ INSTALL_REQUIRES = [
 
 DEV_REQUIRES = [
     "black",
+    "grpcio-tools",
     "mypy",
     "pep517",
     "pylint",
@@ -38,11 +39,13 @@ DEV_REQUIRES = [
     "pytest-timeout",
     "pyyaml",
     "setuptools",
+    "types-protobuf",
 ]
 
 ENVS_REQUIRES = [
     "fabric",
     "grpcio",
+    "protobuf",
 ]
 
 KEYWORDS = [

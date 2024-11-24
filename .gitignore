@@ -11,3 +11,5 @@ build
 dist
 
 cond-out
+
+src/conductor/envs/resources/*.whl
