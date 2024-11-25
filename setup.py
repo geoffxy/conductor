@@ -40,12 +40,19 @@ DEV_REQUIRES = [
     "pyyaml",
     "setuptools",
     "types-protobuf",
+    "types-invoke",
 ]
 
 ENVS_REQUIRES = [
     "fabric",
     "grpcio",
     "protobuf",
+]
+
+EXPLORER_REQUIRES = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
 ]
 
 KEYWORDS = [
@@ -110,8 +117,10 @@ if __name__ == "__main__":
         python_requires=PYTHON_REQUIRES,
         install_requires=INSTALL_REQUIRES,
         extras_require={
+            "all": ENVS_REQUIRES + EXPLORER_REQUIRES,
             "dev": DEV_REQUIRES,
             "envs": ENVS_REQUIRES,
+            "explorer": EXPLORER_REQUIRES,
         },
         entry_points=ENTRY_POINTS,
         classifiers=CLASSIFIERS,

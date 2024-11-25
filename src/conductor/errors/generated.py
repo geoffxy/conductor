@@ -633,6 +633,19 @@ class NoTaskOutputPath(ConductorError):
         )
 
 
+class MissingExplorerSupport(ConductorError):
+    error_code = 5012
+
+    def __init__(self, **kwargs):
+        super().__init__()
+
+    
+    def _message(self):
+        return "This feature requires support for Conductor's explorer. Please install Conductor with the [explore] features.".format(
+
+        )
+
+
 __all__ = [
     "TaskParseError",
     "MissingTaskParameter",
@@ -681,4 +694,5 @@ __all__ = [
     "CannotSetBothCommitFlags",
     "AtLeastCommitNotAncestor",
     "NoTaskOutputPath",
+    "MissingExplorerSupport",
 ]

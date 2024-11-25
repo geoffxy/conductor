@@ -1,4 +1,4 @@
 [MESSAGES CONTROL]
 disable=R,C
 enable=useless-suppression
-ignore-paths=src/conductor/envs/proto_gen/
+ignore-paths=src/conductor/envs/proto_gen/,src/conductor/explorer/static/,explorer/
