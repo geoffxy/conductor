@@ -40,6 +40,7 @@ module.exports = {
             'cli/where',
             'cli/clean',
             'cli/gc',
+            'cli/explorer',
           ],
         },
         'configuration',
