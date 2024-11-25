@@ -23,5 +23,5 @@ if [ "$1" == "--virtualenv" ]; then
   fi
 fi
 
-pip3 install --editable ".[dev,envs]"
+pip3 install --editable ".[dev,envs,explorer]"
 echo_green "✓ Done"

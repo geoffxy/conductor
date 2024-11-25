@@ -8,6 +8,7 @@ import conductor.cli.restore
 import conductor.cli.where
 import conductor.cli.clean
 import conductor.cli.gc
+import conductor.cli.explorer
 
 
 def main():
@@ -32,6 +33,7 @@ def main():
     conductor.cli.where.register_command(subparsers)
     conductor.cli.clean.register_command(subparsers)
     conductor.cli.gc.register_command(subparsers)
+    conductor.cli.explorer.register_command(subparsers)
     args = parser.parse_args()
 
     if args.version:

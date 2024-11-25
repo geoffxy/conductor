@@ -230,3 +230,9 @@
   message: >-
     There is no relevant output path for '{task_identifier}'. For most tasks,
     this just means that you need to run the task first.
+
+5012:
+  name: MissingExplorerSupport
+  message: >-
+    This feature requires support for Conductor's explorer. Please install
+    Conductor with the [explore] features.
