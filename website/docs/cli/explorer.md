@@ -23,6 +23,12 @@ will be port 8000.
 The host that Conductor's explorer tool will bind to. If unspecified, this will
 be `localhost`. Generally, you will not need to modify this value.
 
+### `--no-browser`
+
+If set, Conductor will not automatically launch a web browser. By default, this
+explorer command will start a web browser pointed at the explorer's web
+interface.
+
 ### `-h` or `--help`
 
 Prints a help message that provides details about how to use the `cond explorer`
