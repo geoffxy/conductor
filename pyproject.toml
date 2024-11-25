@@ -25,12 +25,15 @@ exclude = '''
   | src/conductor/__init__.py
   | src/conductor/errors/generated.py
   | src/conductor/envs/proto_gen/
+  | explorer/
 )
 '''
 
 [tool.mypy]
 exclude = [
   'src/conductor/envs/proto_gen/*',
+  'src/conductor/explorer/static/*',
+  'explorer/*'
 ]
 
 [[tool.mypy.overrides]]

@@ -13,3 +13,6 @@ dist
 cond-out
 
 src/conductor/envs/resources/*.whl
+
+explorer/node_modules/
+explorer/dist/
