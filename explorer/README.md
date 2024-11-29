@@ -9,4 +9,3 @@ explorer, run `cond explorer`. The instructions below are for development.
 - Run `npm run watch` inside this directory
 - Run `cond explorer` to launch the explorer backend and web server (required
   for access to Conductor APIs)
-

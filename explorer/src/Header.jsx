@@ -1,14 +1,16 @@
-import logo from './assets/ConductorLogo_Light.png';
-import './Header.css';
+import logo from "./assets/ConductorLogo_Light.png";
+import "./Header.css";
 
 const Header = () => {
-  console.log('Test');
-  return <div class="header">
-    <div class="header-logo">
-      <img src={logo} alt="Conductor Explorer" />
-      <span>Conductor Explorer</span>
+  console.log("Test");
+  return (
+    <div className="header">
+      <div className="header-logo">
+        <img src={logo} alt="Conductor Explorer" />
+        <span>Conductor Explorer</span>
+      </div>
     </div>
-  </div>;
+  );
 };
 
 export default Header;
