@@ -79,6 +79,7 @@ class RemoteEnv:
         self._daemon = daemon
         self._maestro_root = maestro_root
         self._client: Optional[MaestroGrpcClient] = None
+        self._workspace_name: Optional[str] = None
 
     def client(self) -> MaestroGrpcClient:
         """
@@ -89,6 +90,10 @@ class RemoteEnv:
             self._client = MaestroGrpcClient("localhost", self._port)
             self._client.connect()
         return self._client
+
+    def workspace_name(self) -> str:
+        assert self._workspace_name is not None
+        return self._workspace_name
 
     def transfer_file(
         self, local_path: pathlib.Path, remote_path: pathlib.Path
@@ -118,6 +123,9 @@ class RemoteEnv:
         self._connection.close()
         # N.B. This has to be closed after all the Fabric resources are closed.
         self._out_pipe.close()
+
+    def set_workspace_name(self, name: str) -> None:
+        self._workspace_name = name
 
     @staticmethod
     def _compute_maestro_root(c: Connection) -> pathlib.Path:

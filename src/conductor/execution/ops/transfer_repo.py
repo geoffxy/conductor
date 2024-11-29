@@ -39,6 +39,12 @@ class TransferRepo(Operation):
 
         # Remove the local copy.
         local_bundle_path.unlink(missing_ok=True)
+
+        # Unpack the bundle in the remote environment.
+        client = remote_env.client()
+        workspace_name = client.unpack_bundle(remote_bundle_path)
+        remote_env.set_workspace_name(workspace_name)
+
         return OperationExecutionHandle.from_sync_execution()
 
     def finish_execution(self, handle: OperationExecutionHandle, ctx: Context) -> None:
