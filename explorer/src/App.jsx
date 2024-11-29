@@ -1,5 +1,11 @@
+import Header from "./Header";
+
 function App() {
-  return <div />;
+  return (
+    <div id="conductor-explorer">
+      <Header />
+    </div>
+  );
 }
 
 export default App;

@@ -1,0 +1,46 @@
+name: Check Explorer UI Code
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+    - 'explorer/**'
+  pull_request:
+    branches: [ master ]
+    paths:
+    - 'explorer/**'
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Check Explorer UI Code
+    timeout-minutes: 30
+
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set Up Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Dependencies
+      working-directory: explorer
+      run: npm install
+
+    - name: Check Formatting (prettier)
+      working-directory: explorer
+      run: npm run fcheck
+      if: success() || failure()
+
+    - name: Lint (eslint)
+      working-directory: explorer
+      run: npm run lint
+      if: success() || failure()
+
+    - name: Run Build (vite)
+      working-directory: explorer
+      run: npm run build
+      if: success() || failure()
