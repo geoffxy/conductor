@@ -7,6 +7,9 @@ service Maestro {
   // A temporary RPC for testing purposes.
   rpc Ping(PingRequest) returns (PingResponse) {}
 
+  // Used to initialize a repository (workspace) for the current project.
+  rpc UnpackBundle(UnpackBundleRequest) returns (UnpackBundleResponse) {}
+
   // Tell the daemon to shut down.
   rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
 }
@@ -25,4 +28,15 @@ message ShutdownRequest {
 
 message ShutdownResponse {
   string message = 1;
+}
+
+message UnpackBundleRequest {
+  // A path to the bundle file (relative to the maestro root).
+  string bundle_path = 1;
+}
+
+message UnpackBundleResponse {
+  // A unique identifier for the unpacked bundle (workspace). We use this to
+  // differentiate between different copies of the same repository.
+  string workspace_name = 1;
 }

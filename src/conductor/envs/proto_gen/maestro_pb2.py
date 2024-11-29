@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmaestro.proto\x12\tconductor\"\x1e\n\x0bPingRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1f\n\x0cPingResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1e\n\x0fShutdownRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"#\n\x10ShutdownResponse\x12\x0f\n\x07message\x18\x01 \x01(\t2\x8b\x01\n\x07Maestro\x12\x39\n\x04Ping\x12\x16.conductor.PingRequest\x1a\x17.conductor.PingResponse\"\x00\x12\x45\n\x08Shutdown\x12\x1a.conductor.ShutdownRequest\x1a\x1b.conductor.ShutdownResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmaestro.proto\x12\tconductor\"\x1e\n\x0bPingRequest\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1f\n\x0cPingResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"\x1e\n\x0fShutdownRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"#\n\x10ShutdownResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"*\n\x13UnpackBundleRequest\x12\x13\n\x0b\x62undle_path\x18\x01 \x01(\t\".\n\x14UnpackBundleResponse\x12\x16\n\x0eworkspace_name\x18\x01 \x01(\t2\xde\x01\n\x07Maestro\x12\x39\n\x04Ping\x12\x16.conductor.PingRequest\x1a\x17.conductor.PingResponse\"\x00\x12Q\n\x0cUnpackBundle\x12\x1e.conductor.UnpackBundleRequest\x1a\x1f.conductor.UnpackBundleResponse\"\x00\x12\x45\n\x08Shutdown\x12\x1a.conductor.ShutdownRequest\x1a\x1b.conductor.ShutdownResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,6 +39,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SHUTDOWNREQUEST']._serialized_end=123
   _globals['_SHUTDOWNRESPONSE']._serialized_start=125
   _globals['_SHUTDOWNRESPONSE']._serialized_end=160
-  _globals['_MAESTRO']._serialized_start=163
-  _globals['_MAESTRO']._serialized_end=302
+  _globals['_UNPACKBUNDLEREQUEST']._serialized_start=162
+  _globals['_UNPACKBUNDLEREQUEST']._serialized_end=204
+  _globals['_UNPACKBUNDLERESPONSE']._serialized_start=206
+  _globals['_UNPACKBUNDLERESPONSE']._serialized_end=252
+  _globals['_MAESTRO']._serialized_start=255
+  _globals['_MAESTRO']._serialized_end=477
 # @@protoc_insertion_point(module_scope)

@@ -1,4 +1,5 @@
 import grpc
+import pathlib
 from typing import Optional
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
@@ -42,6 +43,12 @@ class MaestroGrpcClient:
         # pylint: disable-next=no-member
         msg = pb.PingRequest(message=message)
         return self._stub.Ping(msg).message
+
+    def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
+        assert self._stub is not None
+        # pylint: disable-next=no-member
+        msg = pb.UnpackBundleRequest(bundle_path=str(bundle_path))
+        return self._stub.UnpackBundle(msg).workspace_name
 
     def shutdown(self, key: str) -> str:
         assert self._stub is not None

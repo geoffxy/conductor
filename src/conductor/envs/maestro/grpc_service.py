@@ -1,3 +1,4 @@
+import pathlib
 import conductor.envs.proto_gen.maestro_pb2_grpc as rpc
 import conductor.envs.proto_gen.maestro_pb2 as pb
 from conductor.envs.maestro.interface import MaestroInterface
@@ -19,6 +20,13 @@ class MaestroGrpc(rpc.MaestroServicer):
     async def Ping(self, request: pb.PingRequest, context) -> pb.PingResponse:
         response_message = await self._maestro.ping(request.message)
         return pb.PingResponse(message=response_message)
+
+    async def UnpackBundle(
+        self, request: pb.UnpackBundleRequest, context
+    ) -> pb.UnpackBundleResponse:
+        bundle_path = pathlib.Path(request.bundle_path)
+        workspace_name = await self._maestro.unpack_bundle(bundle_path)
+        return pb.UnpackBundleResponse(workspace_name=workspace_name)
 
     async def Shutdown(
         self, request: pb.ShutdownRequest, context

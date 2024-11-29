@@ -146,6 +146,14 @@
   name: CombineOutputFileConflict
   message: "The output file or directory '{output_file}' already exists and cannot be overwritten by the combine() task."
 
+3007:
+  name: MissingEnvSupport
+  message: This feature requires support for Conductor environments. Please install Conductor with the [env] features.
+
+3008:
+  name: EnvsRequireGit
+  message: To use a Conductor environments, your project must be tracked in a Git repository.
+
 
 # Archive and restore errors (error code 4xxx)
 4001:

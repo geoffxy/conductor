@@ -4,6 +4,7 @@ from typing import Optional
 
 from conductor.config import CONFIG_FILE_NAME, OUTPUT_DIR, VERSION_INDEX_NAME
 from conductor.config_file import ConfigFile
+from conductor.envs.manager import EnvManager
 from conductor.errors import MissingProjectRoot, OutputDirTaken
 from conductor.execution.version_index import VersionIndex
 from conductor.parsing.task_index import TaskIndex
@@ -39,6 +40,8 @@ class Context:
 
         # We lazily initialize the TeeProcessor because it may not always be needed.
         self._tee_processor: Optional[TeeProcessor] = None
+
+        self._env_manager: Optional[EnvManager] = EnvManager.create()
 
     @classmethod
     def from_cwd(cls) -> "Context":
@@ -92,6 +95,10 @@ class Context:
         if self._tee_processor is None:
             self._tee_processor = TeeProcessor()
         return self._tee_processor
+
+    @property
+    def envs(self) -> Optional[EnvManager]:
+        return self._env_manager
 
     def _ensure_output_dir_exists(self) -> None:
         self.output_path.mkdir(exist_ok=True)

@@ -57,6 +57,7 @@ class RemoteEnv:
             connection=conn,
             tunnel=tunnel,
             daemon=daemon,
+            maestro_root=maestro_root,
         )
 
     def __init__(
@@ -68,6 +69,7 @@ class RemoteEnv:
         connection: Connection,
         tunnel: TunneledSshConnection,
         daemon: Any,
+        maestro_root: pathlib.Path,
     ) -> None:
         self._host = host
         self._port = port
@@ -75,7 +77,9 @@ class RemoteEnv:
         self._connection = connection
         self._tunnel = tunnel
         self._daemon = daemon
+        self._maestro_root = maestro_root
         self._client: Optional[MaestroGrpcClient] = None
+        self._workspace_name: Optional[str] = None
 
     def client(self) -> MaestroGrpcClient:
         """
@@ -86,6 +90,23 @@ class RemoteEnv:
             self._client = MaestroGrpcClient("localhost", self._port)
             self._client.connect()
         return self._client
+
+    def workspace_name(self) -> str:
+        assert self._workspace_name is not None
+        return self._workspace_name
+
+    def transfer_file(
+        self, local_path: pathlib.Path, remote_path: pathlib.Path
+    ) -> None:
+        """
+        Transfers a file from the local machine to the remote environment. The
+        remote path should be a relative path. This method will place the file
+        under the Maestro root.
+        """
+        # Make sure the path (including parent directories) exists.
+        full_remote_path = self._maestro_root / remote_path
+        self._connection.run(f"mkdir -p {str(full_remote_path.parent)}", hide=True)
+        self._connection.put(str(local_path), str(full_remote_path))
 
     def shutdown(self) -> None:
         """
@@ -103,8 +124,11 @@ class RemoteEnv:
         # N.B. This has to be closed after all the Fabric resources are closed.
         self._out_pipe.close()
 
+    def set_workspace_name(self, name: str) -> None:
+        self._workspace_name = name
+
     @staticmethod
     def _compute_maestro_root(c: Connection) -> pathlib.Path:
-        result = c.run("echo $HOME")
+        result = c.run("echo $HOME", hide=True)
         home_dir = result.stdout.strip()
         return pathlib.Path(home_dir) / MAESTRO_ROOT
