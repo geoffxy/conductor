@@ -1,8 +1,8 @@
-import Test from './Test';
+import Header from './Header';
 
 function App() {
-  return <div>
-    <Test />
+  return <div id="conductor-explorer">
+    <Header />
   </div>;
 }
 
