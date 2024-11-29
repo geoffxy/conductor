@@ -120,6 +120,39 @@ def test_distance(tmp_path: pathlib.Path):
     assert g.is_ancestor(commit3, commit2)
 
 
+def test_create_unpack_bundle(tmp_path: pathlib.Path):
+    orig_git = tmp_path / "orig"
+    orig_git.mkdir(exist_ok=True, parents=True)
+    setup_git(orig_git, initialize=True)
+
+    # Create a commit with an empty file
+    open(orig_git / "test.txt", "w", encoding="UTF-8").close()
+    results = subprocess.run(["git", "add", "test.txt"], cwd=orig_git, check=False)
+    assert results.returncode == 0
+    results = subprocess.run(
+        ["git", "commit", "-m", "Test commit."], cwd=orig_git, check=False
+    )
+    assert results.returncode == 0
+
+    # Create a bundle.
+    g = Git(orig_git)
+    g.create_bundle("HEAD", tmp_path / "test.bundle", silent=True)
+
+    # Check that it exists
+    assert (tmp_path / "test.bundle").exists()
+
+    # Unpack the bundle
+    new_git = tmp_path / "new"
+    new_git.mkdir(exist_ok=True, parents=True)
+    result = subprocess.run(
+        ["git", "clone", str(tmp_path / "test.bundle"), str(new_git)], check=False
+    )
+    assert result.returncode == 0
+
+    # Check that the file exists.
+    assert (new_git / "test.txt").exists()
+
+
 # Git environment setup helpers
 
 
