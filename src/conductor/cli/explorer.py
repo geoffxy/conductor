@@ -1,3 +1,4 @@
+from conductor.context import Context
 from conductor.explorer.explorer import start_explorer
 from conductor.utils.user_code import cli_command
 from conductor.errors import ConductorAbort
@@ -31,8 +32,9 @@ def register_command(subparsers):
 @cli_command
 def main(args):
     try:
+        ctx = Context.from_cwd()
         start_explorer(
-            host=args.host, port=args.port, launch_browser=not args.no_browser
+            ctx, host=args.host, port=args.port, launch_browser=not args.no_browser
         )
     except ConductorAbort:
         # We ignore this exception because it is raised when the user hits

@@ -1,10 +1,12 @@
 import time
 import webbrowser
 import threading
+from conductor.context import Context
 from conductor.errors import MissingExplorerSupport
+from conductor.explorer.routes import set_context
 
 
-def start_explorer(host: str, port: int, launch_browser: bool) -> None:
+def start_explorer(ctx: Context, host: str, port: int, launch_browser: bool) -> None:
     """
     Entrypoint to launching Conductor's explorer. This function will attempt to
     start the explorer. If the user has not installed the necessary
@@ -18,6 +20,7 @@ def start_explorer(host: str, port: int, launch_browser: bool) -> None:
     except ImportError as ex:
         raise MissingExplorerSupport() from ex
 
+    set_context(ctx)
     uvicorn_config = uvicorn.Config(
         "conductor.explorer.routes:app",
         host=host,
