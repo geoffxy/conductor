@@ -1,0 +1,5 @@
+run_experiment(
+  name="test2",
+  run="echo test2",
+  deps=["//mod1:test1"],
+)

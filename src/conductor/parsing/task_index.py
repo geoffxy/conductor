@@ -197,6 +197,12 @@ class TaskIndex:
                         root.path_to_cond_file(self._project_root)
                     )
 
+                if curr_id in visited:
+                    # We put this check here to be able to detect cyclic
+                    # dependencies. If we've already visited this task, we don't
+                    # want to visit its children again.
+                    continue
+
                 if curr_id not in self._loaded_tasks:
                     # References a dependency that does not exist (or has not
                     # been loaded).
@@ -211,8 +217,6 @@ class TaskIndex:
                     # and is not a root task.
                     if dep_id in root_candidates:
                         root_candidates[dep_id] += 1
-                    if dep_id in visited:
-                        continue
                     stack.append((dep_id, 0))
 
         for task_id in self._loaded_tasks.keys():

@@ -180,4 +180,6 @@ FIXTURE_TEMPLATES = {
     "git-context": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-context"),
     "git-commit": pathlib.Path(_TESTS_DIR, "fixture-projects", "git-commit"),
     "include": pathlib.Path(_TESTS_DIR, "fixture-projects", "include"),
+    "cyclic-deps": pathlib.Path(_TESTS_DIR, "fixture-projects", "cyclic-deps"),
+    "missing-deps": pathlib.Path(_TESTS_DIR, "fixture-projects", "missing-deps"),
 }
