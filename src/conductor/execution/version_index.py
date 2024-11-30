@@ -102,10 +102,11 @@ class VersionIndex:
         conn.commit()
         return VersionIndex(conn, 0, path)
 
-    def new_for_thread(self) -> "VersionIndex":
+    def clone(self) -> "VersionIndex":
         """
-        Create a new `VersionIndex` instance that is associated with the same
-        thread (needed in Conductor's explorer API).
+        Clone this `VersionIndex` instance. This is helpful for creating a
+        instance associated with the same thread (for the SQLite connection,
+        needed in Conductor's explorer API).
         """
         conn = sqlite3.connect(self._underlying_db_path)
         return VersionIndex(

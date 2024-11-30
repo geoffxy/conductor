@@ -50,7 +50,7 @@ def get_all_versions() -> List[TaskResults]:
     Retrieve all versioned results that Conductor manages.
     """
     assert ctx is not None
-    version_index = ctx.version_index.new_for_thread()
+    version_index = ctx.version_index.clone()
     all_results = version_index.get_all_versions()
     mapped: Dict[TaskIdentifier, List[ResultVersion]] = {}
     for task_id, version in all_results:
