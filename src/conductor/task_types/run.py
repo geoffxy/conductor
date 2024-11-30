@@ -1,13 +1,15 @@
 import pathlib
-from typing import Sequence, Optional
+from typing import Sequence, Optional, TYPE_CHECKING
 
-import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.run_arguments import RunArguments
 from conductor.utils.run_options import RunOptions
 from .base import TaskType
+
+if TYPE_CHECKING:
+    import conductor.context as c  # pylint: disable=unused-import
 
 
 class _RunSubprocess(TaskType):

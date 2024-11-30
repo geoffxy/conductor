@@ -1,0 +1,4 @@
+group(
+  name="start",
+  deps=["//mod1:test1"],
+)

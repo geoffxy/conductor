@@ -1,6 +1,6 @@
 import pathlib
 import subprocess
-from typing import Optional
+from typing import Optional, List
 
 
 class Git:
@@ -130,3 +130,19 @@ class Git:
             **kwargs,  # type: ignore
         )
         return result.returncode == 0
+
+    def find_files(self, file_patterns: List[str]) -> List[str]:
+        """
+        Returns a list of files in the project that match the specified pattern.
+        The file paths will be relative to the repository root.
+        """
+        result = subprocess.run(
+            ["git", "ls-files", *file_patterns],
+            cwd=self._project_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return []
+        return result.stdout.strip().splitlines()

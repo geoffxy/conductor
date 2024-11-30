@@ -2,7 +2,6 @@ import logo from "./assets/ConductorLogo_Light.png";
 import "./Header.css";
 
 const Header = () => {
-  console.log("Test");
   return (
     <div className="header">
       <div className="header-logo">

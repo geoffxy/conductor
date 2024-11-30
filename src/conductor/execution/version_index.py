@@ -63,9 +63,15 @@ class VersionIndex:
     # v0.4.0 and older: FormatVersion = 1
     FormatVersion = 2
 
-    def __init__(self, conn: sqlite3.Connection, last_timestamp: int):
+    def __init__(
+        self,
+        conn: sqlite3.Connection,
+        last_timestamp: int,
+        underlying_db_path: pathlib.Path,
+    ):
         self._conn = conn
         self._last_timestamp = last_timestamp
+        self._underlying_db_path = underlying_db_path
 
     @classmethod
     def create_or_load(cls, path: pathlib.Path) -> "VersionIndex":
@@ -85,6 +91,7 @@ class VersionIndex:
                 last_timestamp=(
                     result[0] if result is not None and result[0] is not None else 0
                 ),
+                underlying_db_path=path,
             )
 
         # Need to create the DB
@@ -93,7 +100,20 @@ class VersionIndex:
         conn.execute(q.set_format_version.format(version=cls.FormatVersion))
         conn.execute(q.create_table)
         conn.commit()
-        return VersionIndex(conn, 0)
+        return VersionIndex(conn, 0, path)
+
+    def clone(self) -> "VersionIndex":
+        """
+        Clone this `VersionIndex` instance. This is helpful for creating a
+        instance associated with the same thread (for the SQLite connection,
+        needed in Conductor's explorer API).
+        """
+        conn = sqlite3.connect(self._underlying_db_path)
+        return VersionIndex(
+            conn=conn,
+            last_timestamp=self._last_timestamp,
+            underlying_db_path=self._underlying_db_path,
+        )
 
     def get_latest_output_version(
         self, task_identifier: TaskIdentifier
