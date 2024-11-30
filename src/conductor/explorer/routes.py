@@ -85,9 +85,11 @@ def get_task_graph() -> m.TaskGraph:
 explorer_module_pkg = pkg_resources.files(explorer_module)
 with pkg_resources.as_file(explorer_module_pkg) as explorer_module_path:
     # Make sure the directory exists. This is needed for our test environments
-    # where we do not build the explorer UI.
+    # where we do not build the explorer UI. The file is supposed to exist as a
+    # symlink.
     static_dir = explorer_module_path / "static"
-    static_dir.mkdir(exist_ok=True)
+    if not static_dir.exists():
+        static_dir.mkdir(exist_ok=True)
     app.mount(
         "/",
         StaticFiles(directory=static_dir, html=True),
