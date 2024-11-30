@@ -84,8 +84,12 @@ def get_task_graph() -> m.TaskGraph:
 # Note that this should go last as a "catch all" route.
 explorer_module_pkg = pkg_resources.files(explorer_module)
 with pkg_resources.as_file(explorer_module_pkg) as explorer_module_path:
+    # Make sure the directory exists. This is needed for our test environments
+    # where we do not build the explorer UI.
+    static_dir = explorer_module_path / "static"
+    static_dir.mkdir(exist_ok=True)
     app.mount(
         "/",
-        StaticFiles(directory=explorer_module_path / "static", html=True),
+        StaticFiles(directory=static_dir, html=True),
         name="static",
     )
