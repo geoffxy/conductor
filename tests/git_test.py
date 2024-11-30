@@ -178,7 +178,9 @@ def test_find_cond_files(tmp_path: pathlib.Path):
     # Check in the files.
     result = subprocess.run(["git", "add", "."], cwd=tmp_path, check=False)
     assert result.returncode == 0
-    result = subprocess.run(["git", "commit", "-m", "Test commit."], cwd=tmp_path)
+    result = subprocess.run(
+        ["git", "commit", "-m", "Test commit."], cwd=tmp_path, check=False
+    )
     assert result.returncode == 0
 
     # Now we should find the files.
