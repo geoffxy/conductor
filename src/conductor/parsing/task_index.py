@@ -49,6 +49,12 @@ class TaskIndex:
         )
         return self._loaded_tasks[identifier]
 
+    def get_all_loaded_tasks(self) -> Dict[TaskIdentifier, TaskType]:
+        """
+        Returns all loaded tasks.
+        """
+        return self._loaded_tasks
+
     def load_transitive_closure(self, task_identifier: TaskIdentifier):
         """
         Ensures all tasks in the transitive closure of the specified
