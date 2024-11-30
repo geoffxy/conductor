@@ -3,6 +3,7 @@ import subprocess
 
 from conductor.utils.git import Git
 from conductor.config import COND_FILE_NAME
+from .git_utils import setup_git, create_commit
 
 
 def test_detect_no_git(tmp_path: pathlib.Path):
@@ -194,37 +195,3 @@ def test_find_cond_files(tmp_path: pathlib.Path):
         str(cond3.relative_to(tmp_path)),
     ]
     assert set(files) == set(expected_rel_files)
-
-
-# Git environment setup helpers
-
-
-def setup_git(repository_root: pathlib.Path, initialize: bool):
-    results = subprocess.run(["git", "init"], cwd=repository_root, check=False)
-    assert results.returncode == 0
-    if initialize:
-        results = subprocess.run(
-            ["git", "commit", "--allow-empty", "-m", "Initial commit"],
-            cwd=repository_root,
-            check=False,
-        )
-        assert results.returncode == 0
-
-
-def create_commit(repository_root: pathlib.Path, message: str) -> str:
-    commit_results = subprocess.run(
-        ["git", "commit", "--allow-empty", "-m", message],
-        cwd=repository_root,
-        check=False,
-    )
-    assert commit_results.returncode == 0
-    # Fetch the commit's hash
-    get_hash_results = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repository_root,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert get_hash_results.returncode == 0
-    return get_hash_results.stdout.strip()

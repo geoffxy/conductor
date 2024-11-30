@@ -23,6 +23,9 @@ class TaskIndex:
         self._loaded_raw_tasks: Dict[pathlib.Path, Dict[str, Dict]] = {}
         # Keyed by task identifier
         self._loaded_tasks: Dict[TaskIdentifier, TaskType] = {}
+        # Used to manage task loading caching. If we have called
+        # `load_all_known_tasks()` before, we avoid running it again.
+        self._all_loaded = False
 
     def get_task(self, identifier: TaskIdentifier) -> TaskType:
         """
@@ -148,6 +151,9 @@ class TaskIndex:
 
         Returns the number of tasks loaded for each COND file and any errors.
         """
+        if self._all_loaded:
+            return []
+
         rel_cond_files = [
             pathlib.Path(file_path)
             for file_path in git.find_files([COND_FILE_NAME, f"**/{COND_FILE_NAME}"])
@@ -161,6 +167,7 @@ class TaskIndex:
                 except ConductorError as ex:
                     ex.add_file_context(rel_cond_file)
                     load_results.append((rel_cond_file, 0, ex))
+            self._all_loaded = True
             return load_results
 
     def validate_all_loaded_tasks(self) -> List[TaskIdentifier]:

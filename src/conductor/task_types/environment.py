@@ -1,9 +1,11 @@
 import pathlib
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-import conductor.context as c  # pylint: disable=unused-import
 from conductor.task_identifier import TaskIdentifier
 from .base import TaskType
+
+if TYPE_CHECKING:
+    import conductor.context as c  # pylint: disable=unused-import
 
 
 class Environment(TaskType):

@@ -1,9 +1,11 @@
 import pathlib
-from typing import Callable, Dict, Sequence, Optional
+from typing import Callable, Dict, Sequence, Optional, TYPE_CHECKING
 
-import conductor.context as c  # pylint: disable=unused-import
 import conductor.filename as f
 from conductor.task_identifier import TaskIdentifier
+
+if TYPE_CHECKING:
+    import conductor.context as c  # pylint: disable=unused-import
 
 
 class TaskType:
