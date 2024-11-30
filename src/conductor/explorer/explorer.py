@@ -3,7 +3,6 @@ import webbrowser
 import threading
 from conductor.context import Context
 from conductor.errors import MissingExplorerSupport
-from conductor.explorer.routes import set_context
 
 
 def start_explorer(ctx: Context, host: str, port: int, launch_browser: bool) -> None:
@@ -17,6 +16,7 @@ def start_explorer(ctx: Context, host: str, port: int, launch_browser: bool) -> 
     # user has not installed Conductor's UI dependencies.
     try:
         import uvicorn
+        from conductor.explorer.routes import set_context
     except ImportError as ex:
         raise MissingExplorerSupport() from ex
 
