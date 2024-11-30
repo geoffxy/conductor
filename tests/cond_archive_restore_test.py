@@ -11,10 +11,6 @@ def test_archive_restore(tmp_path: pathlib.Path):
     assert result.returncode != 0
 
     result = cond.run("//figures:graph")
-    if result.stderr is not None:
-        print(result.stderr.decode("utf-8"))
-    if result.stdout is not None:
-        print(result.stdout.decode("utf-8"))
     assert result.returncode == 0
 
     result = cond.archive("//figures:graph", output_path=None, latest=False)
