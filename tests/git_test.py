@@ -2,6 +2,7 @@ import pathlib
 import subprocess
 
 from conductor.utils.git import Git
+from conductor.config import COND_FILE_NAME
 
 
 def test_detect_no_git(tmp_path: pathlib.Path):
@@ -151,6 +152,46 @@ def test_create_unpack_bundle(tmp_path: pathlib.Path):
 
     # Check that the file exists.
     assert (new_git / "test.txt").exists()
+
+
+def test_find_cond_files(tmp_path: pathlib.Path):
+    setup_git(tmp_path, initialize=True)
+
+    # Create a few files, including nested ones.
+    cond1 = tmp_path / COND_FILE_NAME
+    cond1.touch()
+    (tmp_path / "file.txt").touch()
+    nested_dir = tmp_path / "nested"
+    nested_dir.mkdir()
+    cond2 = nested_dir / COND_FILE_NAME
+    cond2.touch()
+    nested_2 = nested_dir / "nested2"
+    nested_2.mkdir()
+    cond3 = nested_2 / COND_FILE_NAME
+    cond3.touch()
+
+    # Nothing checked in, so we should not find any files.
+    g = Git(tmp_path)
+    files = g.find_files([COND_FILE_NAME, f"**/{COND_FILE_NAME}"])
+    assert len(files) == 0
+
+    # Check in the files.
+    result = subprocess.run(["git", "add", "."], cwd=tmp_path, check=False)
+    assert result.returncode == 0
+    result = subprocess.run(["git", "commit", "-m", "Test commit."], cwd=tmp_path)
+    assert result.returncode == 0
+
+    # Now we should find the files.
+    files = g.find_files([COND_FILE_NAME, f"**/{COND_FILE_NAME}"])
+    assert len(files) == 3
+
+    # Found paths will be relative to the repository root.
+    expected_rel_files = [
+        str(cond1.relative_to(tmp_path)),
+        str(cond2.relative_to(tmp_path)),
+        str(cond3.relative_to(tmp_path)),
+    ]
+    assert set(files) == set(expected_rel_files)
 
 
 # Git environment setup helpers
