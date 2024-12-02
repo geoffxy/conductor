@@ -1,18 +1,41 @@
 import { ReactFlow, Controls } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-const initialNodes = [
-  { id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
-  { id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
-];
-const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+function taskGraphToNodesAndEdges(taskGraph) {
+  const nodes = [];
+  const edges = [];
+  if (taskGraph == null) {
+    return { nodes, edges };
+  }
 
-const MainDisplay = () => {
+  let counter = 0;
+  for (const { taskId, deps } of taskGraph.tasks) {
+    nodes.push({
+      id: taskId.toString(),
+      position: { x: 0, y: counter * 100 },
+      data: { label: taskId.toString() },
+    });
+    counter++;
+    for (const dep of deps) {
+      edges.push({
+        id: `${dep.toString()}-${taskId.toString()}`,
+        source: dep.toString(),
+        target: taskId.toString(),
+        markerEnd: { type: "arrowclosed" },
+      });
+    }
+  }
+  return { nodes, edges };
+}
+
+const MainDisplay = ({ taskGraph }) => {
+  const { nodes, edges } = taskGraphToNodesAndEdges(taskGraph);
+
   return (
     <div
       style={{ height: "calc(100vh - 70px)", marginTop: "70px", zIndex: "1" }}
     >
-      <ReactFlow nodes={initialNodes} edges={initialEdges}>
+      <ReactFlow nodes={nodes} edges={edges}>
         <Controls />
       </ReactFlow>
     </div>
