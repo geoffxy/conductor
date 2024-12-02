@@ -1,5 +1,28 @@
 .task-node {
   border: 1px solid #000;
-  border-radius: 5px;
-  padding: 0 15px;
+  border-radius: 3px;
+  padding: 10px;
+}
+
+.task-node p {
+  margin: 0;
+  padding: 0;
+}
+
+.task-node .task-id {
+  font-size: 1em;
+  font-weight: 600;
+  text-align: left;
+  margin-bottom: 5px;
+}
+
+.task-node .task-type {
+  font-size: 0.4em;
+  font-weight: 400;
+  text-align: right;
+  color: #555;
+}
+
+.task-node.experiment {
+  background-color: #eaf3fd;
 }
