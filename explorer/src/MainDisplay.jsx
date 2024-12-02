@@ -1,24 +1,35 @@
-import { ReactFlow, Controls, MarkerType } from "@xyflow/react";
+import { useMemo, useState, useCallback } from "react";
+import {
+  ReactFlow,
+  ReactFlowProvider,
+  Controls,
+  MarkerType,
+} from "@xyflow/react";
+import TaskNode from "./TaskNode";
 import Dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 
-function taskGraphToNodesAndEdges(taskGraph) {
+function taskGraphToNodesAndEdges(taskGraph, receiveNodeDimensions) {
   const nodes = [];
   const edges = [];
   if (taskGraph == null) {
     return { nodes, edges };
   }
 
-  for (const { taskId, deps } of taskGraph.tasks) {
+  for (const task of taskGraph.tasks) {
     nodes.push({
-      id: taskId.toString(),
-      data: { label: taskId.toString() },
+      id: task.taskId.toString(),
+      data: { task, receiveNodeDimensions },
+      type: "taskNode",
+      // N.B. This is a placeholder position. We use Dagre to compute the actual
+      // layout.
+      position: { x: 0, y: 0 },
     });
-    for (const dep of deps) {
+    for (const dep of task.deps) {
       edges.push({
-        id: `${dep.toString()}-${taskId.toString()}`,
+        id: `${dep.toString()}-${task.taskId.toString()}`,
         source: dep.toString(),
-        target: taskId.toString(),
+        target: task.taskId.toString(),
         markerEnd: { type: MarkerType.ArrowClosed },
       });
     }
@@ -26,28 +37,29 @@ function taskGraphToNodesAndEdges(taskGraph) {
   return { nodes, edges };
 }
 
-function computeGraphLayout({ nodes, edges }) {
+function computeGraphLayout({ nodes, edges }, nodeDimensions) {
   const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
-  g.setGraph({ rankdir: "TB", ranksep: 80, });
+  g.setGraph({ rankdir: "BT", ranksep: 40 });
 
   edges.forEach((edge) => g.setEdge(edge.source, edge.target));
-  nodes.forEach((node) =>
+  nodes.forEach((node) => {
+    const dims = nodeDimensions[node.id] ?? { width: 0, height: 0 };
     g.setNode(node.id, {
       ...node,
-      width: node.measured?.width ?? 0,
-      height: node.measured?.height ?? 0,
-    }),
-  );
+      ...dims,
+    });
+  });
 
   Dagre.layout(g);
 
   return {
     nodes: nodes.map((node) => {
       const position = g.node(node.id);
+      const dims = nodeDimensions[node.id] ?? { width: 0, height: 0 };
       // We are shifting the dagre node position (anchor=center center) to the top left
       // so it matches the React Flow node anchor point (top left).
-      const x = position.x - (node.measured?.width ?? 0) / 2;
-      const y = position.y - (node.measured?.height ?? 0) / 2;
+      const x = position.x - dims.width / 2;
+      const y = position.y - dims.height / 2;
 
       return { ...node, position: { x, y } };
     }),
@@ -55,18 +67,37 @@ function computeGraphLayout({ nodes, edges }) {
   };
 }
 
-const MainDisplay = ({ taskGraph }) => {
-  const nodeEdges = taskGraphToNodesAndEdges(taskGraph);
-  const { nodes, edges } = computeGraphLayout(nodeEdges);
+const MainDisplayImpl = ({ taskGraph }) => {
+  const nodeTypes = useMemo(() => ({ taskNode: TaskNode }), []);
+  const [nodeDimensions, setNodeDimensions] = useState({});
+  const receiveNodeDimensions = useCallback(
+    ({ taskId, dimensions }) => {
+      setNodeDimensions((prev) => ({
+        ...prev,
+        [taskId.toString()]: dimensions,
+      }));
+    },
+    [setNodeDimensions],
+  );
+  const out = taskGraphToNodesAndEdges(taskGraph, receiveNodeDimensions);
+  const { nodes, edges } = computeGraphLayout(out, nodeDimensions);
 
   return (
     <div
       style={{ height: "calc(100vh - 70px)", marginTop: "70px", zIndex: "1" }}
     >
-      <ReactFlow nodes={nodes} edges={edges} fitView>
+      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
         <Controls />
       </ReactFlow>
     </div>
+  );
+};
+
+const MainDisplay = ({ taskGraph }) => {
+  return (
+    <ReactFlowProvider>
+      <MainDisplayImpl taskGraph={taskGraph} />
+    </ReactFlowProvider>
   );
 };
 
