@@ -1,4 +1,4 @@
-import { getTaskGraph } from "./api";
+import { getTaskGraph, getAllVersions } from "./api";
 import Header from "./Header";
 import MainDisplay from "./MainDisplay";
 import { useEffect, useState } from "react";
@@ -10,10 +10,18 @@ function parseRawTaskId({ path, name }) {
 
 const App = () => {
   const [taskGraph, setTaskGraph] = useState(null);
+  const [versions, setVersions] = useState({});
+
   useEffect(() => {
     const fetchData = async () => {
-      const taskGraph = await getTaskGraph();
-      // Light parsing.
+      const taskGraphFuture = getTaskGraph();
+      const versionsFuture = getAllVersions();
+      const [taskGraph, versions] = await Promise.all([
+        taskGraphFuture,
+        versionsFuture,
+      ]);
+
+      // Task graph: light parsing.
       const rootTaskIds = [];
       for (const rawTaskId of taskGraph.root_tasks) {
         rootTaskIds.push(parseRawTaskId(rawTaskId));
@@ -32,6 +40,17 @@ const App = () => {
         rootTaskIds,
         tasks,
       });
+
+      // Versions: light parsing.
+      const parsedVersions = {};
+      for (const rawVersion of versions) {
+        const taskId = parseRawTaskId(rawVersion.identifier);
+        parsedVersions[taskId.toString()] = {
+          taskId,
+          versions: rawVersion.versions,
+        };
+      }
+      setVersions(parsedVersions);
     };
     fetchData();
   }, []);
@@ -39,7 +58,7 @@ const App = () => {
   return (
     <div id="conductor-explorer">
       <Header />
-      <MainDisplay taskGraph={taskGraph} />
+      <MainDisplay taskGraph={taskGraph} versions={versions} />
     </div>
   );
 };

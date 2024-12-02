@@ -18,7 +18,7 @@ function taskTypeClass(taskType) {
 
 const TaskNode = ({ data }) => {
   const nodeRef = useRef();
-  const { task, receiveNodeDimensions } = data;
+  const { task, receiveNodeDimensions, versions } = data;
   const taskTypeClassName = taskTypeClass(task.taskType);
 
   useEffect(() => {
@@ -38,7 +38,12 @@ const TaskNode = ({ data }) => {
       />
       <div className={`task-node ${taskTypeClassName}`} ref={nodeRef}>
         <p className="task-id">{task.taskId.toString()}</p>
-        <p className="task-type">{task.taskType}</p>
+        <div className="task-bottom">
+          <p className="task-type">{task.taskType}</p>
+          {versions.length > 0 && (
+            <p className="task-versions">Versions: {versions.length}</p>
+          )}
+        </div>
       </div>
       <Handle
         type="target"

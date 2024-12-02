@@ -7,4 +7,9 @@ async function getTaskGraph() {
   return results.data;
 }
 
-export { getTaskGraph };
+async function getAllVersions() {
+  const results = await axios.get(`${API}/results/all_versions`);
+  return results.data;
+}
+
+export { getTaskGraph, getAllVersions };
