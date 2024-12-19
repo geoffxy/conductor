@@ -38,7 +38,7 @@ class ExecuteTaskRequest(_message.Message):
     def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ...) -> None: ...
 
 class ExecuteTaskResponse(_message.Message):
-    __slots__ = []
+    __slots__ = []  # type: ignore
     def __init__(self) -> None: ...
 
 class ExecuteTaskResult(_message.Message):
