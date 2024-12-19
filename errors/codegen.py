@@ -10,7 +10,7 @@ ERROR_CLASS_TEMPLATE = """class {error_name}(ConductorError):
     def __init__(self, **kwargs):
         super().__init__()
 {init_body}
-    
+
     def _message(self):
         return "{message}".format(
 {message_properties}
@@ -27,6 +27,13 @@ ALL_ERRORS_TEMPLATE = """__all__ = [
 """
 
 ERROR_ENTRY_TEMPLATE = '    "{error_name}",'
+
+ERROR_CODE_MAP_ENTRY_TEMPLATE = "    {error_code}: {error_name},"
+
+ERROR_CODE_MAP_TEMPLATE = """ERRORS_BY_CODE = {{
+{errors}
+}}
+"""
 
 
 def generate_error_class(error_code, error_properties, output_file):
@@ -85,6 +92,17 @@ def main():
         for error_code, error_properties in raw_errors.items():
             all_errors.append(error_properties["name"])
             generate_error_class(error_code, error_properties, file)
+
+        error_map_items = "\n".join(
+            [
+                ERROR_CODE_MAP_ENTRY_TEMPLATE.format(
+                    error_code=str(error_code), error_name=error_properties["name"]
+                )
+                for error_code, error_properties in raw_errors.items()
+            ]
+        )
+        file.write("\n\n")
+        file.write(ERROR_CODE_MAP_TEMPLATE.format(errors=error_map_items))
 
         error_list = "\n".join(
             [
