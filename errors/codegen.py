@@ -9,6 +9,7 @@ ERROR_CLASS_TEMPLATE = """class {error_name}(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 {init_body}
 
     def _message(self):

@@ -244,3 +244,11 @@
   message: >-
     This feature requires support for Conductor's explorer. Please install
     Conductor with the [explore] features.
+
+
+# Internal errors (error code 6xxx)
+6000:
+  name: InternalError
+  message: >-
+    An internal error occurred. Please report this issue to the Conductor
+    maintainers with the following information: {details}.

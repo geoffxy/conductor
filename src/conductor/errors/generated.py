@@ -11,6 +11,7 @@ class TaskParseError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.error_details = kwargs["error_details"]
 
     def _message(self):
@@ -24,6 +25,7 @@ class MissingTaskParameter(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.parameter_name = kwargs["parameter_name"]
         self.task_type_name = kwargs["task_type_name"]
 
@@ -39,6 +41,7 @@ class InvalidTaskParameterType(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.parameter_name = kwargs["parameter_name"]
         self.task_type_name = kwargs["task_type_name"]
         self.type_name = kwargs["type_name"]
@@ -56,6 +59,7 @@ class UnrecognizedTaskParameters(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_type_name = kwargs["task_type_name"]
 
     def _message(self):
@@ -69,6 +73,7 @@ class DuplicateTaskName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_name = kwargs["task_name"]
 
     def _message(self):
@@ -82,6 +87,7 @@ class InvalidTaskIdentifier(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
 
     def _message(self):
@@ -95,6 +101,7 @@ class InvalidTaskName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_name = kwargs["task_name"]
 
     def _message(self):
@@ -108,6 +115,7 @@ class TaskSyntaxError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -121,6 +129,7 @@ class ParsingUnknownNameError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.error_message = kwargs["error_message"]
 
     def _message(self):
@@ -134,6 +143,7 @@ class MissingCondFile(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -147,6 +157,7 @@ class DuplicateDependency(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
         self.dep_identifier = kwargs["dep_identifier"]
 
@@ -162,6 +173,7 @@ class CombineDuplicateDepName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
         self.task_name = kwargs["task_name"]
 
@@ -177,6 +189,7 @@ class RunOptionsNonStringKey(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.identifier = kwargs["identifier"]
 
     def _message(self):
@@ -190,6 +203,7 @@ class RunOptionsNonPrimitiveValue(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.key = kwargs["key"]
         self.identifier = kwargs["identifier"]
 
@@ -205,6 +219,7 @@ class ExperimentGroupDuplicateName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.instance_name = kwargs["instance_name"]
         self.task_name = kwargs["task_name"]
 
@@ -220,6 +235,7 @@ class ExperimentGroupInvalidExperimentInstance(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_name = kwargs["task_name"]
 
     def _message(self):
@@ -233,6 +249,7 @@ class RunArgumentsNonPrimitiveValue(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.identifier = kwargs["identifier"]
 
     def _message(self):
@@ -246,6 +263,7 @@ class IncludeFileInvalidExtension(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.included_file = kwargs["included_file"]
 
     def _message(self):
@@ -259,6 +277,7 @@ class TaskNotFound(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
 
     def _message(self):
@@ -272,6 +291,7 @@ class MissingProjectRoot(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -285,6 +305,7 @@ class CyclicDependency(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
 
     def _message(self):
@@ -298,6 +319,7 @@ class UnsupportedVersionIndexFormat(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.version = kwargs["version"]
 
     def _message(self):
@@ -311,6 +333,7 @@ class IncludeFileNotFound(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.included_file = kwargs["included_file"]
 
     def _message(self):
@@ -324,6 +347,7 @@ class IncludeFileNotInProject(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.included_file = kwargs["included_file"]
 
     def _message(self):
@@ -337,6 +361,7 @@ class TaskNonZeroExit(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
         self.code = kwargs["code"]
 
@@ -352,6 +377,7 @@ class TaskFailed(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
 
     def _message(self):
@@ -365,6 +391,7 @@ class OutputDirTaken(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.output_dir = kwargs["output_dir"]
 
     def _message(self):
@@ -378,6 +405,7 @@ class ConductorAbort(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -391,6 +419,7 @@ class MaestroInstallError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.error_message = kwargs["error_message"]
 
     def _message(self):
@@ -404,6 +433,7 @@ class CombineOutputFileConflict(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.output_file = kwargs["output_file"]
 
     def _message(self):
@@ -417,6 +447,7 @@ class MissingEnvSupport(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -430,6 +461,7 @@ class EnvsRequireGit(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -443,6 +475,7 @@ class OutputFileExists(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -456,6 +489,7 @@ class OutputPathDoesNotExist(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -469,6 +503,7 @@ class NoTaskOutputsToArchive(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -482,6 +517,7 @@ class CreateArchiveFailed(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -495,6 +531,7 @@ class ArchiveFileInvalid(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -508,6 +545,7 @@ class DuplicateTaskOutput(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.output_dir = kwargs["output_dir"]
 
     def _message(self):
@@ -521,6 +559,7 @@ class ConfigParseError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -534,6 +573,7 @@ class ConfigInvalidValue(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.config_key = kwargs["config_key"]
 
     def _message(self):
@@ -547,6 +587,7 @@ class UnsupportedPlatform(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -560,6 +601,7 @@ class InvalidJobsCount(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -573,6 +615,7 @@ class CannotSelectJobCount(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -586,6 +629,7 @@ class CannotSetAgainAndCommit(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -599,6 +643,7 @@ class CommitFlagUnsupported(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -612,6 +657,7 @@ class InvalidCommitSymbol(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.symbol = kwargs["symbol"]
 
     def _message(self):
@@ -625,6 +671,7 @@ class CannotSetBothCommitFlags(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -638,6 +685,7 @@ class AtLeastCommitNotAncestor(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
@@ -651,6 +699,7 @@ class NoTaskOutputPath(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
 
     def _message(self):
@@ -664,11 +713,26 @@ class MissingExplorerSupport(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
 
     def _message(self):
         return "This feature requires support for Conductor's explorer. Please install Conductor with the [explore] features.".format(
 
+        )
+
+
+class InternalError(ConductorError):
+    error_code = 6000
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.details = kwargs["details"]
+
+    def _message(self):
+        return "An internal error occurred. Please report this issue to the Conductor maintainers with the following information: {details}.".format(
+            details=self.details,
         )
 
 
@@ -723,6 +787,7 @@ ERRORS_BY_CODE = {
     5010: AtLeastCommitNotAncestor,
     5011: NoTaskOutputPath,
     5012: MissingExplorerSupport,
+    6000: InternalError,
 }
 
 
@@ -777,4 +842,5 @@ __all__ = [
     "AtLeastCommitNotAncestor",
     "NoTaskOutputPath",
     "MissingExplorerSupport",
+    "InternalError",
 ]

@@ -1,11 +1,13 @@
 import asyncio
 import logging
 import pathlib
-import subprocess
 import time
 
 from conductor.envs.maestro.interface import MaestroInterface
 from conductor.config import MAESTRO_WORKSPACE_LOCATION, MAESTRO_WORKSPACE_NAME_FORMAT
+from conductor.context import Context
+from conductor.task_identifier import TaskIdentifier
+from conductor.errors import InternalError
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +20,6 @@ class Maestro(MaestroInterface):
 
     def __init__(self, maestro_root: pathlib.Path) -> None:
         self._maestro_root = maestro_root
-
-    async def ping(self, message: str) -> str:
-        logger.info("Received ping message: %s", message)
-        result = subprocess.run(["uname", "-a"], capture_output=True, check=False)
-        return result.stdout.decode("utf-8").strip()
 
     async def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
         bundle_name = bundle_path.stem
@@ -43,6 +40,27 @@ class Maestro(MaestroInterface):
         if process.returncode != 0:
             raise RuntimeError("Failed to unpack the bundle.")
         return workspace_name
+
+    async def execute_task(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        task_identifier: TaskIdentifier,
+    ) -> None:
+        workspace_path = (
+            self._maestro_root / MAESTRO_WORKSPACE_LOCATION / workspace_name
+        )
+        if not workspace_path.exists():
+            raise InternalError(details=f"Workspace {workspace_name} does not exist.")
+
+        full_project_root = workspace_path / project_root
+        if not full_project_root.exists():
+            raise InternalError(
+                details=f"Project root {project_root} does not exist in workspace {workspace_name}."
+            )
+
+        _ctx = Context(full_project_root)
+        # NOTE: Implement task execution.
 
     async def shutdown(self, key: str) -> str:
         logger.info("Received shutdown message with key %s", key)

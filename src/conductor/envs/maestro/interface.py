@@ -1,4 +1,5 @@
 import pathlib
+from conductor.task_identifier import TaskIdentifier
 
 
 class MaestroInterface:
@@ -7,10 +8,15 @@ class MaestroInterface:
     the gRPC implementation details from Maestro.
     """
 
-    async def ping(self, message: str) -> str:
+    async def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
         raise NotImplementedError
 
-    async def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
+    async def execute_task(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        task_identifier: TaskIdentifier,
+    ) -> None:
         raise NotImplementedError
 
     async def shutdown(self, key: str) -> str:

@@ -1,8 +1,12 @@
 import grpc
 import pathlib
 from typing import Optional
+
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
+from conductor.task_identifier import TaskIdentifier
+from conductor.errors import ConductorError
+from conductor.errors.generated import ERRORS_BY_CODE
 
 
 class MaestroGrpcClient:
@@ -38,23 +42,40 @@ class MaestroGrpcClient:
         self._channel = grpc.insecure_channel("{}:{}".format(self._host, self._port))
         self._stub = maestro_grpc.MaestroStub(self._channel)
 
-    def ping(self, message: str) -> str:
-        assert self._stub is not None
-        # pylint: disable-next=no-member
-        msg = pb.PingRequest(message=message)
-        return self._stub.Ping(msg).message
-
     def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.UnpackBundleRequest(bundle_path=str(bundle_path))
-        return self._stub.UnpackBundle(msg).workspace_name
+        result = self._stub.UnpackBundle(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        return result.response.workspace_name
+
+    def execute_task(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        task_identifier: TaskIdentifier,
+    ) -> None:
+        assert self._stub is not None
+        # pylint: disable-next=no-member
+        msg = pb.ExecuteTaskRequest(
+            workspace_name=workspace_name,
+            project_root=str(project_root),
+            task_identifier=str(task_identifier),
+        )
+        result = self._stub.ExecuteTask(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
 
     def shutdown(self, key: str) -> str:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.ShutdownRequest(key=key)
-        return self._stub.Shutdown(msg).message
+        result = self._stub.Shutdown(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        return result.response.message
 
     def close(self) -> None:
         assert self._stub is not None
@@ -62,3 +83,17 @@ class MaestroGrpcClient:
         self._stub = None
         self._channel.close()
         self._channel = None
+
+
+# pylint: disable-next=no-member
+def _pb_to_error(ex: pb.ConductorError) -> ConductorError:
+    exception_class = ERRORS_BY_CODE[ex.code]
+    kwargs = {}
+    for kwarg in ex.kwargs:
+        kwargs[kwarg.key] = kwarg.value
+    error: ConductorError = exception_class(**kwargs)
+    if ex.file_context_path is not None:
+        error.add_file_context(ex.file_context_path, ex.file_context_line_number)
+    if ex.extra_context is not None:
+        error.add_extra_context(ex.extra_context)
+    return error
