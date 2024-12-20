@@ -1,9 +1,13 @@
 from google.protobuf.internal import containers as _containers
+from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Mapping, Optional as _Optional, Union as _Union
 
 DESCRIPTOR: _descriptor.FileDescriptor
+TT_RUN_COMMAND: ExecuteTaskType
+TT_RUN_EXPERIMENT: ExecuteTaskType
+TT_UNSPECIFIED: ExecuteTaskType
 
 class ConductorError(_message.Message):
     __slots__ = ["code", "extra_context", "file_context_line_number", "file_context_path", "kwargs"]
@@ -28,16 +32,18 @@ class ErrorKwarg(_message.Message):
     def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
 
 class ExecuteTaskRequest(_message.Message):
-    __slots__ = ["dep_versions", "project_root", "task_identifier", "workspace_name"]
+    __slots__ = ["dep_versions", "execute_task_type", "project_root", "task_identifier", "workspace_name"]
     DEP_VERSIONS_FIELD_NUMBER: _ClassVar[int]
+    EXECUTE_TASK_TYPE_FIELD_NUMBER: _ClassVar[int]
     PROJECT_ROOT_FIELD_NUMBER: _ClassVar[int]
     TASK_IDENTIFIER_FIELD_NUMBER: _ClassVar[int]
     WORKSPACE_NAME_FIELD_NUMBER: _ClassVar[int]
     dep_versions: _containers.RepeatedCompositeFieldContainer[TaskDependency]
+    execute_task_type: ExecuteTaskType
     project_root: str
     task_identifier: str
     workspace_name: str
-    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ..., dep_versions: _Optional[_Iterable[_Union[TaskDependency, _Mapping]]] = ...) -> None: ...
+    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ..., dep_versions: _Optional[_Iterable[_Union[TaskDependency, _Mapping]]] = ..., execute_task_type: _Optional[_Union[ExecuteTaskType, str]] = ...) -> None: ...
 
 class ExecuteTaskResponse(_message.Message):
     __slots__ = ["end_timestamp", "start_timestamp"]
@@ -110,3 +116,6 @@ class UnpackBundleResult(_message.Message):
     error: ConductorError
     response: UnpackBundleResponse
     def __init__(self, response: _Optional[_Union[UnpackBundleResponse, _Mapping]] = ..., error: _Optional[_Union[ConductorError, _Mapping]] = ...) -> None: ...
+
+class ExecuteTaskType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []  # type: ignore

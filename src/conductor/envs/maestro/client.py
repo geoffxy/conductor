@@ -4,9 +4,9 @@ from typing import Dict, Optional
 
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
-from conductor.envs.maestro.interface import ExecuteTaskResponse
+from conductor.envs.maestro.interface import ExecuteTaskResponse, ExecuteTaskType
 from conductor.task_identifier import TaskIdentifier
-from conductor.errors import ConductorError
+from conductor.errors import ConductorError, InternalError
 from conductor.errors.generated import ERRORS_BY_CODE
 from conductor.execution.version_index import Version
 
@@ -59,6 +59,7 @@ class MaestroGrpcClient:
         workspace_rel_project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
         dep_versions: Dict[TaskIdentifier, Version],
+        execute_task_type: ExecuteTaskType,
     ) -> ExecuteTaskResponse:
         assert self._stub is not None
         # pylint: disable-next=no-member
@@ -73,6 +74,14 @@ class MaestroGrpcClient:
             dv.version.timestamp = version.timestamp
             if version.commit_hash is not None:
                 dv.version.commit_hash = version.commit_hash
+        if execute_task_type == ExecuteTaskType.RunExperiment:
+            msg.execute_task_type = pb.TT_RUN_EXPERIMENT  # pylint: disable=no-member
+        elif execute_task_type == ExecuteTaskType.RunCommand:
+            msg.execute_task_type = pb.TT_RUN_COMMAND  # pylint: disable=no-member
+        else:
+            raise InternalError(
+                details=f"Unsupported execute task type {str(execute_task_type)}."
+            )
         result = self._stub.ExecuteTask(msg)
         if result.WhichOneof("result") == "error":
             raise _pb_to_error(result.error)

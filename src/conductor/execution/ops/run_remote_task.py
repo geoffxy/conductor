@@ -2,12 +2,14 @@ import pathlib
 from typing import Dict, Optional
 
 from conductor.context import Context
-from conductor.errors import MissingEnvSupport, EnvsRequireGit
+from conductor.errors import MissingEnvSupport, EnvsRequireGit, InternalError
 from conductor.execution.handle import OperationExecutionHandle
 from conductor.execution.ops.operation import Operation
 from conductor.execution.operation_state import OperationState
-from conductor.task_identifier import TaskIdentifier
 from conductor.execution.version_index import Version
+from conductor.task_identifier import TaskIdentifier
+from conductor.task_types.base import TaskType
+from conductor.task_types.run import RunCommand, RunExperiment
 
 
 class RunRemoteTask(Operation):
@@ -21,22 +23,34 @@ class RunRemoteTask(Operation):
         *,
         env_name: str,
         workspace_rel_project_root: pathlib.Path,
-        task_identifier: TaskIdentifier,
+        task: TaskType,
         dep_versions: Dict[TaskIdentifier, Version],
     ) -> None:
         super().__init__(initial_state)
         self._env_name = env_name
-        self._task_identifier = task_identifier
+        self._task = task
         self._dep_versions = dep_versions
         self._project_root = workspace_rel_project_root
 
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:
+        # Import this here to avoid import errors for people who have not
+        # installed the [envs] extras.
+        from conductor.envs.maestro.interface import ExecuteTaskType
+
         if ctx.envs is None:
             raise MissingEnvSupport()
         if not ctx.git.is_used():
             raise EnvsRequireGit()
+
+        if isinstance(self._task, RunExperiment):
+            execute_task_type = ExecuteTaskType.RunExperiment
+        elif isinstance(self._task, RunCommand):
+            execute_task_type = ExecuteTaskType.RunCommand
+        else:
+            # Validation should be performed before this point.
+            raise InternalError(details=f"Unsupported task type: {type(self._task)}")
 
         remote_env = ctx.envs.get_remote_env(self._env_name)
         client = remote_env.client()
@@ -45,8 +59,9 @@ class RunRemoteTask(Operation):
         client.execute_task(
             workspace_name,
             self._project_root,
-            self._task_identifier,
+            self._task.identifier,
             self._dep_versions,
+            execute_task_type,
         )
         return OperationExecutionHandle.from_sync_execution()
 

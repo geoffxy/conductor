@@ -13,13 +13,15 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmaestro.proto\x12\tconductor\"\x99\x01\n\x0e\x43onductorError\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12%\n\x06kwargs\x18\x02 \x03(\x0b\x32\x15.conductor.ErrorKwarg\x12\x19\n\x11\x66ile_context_path\x18\x03 \x01(\t\x12 \n\x18\x66ile_context_line_number\x18\x04 \x01(\x05\x12\x15\n\rextra_context\x18\x05 \x01(\t\"(\n\nErrorKwarg\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"*\n\x13UnpackBundleRequest\x12\x13\n\x0b\x62undle_path\x18\x01 \x01(\t\".\n\x14UnpackBundleResponse\x12\x16\n\x0eworkspace_name\x18\x01 \x01(\t\"\x7f\n\x12UnpackBundleResult\x12\x33\n\x08response\x18\x01 \x01(\x0b\x32\x1f.conductor.UnpackBundleResponseH\x00\x12*\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x19.conductor.ConductorErrorH\x00\x42\x08\n\x06result\"\x8c\x01\n\x12\x45xecuteTaskRequest\x12\x16\n\x0eworkspace_name\x18\x01 \x01(\t\x12\x14\n\x0cproject_root\x18\x02 \x01(\t\x12\x17\n\x0ftask_identifier\x18\x03 \x01(\t\x12/\n\x0c\x64\x65p_versions\x18\x04 \x03(\x0b\x32\x19.conductor.TaskDependency\"R\n\x0eTaskDependency\x12\x17\n\x0ftask_identifier\x18\x01 \x01(\t\x12\'\n\x07version\x18\x02 \x01(\x0b\x32\x16.conductor.TaskVersion\"5\n\x0bTaskVersion\x12\x11\n\ttimestamp\x18\x01 \x01(\x04\x12\x13\n\x0b\x63ommit_hash\x18\x02 \x01(\t\"E\n\x13\x45xecuteTaskResponse\x12\x17\n\x0fstart_timestamp\x18\x01 \x01(\x04\x12\x15\n\rend_timestamp\x18\x02 \x01(\x04\"}\n\x11\x45xecuteTaskResult\x12\x32\n\x08response\x18\x01 \x01(\x0b\x32\x1e.conductor.ExecuteTaskResponseH\x00\x12*\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x19.conductor.ConductorErrorH\x00\x42\x08\n\x06result\"\x1e\n\x0fShutdownRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"#\n\x10ShutdownResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"w\n\x0eShutdownResult\x12/\n\x08response\x18\x01 \x01(\x0b\x32\x1b.conductor.ShutdownResponseH\x00\x12*\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x19.conductor.ConductorErrorH\x00\x42\x08\n\x06result2\xed\x01\n\x07Maestro\x12O\n\x0cUnpackBundle\x12\x1e.conductor.UnpackBundleRequest\x1a\x1d.conductor.UnpackBundleResult\"\x00\x12L\n\x0b\x45xecuteTask\x12\x1d.conductor.ExecuteTaskRequest\x1a\x1c.conductor.ExecuteTaskResult\"\x00\x12\x43\n\x08Shutdown\x12\x1a.conductor.ShutdownRequest\x1a\x19.conductor.ShutdownResult\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rmaestro.proto\x12\tconductor\"\x99\x01\n\x0e\x43onductorError\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x05\x12%\n\x06kwargs\x18\x02 \x03(\x0b\x32\x15.conductor.ErrorKwarg\x12\x19\n\x11\x66ile_context_path\x18\x03 \x01(\t\x12 \n\x18\x66ile_context_line_number\x18\x04 \x01(\x05\x12\x15\n\rextra_context\x18\x05 \x01(\t\"(\n\nErrorKwarg\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"*\n\x13UnpackBundleRequest\x12\x13\n\x0b\x62undle_path\x18\x01 \x01(\t\".\n\x14UnpackBundleResponse\x12\x16\n\x0eworkspace_name\x18\x01 \x01(\t\"\x7f\n\x12UnpackBundleResult\x12\x33\n\x08response\x18\x01 \x01(\x0b\x32\x1f.conductor.UnpackBundleResponseH\x00\x12*\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x19.conductor.ConductorErrorH\x00\x42\x08\n\x06result\"\xc3\x01\n\x12\x45xecuteTaskRequest\x12\x16\n\x0eworkspace_name\x18\x01 \x01(\t\x12\x14\n\x0cproject_root\x18\x02 \x01(\t\x12\x17\n\x0ftask_identifier\x18\x03 \x01(\t\x12/\n\x0c\x64\x65p_versions\x18\x04 \x03(\x0b\x32\x19.conductor.TaskDependency\x12\x35\n\x11\x65xecute_task_type\x18\x05 \x01(\x0e\x32\x1a.conductor.ExecuteTaskType\"R\n\x0eTaskDependency\x12\x17\n\x0ftask_identifier\x18\x01 \x01(\t\x12\'\n\x07version\x18\x02 \x01(\x0b\x32\x16.conductor.TaskVersion\"5\n\x0bTaskVersion\x12\x11\n\ttimestamp\x18\x01 \x01(\x04\x12\x13\n\x0b\x63ommit_hash\x18\x02 \x01(\t\"E\n\x13\x45xecuteTaskResponse\x12\x17\n\x0fstart_timestamp\x18\x01 \x01(\x04\x12\x15\n\rend_timestamp\x18\x02 \x01(\x04\"}\n\x11\x45xecuteTaskResult\x12\x32\n\x08response\x18\x01 \x01(\x0b\x32\x1e.conductor.ExecuteTaskResponseH\x00\x12*\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x19.conductor.ConductorErrorH\x00\x42\x08\n\x06result\"\x1e\n\x0fShutdownRequest\x12\x0b\n\x03key\x18\x01 \x01(\t\"#\n\x10ShutdownResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"w\n\x0eShutdownResult\x12/\n\x08response\x18\x01 \x01(\x0b\x32\x1b.conductor.ShutdownResponseH\x00\x12*\n\x05\x65rror\x18\x02 \x01(\x0b\x32\x19.conductor.ConductorErrorH\x00\x42\x08\n\x06result*P\n\x0f\x45xecuteTaskType\x12\x12\n\x0eTT_UNSPECIFIED\x10\x00\x12\x15\n\x11TT_RUN_EXPERIMENT\x10\x01\x12\x12\n\x0eTT_RUN_COMMAND\x10\x02\x32\xed\x01\n\x07Maestro\x12O\n\x0cUnpackBundle\x12\x1e.conductor.UnpackBundleRequest\x1a\x1d.conductor.UnpackBundleResult\"\x00\x12L\n\x0b\x45xecuteTask\x12\x1d.conductor.ExecuteTaskRequest\x1a\x1c.conductor.ExecuteTaskResult\"\x00\x12\x43\n\x08Shutdown\x12\x1a.conductor.ShutdownRequest\x1a\x19.conductor.ShutdownResult\"\x00\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'maestro_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
+  _EXECUTETASKTYPE._serialized_start=1172
+  _EXECUTETASKTYPE._serialized_end=1252
   _CONDUCTORERROR._serialized_start=29
   _CONDUCTORERROR._serialized_end=182
   _ERRORKWARG._serialized_start=184
@@ -31,21 +33,21 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _UNPACKBUNDLERESULT._serialized_start=318
   _UNPACKBUNDLERESULT._serialized_end=445
   _EXECUTETASKREQUEST._serialized_start=448
-  _EXECUTETASKREQUEST._serialized_end=588
-  _TASKDEPENDENCY._serialized_start=590
-  _TASKDEPENDENCY._serialized_end=672
-  _TASKVERSION._serialized_start=674
-  _TASKVERSION._serialized_end=727
-  _EXECUTETASKRESPONSE._serialized_start=729
-  _EXECUTETASKRESPONSE._serialized_end=798
-  _EXECUTETASKRESULT._serialized_start=800
-  _EXECUTETASKRESULT._serialized_end=925
-  _SHUTDOWNREQUEST._serialized_start=927
-  _SHUTDOWNREQUEST._serialized_end=957
-  _SHUTDOWNRESPONSE._serialized_start=959
-  _SHUTDOWNRESPONSE._serialized_end=994
-  _SHUTDOWNRESULT._serialized_start=996
-  _SHUTDOWNRESULT._serialized_end=1115
-  _MAESTRO._serialized_start=1118
-  _MAESTRO._serialized_end=1355
+  _EXECUTETASKREQUEST._serialized_end=643
+  _TASKDEPENDENCY._serialized_start=645
+  _TASKDEPENDENCY._serialized_end=727
+  _TASKVERSION._serialized_start=729
+  _TASKVERSION._serialized_end=782
+  _EXECUTETASKRESPONSE._serialized_start=784
+  _EXECUTETASKRESPONSE._serialized_end=853
+  _EXECUTETASKRESULT._serialized_start=855
+  _EXECUTETASKRESULT._serialized_end=980
+  _SHUTDOWNREQUEST._serialized_start=982
+  _SHUTDOWNREQUEST._serialized_end=1012
+  _SHUTDOWNRESPONSE._serialized_start=1014
+  _SHUTDOWNRESPONSE._serialized_end=1049
+  _SHUTDOWNRESULT._serialized_start=1051
+  _SHUTDOWNRESULT._serialized_end=1170
+  _MAESTRO._serialized_start=1255
+  _MAESTRO._serialized_end=1492
 # @@protoc_insertion_point(module_scope)

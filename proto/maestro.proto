@@ -62,6 +62,15 @@ message ExecuteTaskRequest {
   // Note that unversioned dependencies (i.e., `run_command()` dependencies) are
   // not included here.
   repeated TaskDependency dep_versions = 4;
+
+  // The type of task to run.
+  ExecuteTaskType execute_task_type = 5;
+}
+
+enum ExecuteTaskType {
+  TT_UNSPECIFIED = 0;
+  TT_RUN_EXPERIMENT = 1;
+  TT_RUN_COMMAND = 2;
 }
 
 message TaskDependency {

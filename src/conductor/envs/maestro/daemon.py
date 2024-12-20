@@ -2,11 +2,15 @@ import asyncio
 import logging
 import pathlib
 import time
-from typing import Dict
+from typing import Any, Dict
 
 from conductor.config import MAESTRO_WORKSPACE_LOCATION, MAESTRO_WORKSPACE_NAME_FORMAT
 from conductor.context import Context
-from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskResponse
+from conductor.envs.maestro.interface import (
+    MaestroInterface,
+    ExecuteTaskResponse,
+    ExecuteTaskType,
+)
 from conductor.errors import InternalError
 from conductor.execution.executor import Executor
 from conductor.execution.operation_state import OperationState
@@ -56,6 +60,7 @@ class Maestro(MaestroInterface):
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
         dep_versions: Dict[TaskIdentifier, Version],
+        execute_task_type: ExecuteTaskType,
     ) -> ExecuteTaskResponse:
         workspace_path = (
             self._maestro_root / MAESTRO_WORKSPACE_LOCATION / workspace_name
@@ -97,24 +102,41 @@ class Maestro(MaestroInterface):
                 deps_output_paths.append(output_path)
 
         # 3. Create the task execution operation.
-        output_path = task_to_run.get_output_path(ctx)
-        assert output_path is not None
-        # NOTE: Set the options flags appropriately.
-        op = RunTaskExecutable(
-            initial_state=OperationState.QUEUED,
-            task=task_to_run,
-            identifier=task_identifier,
-            run=task_to_run.raw_run,
-            args=task_to_run.args,
-            options=task_to_run.options,
-            working_path=task_to_run.get_working_path(ctx),
-            output_path=output_path,
-            deps_output_paths=deps_output_paths,
-            record_output=True,
-            version_to_record=None,
-            serialize_args_options=True,
-            parallelizable=task_to_run.parallelizable,
-        )
+        kwargs: Dict[str, Any] = {
+            "initial_state": OperationState.QUEUED,
+            "task": task_to_run,
+            "identifier": task_identifier,
+            "run": task_to_run.raw_run,
+            "args": task_to_run.args,
+            "options": task_to_run.options,
+            "working_path": task_to_run.get_working_path(ctx),
+            "deps_output_paths": deps_output_paths,
+            "parallelizable": task_to_run.parallelizable,
+        }
+
+        if execute_task_type == ExecuteTaskType.RunExperiment:
+            assert isinstance(task_to_run, RunExperiment)
+            # We need it to be versioned.
+            exp_version = task_to_run.create_new_version(ctx)
+            output_path = task_to_run.get_output_path(ctx)
+            assert output_path is not None
+            kwargs["record_output"] = True
+            kwargs["version_to_record"] = exp_version
+            kwargs["serialize_args_options"] = True
+            kwargs["output_path"] = output_path
+        elif execute_task_type == ExecuteTaskType.RunCommand:
+            output_path = task_to_run.get_output_path(ctx)
+            assert output_path is not None
+            kwargs["record_output"] = False
+            kwargs["version_to_record"] = None
+            kwargs["serialize_args_options"] = False
+            kwargs["output_path"] = output_path
+        else:
+            raise InternalError(
+                details=f"Unsupported task type {str(execute_task_type)}."
+            )
+
+        op = RunTaskExecutable(**kwargs)  # pylint: disable=missing-kwoa
 
         # 4. Run the task.
         plan = ExecutionPlan(

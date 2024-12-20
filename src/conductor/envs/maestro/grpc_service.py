@@ -1,10 +1,10 @@
 import pathlib
 import conductor.envs.proto_gen.maestro_pb2_grpc as rpc
 import conductor.envs.proto_gen.maestro_pb2 as pb
-from conductor.envs.maestro.interface import MaestroInterface
-from conductor.errors import ConductorError
-from conductor.task_identifier import TaskIdentifier
+from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskType
+from conductor.errors import ConductorError, InternalError
 from conductor.execution.version_index import Version
+from conductor.task_identifier import TaskIdentifier
 
 # pylint: disable=no-member
 # See https://github.com/protocolbuffers/protobuf/issues/10372
@@ -49,8 +49,20 @@ class MaestroGrpc(rpc.MaestroServicer):
                     has_uncommitted_changes=False,
                 )
                 dep_versions[dep_id] = version
+            if request.execute_task_type == pb.TT_RUN_EXPERIMENT:
+                execute_task_type = ExecuteTaskType.RunExperiment
+            elif request.execute_task_type == pb.TT_RUN_COMMAND:
+                execute_task_type = ExecuteTaskType.RunCommand
+            else:
+                raise InternalError(
+                    details=f"Unsupported execute task type {str(request.execute_task_type)}."
+                )
             response = await self._maestro.execute_task(
-                workspace_name, project_root, task_identifier, dep_versions
+                workspace_name,
+                project_root,
+                task_identifier,
+                dep_versions,
+                execute_task_type,
             )
             return pb.ExecuteTaskResult(
                 response=pb.ExecuteTaskResponse(

@@ -1,3 +1,4 @@
+import enum
 import pathlib
 from typing import Dict, NamedTuple
 from conductor.task_identifier import TaskIdentifier
@@ -7,6 +8,11 @@ from conductor.execution.version_index import Version
 class ExecuteTaskResponse(NamedTuple):
     start_timestamp: int
     end_timestamp: int
+
+
+class ExecuteTaskType(enum.Enum):
+    RunExperiment = "run_experiment"
+    RunCommand = "run_command"
 
 
 class MaestroInterface:
@@ -24,6 +30,7 @@ class MaestroInterface:
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
         dep_versions: Dict[TaskIdentifier, Version],
+        execute_task_type: ExecuteTaskType,
     ) -> ExecuteTaskResponse:
         raise NotImplementedError
 
