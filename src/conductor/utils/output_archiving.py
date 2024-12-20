@@ -1,11 +1,18 @@
 import pathlib
 import subprocess
+import shutil
+import sqlite3
 from typing import List, Optional, Tuple
 
 import conductor.filename as f
-from conductor.config import ARCHIVE_VERSION_INDEX
+from conductor.config import ARCHIVE_VERSION_INDEX, ARCHIVE_STAGING
 from conductor.context import Context
-from conductor.errors import InternalError, CreateArchiveFailed
+from conductor.errors import (
+    InternalError,
+    CreateArchiveFailed,
+    ArchiveFileInvalid,
+    DuplicateTaskOutput,
+)
 from conductor.execution.version_index import VersionIndex, Version
 from conductor.task_identifier import TaskIdentifier
 
@@ -86,3 +93,63 @@ def create_archive(
     finally:
         # Clean up the archive index file.
         archive_index_path.unlink(missing_ok=True)
+
+
+def restore_archive(ctx: Context, archive_path: pathlib.Path) -> None:
+    """
+    This utility is used to restore the output directories of tasks from an
+    archive created by `create_archive`.
+    """
+
+    try:
+        # Extract the archive to a staging location.
+        staging_path = ctx.output_path / ARCHIVE_STAGING
+        staging_path.mkdir(parents=True, exist_ok=True)
+        _extract_archive(archive_path, staging_path)
+
+        # Load the archive version index.
+        archive_version_index_path = staging_path / ARCHIVE_VERSION_INDEX
+        archive_version_index = VersionIndex.create_or_load(archive_version_index_path)
+
+        # Transfer the version index entries to the current version index.
+        try:
+            archive_version_index.copy_entries_to(
+                dest=ctx.version_index, tasks=None, latest_only=False
+            )
+        except sqlite3.IntegrityError as ex:
+            raise DuplicateTaskOutput(output_dir=str(ctx.output_path)) from ex
+
+        # Copy over all archived task outputs.
+        # NOTE: We should copy task by task.
+        shutil.copytree(staging_path, ctx.output_path, dirs_exist_ok=True)
+
+    except:
+        ctx.version_index.rollback_changes()
+        raise
+
+    finally:
+        # Clean up the staging directory.
+        shutil.rmtree(staging_path, ignore_errors=True)
+
+
+def _extract_archive(archive_file: pathlib.Path, staging_path: pathlib.Path):
+    try:
+        process = subprocess.Popen(
+            [
+                "tar",
+                "-xf",
+                str(archive_file),
+                "--use-compress-program=zstdmt",
+                "-C",
+                str(staging_path),
+            ],
+            shell=False,
+        )
+        process.wait()
+        if process.returncode != 0:
+            raise ArchiveFileInvalid().add_extra_context(
+                "The tar utility returned a non-zero error code."
+            )
+
+    except OSError as ex:
+        raise ArchiveFileInvalid().add_extra_context(str(ex))
