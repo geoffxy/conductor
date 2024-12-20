@@ -3,7 +3,7 @@ import logging
 import pathlib
 import time
 
-from conductor.envs.maestro.interface import MaestroInterface
+from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskResponse
 from conductor.config import MAESTRO_WORKSPACE_LOCATION, MAESTRO_WORKSPACE_NAME_FORMAT
 from conductor.context import Context
 from conductor.task_identifier import TaskIdentifier
@@ -46,7 +46,7 @@ class Maestro(MaestroInterface):
         workspace_name: str,
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
-    ) -> None:
+    ) -> ExecuteTaskResponse:
         workspace_path = (
             self._maestro_root / MAESTRO_WORKSPACE_LOCATION / workspace_name
         )
@@ -60,7 +60,12 @@ class Maestro(MaestroInterface):
             )
 
         _ctx = Context(full_project_root)
+        start_timestamp = int(time.time())
         # NOTE: Implement task execution.
+        end_timestamp = int(time.time())
+        return ExecuteTaskResponse(
+            start_timestamp=start_timestamp, end_timestamp=end_timestamp
+        )
 
     async def shutdown(self, key: str) -> str:
         logger.info("Received shutdown message with key %s", key)

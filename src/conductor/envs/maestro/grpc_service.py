@@ -38,10 +38,15 @@ class MaestroGrpc(rpc.MaestroServicer):
             workspace_name = request.workspace_name
             project_root = pathlib.Path(request.project_root)
             task_identifier = TaskIdentifier.from_str(request.task_identifier)
-            await self._maestro.execute_task(
+            response = await self._maestro.execute_task(
                 workspace_name, project_root, task_identifier
             )
-            return pb.ExecuteTaskResult(response=pb.ExecuteTaskResponse())
+            return pb.ExecuteTaskResult(
+                response=pb.ExecuteTaskResponse(
+                    start_timestamp=response.start_timestamp,
+                    end_timestamp=response.end_timestamp,
+                )
+            )
         except ConductorError as ex:
             return pb.ExecuteTaskResult(error=_error_to_pb(ex))
 

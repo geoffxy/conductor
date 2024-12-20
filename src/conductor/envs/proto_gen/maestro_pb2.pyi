@@ -28,18 +28,24 @@ class ErrorKwarg(_message.Message):
     def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
 
 class ExecuteTaskRequest(_message.Message):
-    __slots__ = ["project_root", "task_identifier", "workspace_name"]
+    __slots__ = ["dep_versions", "project_root", "task_identifier", "workspace_name"]
+    DEP_VERSIONS_FIELD_NUMBER: _ClassVar[int]
     PROJECT_ROOT_FIELD_NUMBER: _ClassVar[int]
     TASK_IDENTIFIER_FIELD_NUMBER: _ClassVar[int]
     WORKSPACE_NAME_FIELD_NUMBER: _ClassVar[int]
+    dep_versions: _containers.RepeatedCompositeFieldContainer[TaskDependency]
     project_root: str
     task_identifier: str
     workspace_name: str
-    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ...) -> None: ...
+    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ..., dep_versions: _Optional[_Iterable[_Union[TaskDependency, _Mapping]]] = ...) -> None: ...
 
 class ExecuteTaskResponse(_message.Message):
-    __slots__ = []  # type: ignore
-    def __init__(self) -> None: ...
+    __slots__ = ["end_timestamp", "start_timestamp"]
+    END_TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
+    START_TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
+    end_timestamp: int
+    start_timestamp: int
+    def __init__(self, start_timestamp: _Optional[int] = ..., end_timestamp: _Optional[int] = ...) -> None: ...
 
 class ExecuteTaskResult(_message.Message):
     __slots__ = ["error", "response"]
@@ -68,6 +74,22 @@ class ShutdownResult(_message.Message):
     error: ConductorError
     response: ShutdownResponse
     def __init__(self, response: _Optional[_Union[ShutdownResponse, _Mapping]] = ..., error: _Optional[_Union[ConductorError, _Mapping]] = ...) -> None: ...
+
+class TaskDependency(_message.Message):
+    __slots__ = ["task_identifier", "version"]
+    TASK_IDENTIFIER_FIELD_NUMBER: _ClassVar[int]
+    VERSION_FIELD_NUMBER: _ClassVar[int]
+    task_identifier: str
+    version: TaskVersion
+    def __init__(self, task_identifier: _Optional[str] = ..., version: _Optional[_Union[TaskVersion, _Mapping]] = ...) -> None: ...
+
+class TaskVersion(_message.Message):
+    __slots__ = ["commit_hash", "timestamp"]
+    COMMIT_HASH_FIELD_NUMBER: _ClassVar[int]
+    TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
+    commit_hash: str
+    timestamp: int
+    def __init__(self, timestamp: _Optional[int] = ..., commit_hash: _Optional[str] = ...) -> None: ...
 
 class UnpackBundleRequest(_message.Message):
     __slots__ = ["bundle_path"]

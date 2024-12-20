@@ -57,9 +57,27 @@ message ExecuteTaskRequest {
 
   // The fully qualified task identifier of the task to run.
   string task_identifier = 3;
+
+  // For task dependencies that are versioned, this contains the version to use.
+  // Note that unversioned dependencies (i.e., `run_command()` dependencies) are
+  // not included here.
+  repeated TaskDependency dep_versions = 4;
 }
 
-message ExecuteTaskResponse {}
+message TaskDependency {
+  string task_identifier = 1;
+  TaskVersion version = 2;
+}
+
+message TaskVersion {
+  uint64 timestamp = 1;
+  string commit_hash = 2;
+}
+
+message ExecuteTaskResponse {
+  uint64 start_timestamp = 1;
+  uint64 end_timestamp = 2;
+}
 
 message ExecuteTaskResult {
   oneof result {

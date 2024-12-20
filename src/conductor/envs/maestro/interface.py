@@ -1,5 +1,11 @@
 import pathlib
+from typing import NamedTuple
 from conductor.task_identifier import TaskIdentifier
+
+
+class ExecuteTaskResponse(NamedTuple):
+    start_timestamp: int
+    end_timestamp: int
 
 
 class MaestroInterface:
@@ -16,7 +22,7 @@ class MaestroInterface:
         workspace_name: str,
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
-    ) -> None:
+    ) -> ExecuteTaskResponse:
         raise NotImplementedError
 
     async def shutdown(self, key: str) -> str:

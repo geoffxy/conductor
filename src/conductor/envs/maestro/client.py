@@ -4,6 +4,7 @@ from typing import Optional
 
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
+from conductor.envs.maestro.interface import ExecuteTaskResponse
 from conductor.task_identifier import TaskIdentifier
 from conductor.errors import ConductorError
 from conductor.errors.generated import ERRORS_BY_CODE
@@ -56,7 +57,7 @@ class MaestroGrpcClient:
         workspace_name: str,
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
-    ) -> None:
+    ) -> ExecuteTaskResponse:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.ExecuteTaskRequest(
@@ -67,6 +68,11 @@ class MaestroGrpcClient:
         result = self._stub.ExecuteTask(msg)
         if result.WhichOneof("result") == "error":
             raise _pb_to_error(result.error)
+        response = result.response
+        return ExecuteTaskResponse(
+            start_timestamp=response.start_timestamp,
+            end_timestamp=response.end_timestamp,
+        )
 
     def shutdown(self, key: str) -> str:
         assert self._stub is not None
