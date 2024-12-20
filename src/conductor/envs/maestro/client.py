@@ -1,8 +1,14 @@
 import grpc
 import pathlib
-from typing import Optional
+from typing import Dict, Optional
+
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
+from conductor.envs.maestro.interface import ExecuteTaskResponse, ExecuteTaskType
+from conductor.task_identifier import TaskIdentifier
+from conductor.errors import ConductorError, InternalError
+from conductor.errors.generated import ERRORS_BY_CODE
+from conductor.execution.version_index import Version
 
 
 class MaestroGrpcClient:
@@ -38,23 +44,61 @@ class MaestroGrpcClient:
         self._channel = grpc.insecure_channel("{}:{}".format(self._host, self._port))
         self._stub = maestro_grpc.MaestroStub(self._channel)
 
-    def ping(self, message: str) -> str:
-        assert self._stub is not None
-        # pylint: disable-next=no-member
-        msg = pb.PingRequest(message=message)
-        return self._stub.Ping(msg).message
-
     def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.UnpackBundleRequest(bundle_path=str(bundle_path))
-        return self._stub.UnpackBundle(msg).workspace_name
+        result = self._stub.UnpackBundle(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        return result.response.workspace_name
+
+    def execute_task(
+        self,
+        workspace_name: str,
+        workspace_rel_project_root: pathlib.Path,
+        task_identifier: TaskIdentifier,
+        dep_versions: Dict[TaskIdentifier, Version],
+        execute_task_type: ExecuteTaskType,
+    ) -> ExecuteTaskResponse:
+        assert self._stub is not None
+        # pylint: disable-next=no-member
+        msg = pb.ExecuteTaskRequest(
+            workspace_name=workspace_name,
+            project_root=str(workspace_rel_project_root),
+            task_identifier=str(task_identifier),
+        )
+        for task_id, version in dep_versions.items():
+            dv = msg.dep_versions.add()
+            dv.task_identifier = str(task_id)
+            dv.version.timestamp = version.timestamp
+            if version.commit_hash is not None:
+                dv.version.commit_hash = version.commit_hash
+        if execute_task_type == ExecuteTaskType.RunExperiment:
+            msg.execute_task_type = pb.TT_RUN_EXPERIMENT  # pylint: disable=no-member
+        elif execute_task_type == ExecuteTaskType.RunCommand:
+            msg.execute_task_type = pb.TT_RUN_COMMAND  # pylint: disable=no-member
+        else:
+            raise InternalError(
+                details=f"Unsupported execute task type {str(execute_task_type)}."
+            )
+        result = self._stub.ExecuteTask(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        response = result.response
+        return ExecuteTaskResponse(
+            start_timestamp=response.start_timestamp,
+            end_timestamp=response.end_timestamp,
+        )
 
     def shutdown(self, key: str) -> str:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.ShutdownRequest(key=key)
-        return self._stub.Shutdown(msg).message
+        result = self._stub.Shutdown(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        return result.response.message
 
     def close(self) -> None:
         assert self._stub is not None
@@ -62,3 +106,17 @@ class MaestroGrpcClient:
         self._stub = None
         self._channel.close()
         self._channel = None
+
+
+# pylint: disable-next=no-member
+def _pb_to_error(ex: pb.ConductorError) -> ConductorError:
+    exception_class = ERRORS_BY_CODE[ex.code]
+    kwargs = {}
+    for kwarg in ex.kwargs:
+        kwargs[kwarg.key] = kwarg.value
+    error: ConductorError = exception_class(**kwargs)
+    if ex.file_context_path is not None:
+        error.add_file_context(ex.file_context_path, ex.file_context_line_number)
+    if ex.extra_context is not None:
+        error.add_extra_context(ex.extra_context)
+    return error

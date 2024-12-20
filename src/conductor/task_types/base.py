@@ -3,6 +3,7 @@ from typing import Callable, Dict, Sequence, Optional, TYPE_CHECKING
 
 import conductor.filename as f
 from conductor.task_identifier import TaskIdentifier
+from conductor.execution.version_index import Version
 
 if TYPE_CHECKING:
     import conductor.context as c  # pylint: disable=unused-import
@@ -98,6 +99,17 @@ class TaskType:
         return value will be `None` if no such path exists.
         """
         return ctx.output_path / self._output_path_suffix
+
+    def get_specific_output_path(
+        self, ctx: "c.Context", version: Optional[Version]
+    ) -> Optional[pathlib.Path]:
+        """
+        Returns the absolute path to this task's outputs directory for a
+        specific version, if applicable.
+
+        If the task's outputs are versioned, `version` must be provided.
+        """
+        return self.get_output_path(ctx)
 
     def get_deps_output_paths(self, ctx: "c.Context") -> Sequence[pathlib.Path]:
         """

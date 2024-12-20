@@ -112,7 +112,7 @@ class _InflightOperations:
 
 
 class Executor:
-    def __init__(self, execution_slots: int) -> None:
+    def __init__(self, execution_slots: int, silent: bool = False) -> None:
         assert execution_slots > 0
         self._slots = execution_slots
         self._available_slots = list(reversed(range(self._slots)))
@@ -124,8 +124,14 @@ class Executor:
         self._num_tasks_to_run = 0
         self._num_tasks_dequeued = 0
 
+        # If `silent` is set to `True`, the executor will not print any output
+        self._silent = silent
+
     def run_plan(
-        self, plan: ExecutionPlan, ctx: Context, stop_on_first_error: bool = False
+        self,
+        plan: ExecutionPlan,
+        ctx: Context,
+        stop_on_first_error: bool = False,
     ):
         try:
             self._reset()
@@ -134,10 +140,13 @@ class Executor:
             start = time.time()
 
             # 1. Print out any cached tasks.
-            for cached_task in plan.cached_tasks:
-                print_cyan(
-                    "✓ Using cached results for {}.".format(str(cached_task.identifier))
-                )
+            if not self._silent:
+                for cached_task in plan.cached_tasks:
+                    print_cyan(
+                        "✓ Using cached results for {}.".format(
+                            str(cached_task.identifier)
+                        )
+                    )
 
             # 2. Run the operations as they become eligible for execution.
             should_stop = False
@@ -169,12 +178,15 @@ class Executor:
         except ConductorAbort:
             self._inflight_ops.terminate_processes()
             elapsed = time.time() - start
-            print()
-            print_yellow(
-                "🔸 Task aborted. {}".format(self._get_elapsed_time_string(elapsed)),
-                bold=True,
-            )
-            print()
+            if not self._silent:
+                print()
+                print_yellow(
+                    "🔸 Task aborted. {}".format(
+                        self._get_elapsed_time_string(elapsed)
+                    ),
+                    bold=True,
+                )
+                print()
             raise
 
     def _reset(self) -> None:
@@ -224,7 +236,7 @@ class Executor:
 
             if not next_op.exe_deps_succeeded():
                 # At least one dependency failed, so we need to skip this task.
-                if next_op.main_task is not None:
+                if next_op.main_task is not None and not self._silent:
                     # Print information about the task that is being skipped.
                     if not avoid_leading_newline:
                         print()
@@ -237,7 +249,7 @@ class Executor:
                 next_op.set_state(OperationState.SKIPPED)
                 self._process_finished_op(next_op)
             else:
-                if next_op.main_task is not None:
+                if next_op.main_task is not None and not self._silent:
                     if not avoid_leading_newline:
                         print()
                     print_cyan(
@@ -287,7 +299,7 @@ class Executor:
         try:
             op.finish_execution(handle, ctx)
             op.set_state(OperationState.SUCCEEDED)
-            if op.main_task is not None:
+            if op.main_task is not None and not self._silent:
                 print_green(
                     "✓ {} completed successfully.".format(op.main_task.identifier)
                 )
@@ -337,10 +349,11 @@ class Executor:
 
         # Print the final execution result (succeeded or failed).
         if all_succeeded and (main_task_executed or main_task_cached):
-            print()
-            print_bold(
-                "✨ Done! {}".format(self._get_elapsed_time_string(elapsed_time))
-            )
+            if not self._silent:
+                print()
+                print_bold(
+                    "✨ Done! {}".format(self._get_elapsed_time_string(elapsed_time))
+                )
 
         else:
             # At least one task must have failed.
@@ -354,36 +367,41 @@ class Executor:
                 elif op.state == OperationState.FAILED:
                     failed_task_ops.append(op)
             assert len(failed_task_ops) > 0
-            print()
-            print_red(
-                "🔴 Task failed. {}".format(
-                    self._get_elapsed_time_string(elapsed_time)
-                ),
-                bold=True,
-            )
-            print()
-            print_bold("Failed task(s):")
-            for failed in failed_task_ops:
-                assert failed.main_task is not None
-                print("  {}".format(failed.main_task.identifier))
-                assert failed.stored_error is not None
-                print(
-                    "    {}".format(
-                        failed.stored_error.printable_message(omit_file_context=True)
-                    )
-                )
-            print()
-            if len(skipped_tasks) > 0:
-                print_bold("Skipped task(s) (one or more dependencies failed):")
-                for skipped in skipped_tasks:
-                    print("  {}".format(skipped))
+            if not self._silent:
                 print()
+                print_red(
+                    "🔴 Task failed. {}".format(
+                        self._get_elapsed_time_string(elapsed_time)
+                    ),
+                    bold=True,
+                )
+                print()
+                print_bold("Failed task(s):")
+                for failed in failed_task_ops:
+                    assert failed.main_task is not None
+                    print("  {}".format(failed.main_task.identifier))
+                    assert failed.stored_error is not None
+                    print(
+                        "    {}".format(
+                            failed.stored_error.printable_message(
+                                omit_file_context=True
+                            )
+                        )
+                    )
+                print()
+                if len(skipped_tasks) > 0:
+                    print_bold("Skipped task(s) (one or more dependencies failed):")
+                    for skipped in skipped_tasks:
+                        print("  {}".format(skipped))
+                    print()
 
             assert failed_task_ops[0].stored_error is not None
             raise failed_task_ops[0].stored_error
 
     def _print_op_failed(self, op: Operation):
         if op.main_task is None:
+            return
+        if self._silent:
             return
         print_red("✘ {} failed.".format(op.main_task.identifier))
 

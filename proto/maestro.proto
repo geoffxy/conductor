@@ -4,30 +4,28 @@ package conductor;
 
 // Conductor's remote daemon service (Maestro).
 service Maestro {
-  // A temporary RPC for testing purposes.
-  rpc Ping(PingRequest) returns (PingResponse) {}
-
   // Used to initialize a repository (workspace) for the current project.
-  rpc UnpackBundle(UnpackBundleRequest) returns (UnpackBundleResponse) {}
+  rpc UnpackBundle(UnpackBundleRequest) returns (UnpackBundleResult) {}
+
+  // Used to execute a Conductor task.
+  rpc ExecuteTask(ExecuteTaskRequest) returns (ExecuteTaskResult) {}
 
   // Tell the daemon to shut down.
-  rpc Shutdown(ShutdownRequest) returns (ShutdownResponse) {}
+  rpc Shutdown(ShutdownRequest) returns (ShutdownResult) {}
 }
 
-message PingRequest {
-  string message = 1;
+message ConductorError {
+  int32 code = 1;
+  repeated ErrorKwarg kwargs = 2;
+
+  string file_context_path = 3;
+  int32 file_context_line_number = 4;
+  string extra_context = 5;
 }
 
-message PingResponse {
-  string message = 1;
-}
-
-message ShutdownRequest {
+message ErrorKwarg {
   string key = 1;
-}
-
-message ShutdownResponse {
-  string message = 1;
+  string value = 2;
 }
 
 message UnpackBundleRequest {
@@ -39,4 +37,71 @@ message UnpackBundleResponse {
   // A unique identifier for the unpacked bundle (workspace). We use this to
   // differentiate between different copies of the same repository.
   string workspace_name = 1;
+}
+
+message UnpackBundleResult {
+  oneof result {
+    UnpackBundleResponse response = 1;
+    ConductorError error = 2;
+  }
+}
+
+message ExecuteTaskRequest {
+  // The workspace that contains this task.
+  string workspace_name = 1;
+
+  // A relative path to the Conductor project root within the workspace. The
+  // project root is not necessarily the same as the workspace root, but often
+  // can be the same.
+  string project_root = 2;
+
+  // The fully qualified task identifier of the task to run.
+  string task_identifier = 3;
+
+  // For task dependencies that are versioned, this contains the version to use.
+  // Note that unversioned dependencies (i.e., `run_command()` dependencies) are
+  // not included here.
+  repeated TaskDependency dep_versions = 4;
+
+  // The type of task to run.
+  ExecuteTaskType execute_task_type = 5;
+}
+
+enum ExecuteTaskType {
+  TT_UNSPECIFIED = 0;
+  TT_RUN_EXPERIMENT = 1;
+  TT_RUN_COMMAND = 2;
+}
+
+message TaskDependency {
+  string task_identifier = 1;
+  TaskVersion version = 2;
+}
+
+message TaskVersion {
+  uint64 timestamp = 1;
+  string commit_hash = 2;
+}
+
+message ExecuteTaskResponse {
+  uint64 start_timestamp = 1;
+  uint64 end_timestamp = 2;
+}
+
+message ExecuteTaskResult {
+  oneof result {
+    ExecuteTaskResponse response = 1;
+    ConductorError error = 2;
+  }
+}
+
+message ShutdownRequest { string key = 1; }
+
+message ShutdownResponse { string message = 1; }
+
+message ShutdownResult {
+  oneof result {
+    ShutdownResponse response = 1;
+    ConductorError error = 2;
+  }
 }

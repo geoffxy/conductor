@@ -8,10 +8,13 @@ FileContext = collections.namedtuple(
 
 
 class ConductorError(RuntimeError):
-    def __init__(self, *args):
-        super().__init__(*args)
+    error_code = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.file_context = None
         self.extra_context = None
+        self.kwargs = kwargs
 
     def add_file_context(self, file_path, line_number=None):
         self.file_context = FileContext(file_path, line_number)

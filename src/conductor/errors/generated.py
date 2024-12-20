@@ -11,8 +11,9 @@ class TaskParseError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.error_details = kwargs["error_details"]
-    
+
     def _message(self):
         return "An error occurred when parsing a COND file or a file that it includes: {error_details}.".format(
             error_details=self.error_details,
@@ -24,9 +25,10 @@ class MissingTaskParameter(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.parameter_name = kwargs["parameter_name"]
         self.task_type_name = kwargs["task_type_name"]
-    
+
     def _message(self):
         return "Missing parameter '{parameter_name}' for task type '{task_type_name}'.".format(
             parameter_name=self.parameter_name,
@@ -39,10 +41,11 @@ class InvalidTaskParameterType(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.parameter_name = kwargs["parameter_name"]
         self.task_type_name = kwargs["task_type_name"]
         self.type_name = kwargs["type_name"]
-    
+
     def _message(self):
         return "Invalid type for parameter '{parameter_name}' in task type '{task_type_name}' (expected {type_name}).".format(
             parameter_name=self.parameter_name,
@@ -56,8 +59,9 @@ class UnrecognizedTaskParameters(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_type_name = kwargs["task_type_name"]
-    
+
     def _message(self):
         return "Unrecognized parameter(s) passed to task type '{task_type_name}'.".format(
             task_type_name=self.task_type_name,
@@ -69,8 +73,9 @@ class DuplicateTaskName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_name = kwargs["task_name"]
-    
+
     def _message(self):
         return "Task name '{task_name}' was used more than once.".format(
             task_name=self.task_name,
@@ -82,8 +87,9 @@ class InvalidTaskIdentifier(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
-    
+
     def _message(self):
         return "Invalid task identifier '{task_identifier}'.".format(
             task_identifier=self.task_identifier,
@@ -95,8 +101,9 @@ class InvalidTaskName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_name = kwargs["task_name"]
-    
+
     def _message(self):
         return "Invalid task name '{task_name}'.".format(
             task_name=self.task_name,
@@ -108,8 +115,9 @@ class TaskSyntaxError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Encountered a syntax error when parsing a COND file or a file that it includes.".format(
 
@@ -121,8 +129,9 @@ class ParsingUnknownNameError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.error_message = kwargs["error_message"]
-    
+
     def _message(self):
         return "Encountered an unknown name when parsing a COND file: {error_message}.".format(
             error_message=self.error_message,
@@ -134,8 +143,9 @@ class MissingCondFile(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Could not find a required COND file. Please ensure that you have defined all the tasks that you use.".format(
 
@@ -147,9 +157,10 @@ class DuplicateDependency(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
         self.dep_identifier = kwargs["dep_identifier"]
-    
+
     def _message(self):
         return "Task '{task_identifier}' has declared a dependency on '{dep_identifier}' more than once.".format(
             task_identifier=self.task_identifier,
@@ -162,9 +173,10 @@ class CombineDuplicateDepName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
         self.task_name = kwargs["task_name"]
-    
+
     def _message(self):
         return "The combine() task '{task_identifier}' has two or more dependencies that share the same task name '{task_name}'. A combine() task's dependencies must have unique names.".format(
             task_identifier=self.task_identifier,
@@ -177,8 +189,9 @@ class RunOptionsNonStringKey(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.identifier = kwargs["identifier"]
-    
+
     def _message(self):
         return "Encountered a non-string option key when processing task '{identifier}'. All option keys must be strings.".format(
             identifier=self.identifier,
@@ -190,9 +203,10 @@ class RunOptionsNonPrimitiveValue(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.key = kwargs["key"]
         self.identifier = kwargs["identifier"]
-    
+
     def _message(self):
         return "Encountered a non-primitive option value for key '{key}' when processing task '{identifier}'. All option values must be either a string, integer, floating point number, or boolean.".format(
             key=self.key,
@@ -205,9 +219,10 @@ class ExperimentGroupDuplicateName(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.instance_name = kwargs["instance_name"]
         self.task_name = kwargs["task_name"]
-    
+
     def _message(self):
         return "Encountered a duplicate experiment instance name '{instance_name}' when processing a run_experiment_group() task with name '{task_name}'. Experiment instance names must be unique.".format(
             instance_name=self.instance_name,
@@ -220,8 +235,9 @@ class ExperimentGroupInvalidExperimentInstance(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_name = kwargs["task_name"]
-    
+
     def _message(self):
         return "Encountered an experiment instance that was incorrectly formed when processing a run_experiment_group() task with name '{task_name}'. Experiments in an experiment group must be defined using an iterable of ExperimentInstance named tuples.".format(
             task_name=self.task_name,
@@ -233,8 +249,9 @@ class RunArgumentsNonPrimitiveValue(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.identifier = kwargs["identifier"]
-    
+
     def _message(self):
         return "Encountered a non-primitive argument when processing task '{identifier}'. All arguments must be either a string, integer, floating point number, or boolean.".format(
             identifier=self.identifier,
@@ -246,8 +263,9 @@ class IncludeFileInvalidExtension(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.included_file = kwargs["included_file"]
-    
+
     def _message(self):
         return "Encountered an include() of '{included_file}', which does not have a '.cond' extension. Conductor only supports including .cond files.".format(
             included_file=self.included_file,
@@ -259,8 +277,9 @@ class TaskNotFound(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
-    
+
     def _message(self):
         return "Task '{task_identifier}' could not be found.".format(
             task_identifier=self.task_identifier,
@@ -272,8 +291,9 @@ class MissingProjectRoot(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Could not locate your project's root. Did you add a cond_config.toml file?".format(
 
@@ -285,8 +305,9 @@ class CyclicDependency(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
-    
+
     def _message(self):
         return "Encountered a cyclic dependency when loading the transitive closure of '{task_identifier}'.".format(
             task_identifier=self.task_identifier,
@@ -298,8 +319,9 @@ class UnsupportedVersionIndexFormat(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.version = kwargs["version"]
-    
+
     def _message(self):
         return "Detected an unsupported version index ({version}). Please make sure that you are using the latest version of Conductor.".format(
             version=self.version,
@@ -311,8 +333,9 @@ class IncludeFileNotFound(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.included_file = kwargs["included_file"]
-    
+
     def _message(self):
         return "Encountered an include() of '{included_file}'. However, that file does not exist.".format(
             included_file=self.included_file,
@@ -324,8 +347,9 @@ class IncludeFileNotInProject(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.included_file = kwargs["included_file"]
-    
+
     def _message(self):
         return "Encountered an include() of '{included_file}'. However, that file is not inside the project.".format(
             included_file=self.included_file,
@@ -337,9 +361,10 @@ class TaskNonZeroExit(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
         self.code = kwargs["code"]
-    
+
     def _message(self):
         return "Task '{task_identifier}' terminated with a non-zero error code ({code}).".format(
             task_identifier=self.task_identifier,
@@ -352,8 +377,9 @@ class TaskFailed(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
-    
+
     def _message(self):
         return "Task '{task_identifier}' could not be executed.".format(
             task_identifier=self.task_identifier,
@@ -365,8 +391,9 @@ class OutputDirTaken(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.output_dir = kwargs["output_dir"]
-    
+
     def _message(self):
         return "Conductor cannot create its output directory '{output_dir}' because it already exists as a file.".format(
             output_dir=self.output_dir,
@@ -378,8 +405,9 @@ class ConductorAbort(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Conductor's execution has been aborted by the user.".format(
 
@@ -391,8 +419,9 @@ class MaestroInstallError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.error_message = kwargs["error_message"]
-    
+
     def _message(self):
         return "An error occurred when installing Maestro in a remote environment: {error_message}".format(
             error_message=self.error_message,
@@ -404,8 +433,9 @@ class CombineOutputFileConflict(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.output_file = kwargs["output_file"]
-    
+
     def _message(self):
         return "The output file or directory '{output_file}' already exists and cannot be overwritten by the combine() task.".format(
             output_file=self.output_file,
@@ -417,8 +447,9 @@ class MissingEnvSupport(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "This feature requires support for Conductor environments. Please install Conductor with the [env] features.".format(
 
@@ -430,8 +461,9 @@ class EnvsRequireGit(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "To use a Conductor environments, your project must be tracked in a Git repository.".format(
 
@@ -443,8 +475,9 @@ class OutputFileExists(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "The provided output path points to an existing file. Conductor will not overwrite existing files.".format(
 
@@ -456,8 +489,9 @@ class OutputPathDoesNotExist(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "The provided output path does not exist. Make sure to create any missing directories.".format(
 
@@ -469,8 +503,9 @@ class NoTaskOutputsToArchive(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "There are no task outputs to archive. Make sure that you have `cond run` your task at least once and that it (or its dependencies) are archivable.".format(
 
@@ -482,8 +517,9 @@ class CreateArchiveFailed(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Conductor failed to create an archive.".format(
 
@@ -495,8 +531,9 @@ class ArchiveFileInvalid(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "The provided archive file does not exist or is corrupted.".format(
 
@@ -508,8 +545,9 @@ class DuplicateTaskOutput(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.output_dir = kwargs["output_dir"]
-    
+
     def _message(self):
         return "The provided archive contains task output(s) that already exist in the output directory '{output_dir}'.".format(
             output_dir=self.output_dir,
@@ -521,8 +559,9 @@ class ConfigParseError(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Conductor failed to parse cond_config.toml.".format(
 
@@ -534,8 +573,9 @@ class ConfigInvalidValue(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.config_key = kwargs["config_key"]
-    
+
     def _message(self):
         return "Encountered an invalid value for '{config_key}' in cond_config.toml.".format(
             config_key=self.config_key,
@@ -547,8 +587,9 @@ class UnsupportedPlatform(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Conductor is not supported on your system. Conductor only supports Linux and macOS.".format(
 
@@ -560,8 +601,9 @@ class InvalidJobsCount(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "The maximum number of parallel jobs must be at least 1.".format(
 
@@ -573,8 +615,9 @@ class CannotSelectJobCount(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Conductor could not automatically set the maximum number of parallel jobs. Please explicitly specify a number using the --jobs flag.".format(
 
@@ -586,8 +629,9 @@ class CannotSetAgainAndCommit(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "You cannot set the --again flag while also setting --this-commit or --at-least.".format(
 
@@ -599,8 +643,9 @@ class CommitFlagUnsupported(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "Your project does not use Git, Git integration has been disabled, or there are no commits in your repository. You cannot use the --this-commit or --at-least flags when Git is disabled nor when there are no commits available.".format(
 
@@ -612,8 +657,9 @@ class InvalidCommitSymbol(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.symbol = kwargs["symbol"]
-    
+
     def _message(self):
         return "The commit symbol '{symbol}' passed to --at-least is not valid.".format(
             symbol=self.symbol,
@@ -625,8 +671,9 @@ class CannotSetBothCommitFlags(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "You cannot set both --this-commit and --at-least at the same time.".format(
 
@@ -638,8 +685,9 @@ class AtLeastCommitNotAncestor(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "The commit passed to --at-least is not an ancestor of the current commit.".format(
 
@@ -651,8 +699,9 @@ class NoTaskOutputPath(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
         self.task_identifier = kwargs["task_identifier"]
-    
+
     def _message(self):
         return "There is no relevant output path for '{task_identifier}'. For most tasks, this just means that you need to run the task first.".format(
             task_identifier=self.task_identifier,
@@ -664,12 +713,82 @@ class MissingExplorerSupport(ConductorError):
 
     def __init__(self, **kwargs):
         super().__init__()
+        self.kwargs = kwargs
 
-    
+
     def _message(self):
         return "This feature requires support for Conductor's explorer. Please install Conductor with the [explore] features.".format(
 
         )
+
+
+class InternalError(ConductorError):
+    error_code = 6000
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.details = kwargs["details"]
+
+    def _message(self):
+        return "An internal error occurred. Please report this issue to the Conductor maintainers with the following information: {details}.".format(
+            details=self.details,
+        )
+
+
+ERRORS_BY_CODE = {
+    1000: TaskParseError,
+    1001: MissingTaskParameter,
+    1002: InvalidTaskParameterType,
+    1003: UnrecognizedTaskParameters,
+    1004: DuplicateTaskName,
+    1005: InvalidTaskIdentifier,
+    1006: InvalidTaskName,
+    1007: TaskSyntaxError,
+    1008: ParsingUnknownNameError,
+    1009: MissingCondFile,
+    1010: DuplicateDependency,
+    1011: CombineDuplicateDepName,
+    1012: RunOptionsNonStringKey,
+    1013: RunOptionsNonPrimitiveValue,
+    1014: ExperimentGroupDuplicateName,
+    1015: ExperimentGroupInvalidExperimentInstance,
+    1016: RunArgumentsNonPrimitiveValue,
+    1017: IncludeFileInvalidExtension,
+    2001: TaskNotFound,
+    2002: MissingProjectRoot,
+    2003: CyclicDependency,
+    2004: UnsupportedVersionIndexFormat,
+    2005: IncludeFileNotFound,
+    2006: IncludeFileNotInProject,
+    3001: TaskNonZeroExit,
+    3002: TaskFailed,
+    3003: OutputDirTaken,
+    3004: ConductorAbort,
+    3005: MaestroInstallError,
+    3006: CombineOutputFileConflict,
+    3007: MissingEnvSupport,
+    3008: EnvsRequireGit,
+    4001: OutputFileExists,
+    4002: OutputPathDoesNotExist,
+    4003: NoTaskOutputsToArchive,
+    4004: CreateArchiveFailed,
+    4005: ArchiveFileInvalid,
+    4006: DuplicateTaskOutput,
+    5001: ConfigParseError,
+    5002: ConfigInvalidValue,
+    5003: UnsupportedPlatform,
+    5004: InvalidJobsCount,
+    5005: CannotSelectJobCount,
+    5006: CannotSetAgainAndCommit,
+    5007: CommitFlagUnsupported,
+    5008: InvalidCommitSymbol,
+    5009: CannotSetBothCommitFlags,
+    5010: AtLeastCommitNotAncestor,
+    5011: NoTaskOutputPath,
+    5012: MissingExplorerSupport,
+    6000: InternalError,
+}
 
 
 __all__ = [
@@ -723,4 +842,5 @@ __all__ = [
     "AtLeastCommitNotAncestor",
     "NoTaskOutputPath",
     "MissingExplorerSupport",
+    "InternalError",
 ]

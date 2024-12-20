@@ -2,6 +2,7 @@ import pathlib
 from typing import Sequence, Optional, TYPE_CHECKING
 
 import conductor.filename as f
+from conductor.errors import InternalError
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.run_arguments import RunArguments
@@ -160,6 +161,20 @@ class RunExperiment(_RunSubprocess):
         assert unversioned_path is not None
         return unversioned_path.with_name(
             f.task_output_dir(self.identifier, version=self._most_relevant_version)
+        )
+
+    def get_specific_output_path(
+        self, ctx: "c.Context", version: Optional[Version]
+    ) -> Optional[pathlib.Path]:
+        if version is None:
+            raise InternalError(
+                details="Version must be specified when calling "
+                "get_specific_output_path() on a RunExperiment task."
+            )
+        unversioned_path = super().get_output_path(ctx)
+        assert unversioned_path is not None
+        return unversioned_path.with_name(
+            f.task_output_dir(self.identifier, version=version)
         )
 
     def should_run(self, ctx: "c.Context", at_least_commit: Optional[str]) -> bool:
