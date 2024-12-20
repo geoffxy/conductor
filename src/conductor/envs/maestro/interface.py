@@ -1,6 +1,7 @@
 import pathlib
-from typing import NamedTuple
+from typing import Dict, NamedTuple
 from conductor.task_identifier import TaskIdentifier
+from conductor.execution.version_index import Version
 
 
 class ExecuteTaskResponse(NamedTuple):
@@ -22,6 +23,7 @@ class MaestroInterface:
         workspace_name: str,
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
+        dep_versions: Dict[TaskIdentifier, Version],
     ) -> ExecuteTaskResponse:
         raise NotImplementedError
 

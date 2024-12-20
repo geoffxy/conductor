@@ -4,6 +4,7 @@ import conductor.envs.proto_gen.maestro_pb2 as pb
 from conductor.envs.maestro.interface import MaestroInterface
 from conductor.errors import ConductorError
 from conductor.task_identifier import TaskIdentifier
+from conductor.execution.version_index import Version
 
 # pylint: disable=no-member
 # See https://github.com/protocolbuffers/protobuf/issues/10372
@@ -38,8 +39,18 @@ class MaestroGrpc(rpc.MaestroServicer):
             workspace_name = request.workspace_name
             project_root = pathlib.Path(request.project_root)
             task_identifier = TaskIdentifier.from_str(request.task_identifier)
+            dep_versions = {}
+            for dep in request.dep_versions:
+                dep_id = TaskIdentifier.from_str(dep.task_identifier)
+                dep_ver = dep.version
+                version = Version(
+                    dep_ver.timestamp,
+                    dep_ver.commit_hash,
+                    has_uncommitted_changes=False,
+                )
+                dep_versions[dep_id] = version
             response = await self._maestro.execute_task(
-                workspace_name, project_root, task_identifier
+                workspace_name, project_root, task_identifier, dep_versions
             )
             return pb.ExecuteTaskResult(
                 response=pb.ExecuteTaskResponse(

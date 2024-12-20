@@ -2,12 +2,19 @@ import asyncio
 import logging
 import pathlib
 import time
+from typing import Dict
 
-from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskResponse
 from conductor.config import MAESTRO_WORKSPACE_LOCATION, MAESTRO_WORKSPACE_NAME_FORMAT
 from conductor.context import Context
-from conductor.task_identifier import TaskIdentifier
+from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskResponse
 from conductor.errors import InternalError
+from conductor.execution.executor import Executor
+from conductor.execution.operation_state import OperationState
+from conductor.execution.ops.run_task_executable import RunTaskExecutable
+from conductor.execution.plan import ExecutionPlan
+from conductor.execution.version_index import Version
+from conductor.task_identifier import TaskIdentifier
+from conductor.task_types.run import RunCommand, RunExperiment
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +27,8 @@ class Maestro(MaestroInterface):
 
     def __init__(self, maestro_root: pathlib.Path) -> None:
         self._maestro_root = maestro_root
+        # Stores the contexts for each workspace. This allows for context reuse.
+        self._contexts: Dict[pathlib.Path, Context] = {}
 
     async def unpack_bundle(self, bundle_path: pathlib.Path) -> str:
         bundle_name = bundle_path.stem
@@ -46,6 +55,7 @@ class Maestro(MaestroInterface):
         workspace_name: str,
         project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
+        dep_versions: Dict[TaskIdentifier, Version],
     ) -> ExecuteTaskResponse:
         workspace_path = (
             self._maestro_root / MAESTRO_WORKSPACE_LOCATION / workspace_name
@@ -59,9 +69,64 @@ class Maestro(MaestroInterface):
                 details=f"Project root {project_root} does not exist in workspace {workspace_name}."
             )
 
-        _ctx = Context(full_project_root)
         start_timestamp = int(time.time())
-        # NOTE: Implement task execution.
+
+        # 1. Load and parse this task's dependencies.
+        ctx = self._get_context(full_project_root)
+        ctx.task_index.load_transitive_closure(task_identifier)
+
+        # 2. Assemble the paths to the task's dependencies' outputs.
+        task_to_run = ctx.task_index.get_task(task_identifier)
+        if not (
+            isinstance(task_to_run, RunExperiment)
+            or isinstance(task_to_run, RunCommand)
+        ):
+            raise InternalError(
+                details=f"Task {task_identifier} is not a run_experiment() or run_command() task."
+            )
+
+        deps_output_paths = []
+        for dep_id in task_to_run.deps:
+            dep_task = ctx.task_index.get_task(dep_id)
+            if dep_id in dep_versions:
+                version = dep_versions[dep_id]
+            else:
+                version = None
+            output_path = dep_task.get_specific_output_path(ctx, version)
+            if output_path is not None:
+                deps_output_paths.append(output_path)
+
+        # 3. Create the task execution operation.
+        output_path = task_to_run.get_output_path(ctx)
+        assert output_path is not None
+        # NOTE: Set the options flags appropriately.
+        op = RunTaskExecutable(
+            initial_state=OperationState.QUEUED,
+            task=task_to_run,
+            identifier=task_identifier,
+            run=task_to_run.raw_run,
+            args=task_to_run.args,
+            options=task_to_run.options,
+            working_path=task_to_run.get_working_path(ctx),
+            output_path=output_path,
+            deps_output_paths=deps_output_paths,
+            record_output=True,
+            version_to_record=None,
+            serialize_args_options=True,
+            parallelizable=task_to_run.parallelizable,
+        )
+
+        # 4. Run the task.
+        plan = ExecutionPlan(
+            task_to_run=task_to_run,
+            all_ops=[op],
+            initial_ops=[op],
+            cached_tasks=[],
+            num_tasks_to_run=1,
+        )
+        executor = Executor(execution_slots=1, silent=True)
+        executor.run_plan(plan, ctx)
+
         end_timestamp = int(time.time())
         return ExecuteTaskResponse(
             start_timestamp=start_timestamp, end_timestamp=end_timestamp
@@ -72,6 +137,11 @@ class Maestro(MaestroInterface):
         loop = asyncio.get_running_loop()
         loop.create_task(_orchestrate_shutdown())
         return "OK"
+
+    def _get_context(self, full_project_root: pathlib.Path) -> Context:
+        if full_project_root not in self._contexts:
+            self._contexts[full_project_root] = Context(full_project_root)
+        return self._contexts[full_project_root]
 
 
 async def _orchestrate_shutdown() -> None:
