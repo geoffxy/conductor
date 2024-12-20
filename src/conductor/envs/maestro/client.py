@@ -1,6 +1,6 @@
 import grpc
 import pathlib
-from typing import Optional
+from typing import Dict, Optional
 
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
@@ -8,6 +8,7 @@ from conductor.envs.maestro.interface import ExecuteTaskResponse
 from conductor.task_identifier import TaskIdentifier
 from conductor.errors import ConductorError
 from conductor.errors.generated import ERRORS_BY_CODE
+from conductor.execution.version_index import Version
 
 
 class MaestroGrpcClient:
@@ -55,16 +56,23 @@ class MaestroGrpcClient:
     def execute_task(
         self,
         workspace_name: str,
-        project_root: pathlib.Path,
+        workspace_rel_project_root: pathlib.Path,
         task_identifier: TaskIdentifier,
+        dep_versions: Dict[TaskIdentifier, Version],
     ) -> ExecuteTaskResponse:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.ExecuteTaskRequest(
             workspace_name=workspace_name,
-            project_root=str(project_root),
+            project_root=str(workspace_rel_project_root),
             task_identifier=str(task_identifier),
         )
+        for task_id, version in dep_versions.items():
+            dv = msg.dep_versions.add()
+            dv.task_identifier = str(task_id)
+            dv.version.timestamp = version.timestamp
+            if version.commit_hash is not None:
+                dv.version.commit_hash = version.commit_hash
         result = self._stub.ExecuteTask(msg)
         if result.WhichOneof("result") == "error":
             raise _pb_to_error(result.error)
