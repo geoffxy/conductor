@@ -21,7 +21,7 @@ def test_archive_restore(tmp_path: pathlib.Path):
     archive_name = None
     orig_archive_path = None
     for file in cond.output_path.iterdir():
-        if file.name.endswith(".tar.gz"):
+        if file.name.endswith(".tar.zst"):
             found_archive = True
             archive_name = file.name
             orig_archive_path = file
@@ -48,7 +48,7 @@ def test_archive_restore(tmp_path: pathlib.Path):
 
 def test_restore_invalid(tmp_path: pathlib.Path):
     cond = ConductorRunner.from_template(tmp_path, EXAMPLE_TEMPLATES["hello_world"])
-    result = cond.restore(cond.output_path / "non_existent.tar.gz")
+    result = cond.restore(cond.output_path / "non_existent.tar.zst")
     assert result.returncode != 0
 
 
@@ -57,7 +57,7 @@ def test_archive_output(tmp_path: pathlib.Path):
     result = cond.run("//:hello_world")
     assert result.returncode == 0
 
-    output_archive = cond.project_root / "custom.tar.gz"
+    output_archive = cond.project_root / "custom.tar.zst"
     assert not output_archive.exists()
     result = cond.archive("//:hello_world", output_path=output_archive, latest=False)
     assert result.returncode == 0
@@ -77,7 +77,7 @@ def test_archive_output_dir(tmp_path: pathlib.Path):
     # Conductor-provided name
     archive_found = False
     for file in cond.project_root.iterdir():
-        if file.name.startswith("cond-archive") and file.name.endswith(".tar.gz"):
+        if file.name.startswith("cond-archive") and file.name.endswith(".tar.zst"):
             archive_found = True
             break
     assert archive_found
@@ -109,7 +109,7 @@ def test_archive_restore_latest(tmp_path: pathlib.Path):
     assert count_task_outputs(cond.output_path) == 2
 
     # Archive the latest only
-    output_archive = cond.project_root / "latest.tar.gz"
+    output_archive = cond.project_root / "latest.tar.zst"
     assert not output_archive.exists()
     result = cond.archive("//:hello_world", output_path=output_archive, latest=True)
     assert result.returncode == 0

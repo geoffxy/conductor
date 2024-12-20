@@ -172,6 +172,46 @@ class VersionIndex:
             for row in cursor
         ]
 
+    def get_all_unversioned(self) -> List[TaskIdentifier]:
+        try:
+            cursor = self._conn.cursor()
+            cursor.execute(q.get_unversioned_tasks)
+            return [TaskIdentifier.from_str(row[0]) for row in cursor]
+        except sqlite3.OperationalError:
+            # The unversioned table does not exist, so there are no unversioned tasks.
+            # We create the unversioned table only when we add unversioned tasks.
+            return []
+
+    def get_versioned_tasks(
+        self, tasks: Optional[List[TaskIdentifier]], latest_only: bool
+    ) -> List[Tuple[TaskIdentifier, Version]]:
+        cursor = self._conn.cursor()
+        if tasks is None:
+            if latest_only:
+                cursor.execute(q.all_entries_latest)
+            else:
+                cursor.execute(q.all_entries)
+            return [
+                (TaskIdentifier.from_str(row[0]), self._version_from_row(row[1:]))
+                for row in cursor
+            ]
+
+        else:
+            results = []
+            for task_id in tasks:
+                if latest_only:
+                    cursor.execute(q.latest_entry_for_task, (str(task_id),))
+                else:
+                    cursor.execute(q.all_entries_for_task, (str(task_id),))
+                for row in cursor:
+                    results.append(
+                        (
+                            TaskIdentifier.from_str(row[0]),
+                            self._version_from_row(row[1:]),
+                        )
+                    )
+            return results
+
     def copy_entries_to(
         self,
         dest: "VersionIndex",
@@ -217,6 +257,16 @@ class VersionIndex:
         """
         cursor = self._conn.cursor()
         cursor.executemany(q.insert_new_version, rows)
+        return cursor.rowcount
+
+    def bulk_load_unversioned(self, task_ids: Iterable[TaskIdentifier]) -> int:
+        """
+        Load the unversioned task IDs into the index and return the number loaded.
+        """
+        cursor = self._conn.cursor()
+        cursor.execute(q.create_unversioned_table)
+        rows = [(str(task_id),) for task_id in task_ids]
+        cursor.executemany(q.add_unversioned_task, rows)
         return cursor.rowcount
 
     def commit_changes(self):

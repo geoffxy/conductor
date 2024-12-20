@@ -1,21 +1,18 @@
 import pathlib
 import datetime
-import subprocess
 from typing import List, Optional
 
 import conductor.filename as f
-from conductor.config import ARCHIVE_VERSION_INDEX
 from conductor.context import Context
 from conductor.errors import (
-    CreateArchiveFailed,
     OutputFileExists,
     OutputPathDoesNotExist,
     NoTaskOutputsToArchive,
 )
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
-from conductor.execution.version_index import VersionIndex
 from conductor.utils.user_code import cli_command
+from conductor.utils.output_archiving import create_archive
 
 
 def register_command(subparsers):
@@ -105,45 +102,6 @@ def compute_tasks_to_archive(
     return relevant_tasks
 
 
-def create_archive(
-    ctx: Context,
-    archive_index: VersionIndex,
-    output_archive_path: pathlib.Path,
-    archive_index_path: pathlib.Path,
-) -> None:
-    output_dirs_str = [
-        str(
-            pathlib.Path(
-                task_id.path,
-                f.task_output_dir(task_id, version),
-            )
-        )
-        for task_id, version in archive_index.get_all_versions()
-    ]
-
-    try:
-        process = subprocess.Popen(
-            [
-                "tar",
-                "czf",  # Create a new archive and use gzip to compress
-                str(output_archive_path),
-                "-C",  # Files to put in the archive are relative to `ctx.output_path`
-                str(ctx.output_path),
-                str(archive_index_path.relative_to(ctx.output_path)),
-                *output_dirs_str,
-            ],
-            shell=False,
-        )
-        process.wait()
-        if process.returncode != 0:
-            raise CreateArchiveFailed().add_extra_context(
-                "The tar utility returned a non-zero error code."
-            )
-
-    except OSError as ex:
-        raise CreateArchiveFailed().add_extra_context(str(ex))
-
-
 @cli_command
 def main(args):
     ctx = Context.from_cwd()
@@ -155,17 +113,13 @@ def main(args):
         raise NoTaskOutputsToArchive()
 
     try:
-        archive_index_path = pathlib.Path(ctx.output_path, ARCHIVE_VERSION_INDEX)
-        archive_index_path.unlink(missing_ok=True)
-        archive_index = VersionIndex.create_or_load(archive_index_path)
-        total_entry_count = ctx.version_index.copy_entries_to(
-            dest=archive_index, tasks=tasks_to_archive, latest_only=args.latest
+        tasks_to_archive_with_versions = ctx.version_index.get_versioned_tasks(
+            tasks=tasks_to_archive, latest_only=args.latest
         )
-        if total_entry_count == 0:
+        if len(tasks_to_archive_with_versions) == 0:
             raise NoTaskOutputsToArchive()
 
-        archive_index.commit_changes()
-        create_archive(ctx, archive_index, output_archive_path, archive_index_path)
+        create_archive(ctx, tasks_to_archive_with_versions, output_archive_path)
 
         # Compute a relative path to the current working directory, if possible
         try:
@@ -177,6 +131,3 @@ def main(args):
     except:
         output_archive_path.unlink(missing_ok=True)
         raise
-
-    finally:
-        archive_index_path.unlink(missing_ok=True)

@@ -8,6 +8,15 @@ create_table = """
   )
 """
 
+# Used when archiving non-versioned task outputs (usually for transport to/from
+# a remote environment).
+create_unversioned_table = """
+  CREATE TABLE IF NOT EXISTS unversioned (
+    task_identifier TEXT NOT NULL,
+    PRIMARY KEY (task_identifier)
+  )
+"""
+
 set_format_version = "PRAGMA user_version = {version:d}"
 
 get_format_version = "PRAGMA user_version"
@@ -99,6 +108,14 @@ all_versions = """
     has_uncommitted_changes
   FROM
     version_index
+"""
+
+add_unversioned_task = """
+  INSERT INTO unversioned (task_identifier) VALUES (?)
+"""
+
+get_unversioned_tasks = """
+  SELECT task_identifier FROM unversioned
 """
 
 

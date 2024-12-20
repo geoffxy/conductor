@@ -42,7 +42,7 @@ TASK_NAME_ENV_VARIABLE_NAME = "COND_NAME"
 SLOT_ENV_VARIABLE_NAME = "COND_SLOT"
 
 # A template for the default name of a Conductor archive.
-ARCHIVE_FILE_NAME_TEMPLATE = "cond-archive+{timestamp}.tar.gz"
+ARCHIVE_FILE_NAME_TEMPLATE = "cond-archive+{timestamp}.tar.zst"
 
 # The file name of the version index used in a Conductor archive.
 ARCHIVE_VERSION_INDEX = "version_index_archive.sqlite"
