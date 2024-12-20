@@ -195,6 +195,22 @@ class VersionIndex:
             insert_count += dest.bulk_load(cursor)
         return insert_count
 
+    @staticmethod
+    def copy_specific_entries_to(
+        dest: "VersionIndex", entries: List[Tuple[TaskIdentifier, Version]]
+    ) -> int:
+        values = []
+        for task_id, version in entries:
+            values.append(
+                (
+                    str(task_id),
+                    version.timestamp,
+                    version.commit_hash,
+                    version.has_uncommitted_changes,
+                )
+            )
+        return dest.bulk_load(values)
+
     def bulk_load(self, rows: Iterable) -> int:
         """
         Load the rows into the index and return the number loaded

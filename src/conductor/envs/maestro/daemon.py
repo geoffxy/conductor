@@ -148,6 +148,8 @@ class Maestro(MaestroInterface):
         )
         executor = Executor(execution_slots=1, silent=True)
         executor.run_plan(plan, ctx)
+        # Make sure any new versions are committed.
+        ctx.version_index.commit_changes()
 
         end_timestamp = int(time.time())
         return ExecuteTaskResponse(
