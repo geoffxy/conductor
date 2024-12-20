@@ -67,9 +67,9 @@ def create_archive(
         process = subprocess.Popen(
             [
                 "tar",
-                "cf",
-                "--use-compress-program=zstdmt",
+                "-cf",
                 str(output_archive_path),
+                "--use-compress-program=zstdmt",
                 "-C",  # Files to put in the archive are relative to `ctx.output_path`
                 str(ctx.output_path),
                 str(archive_index_path.relative_to(ctx.output_path)),

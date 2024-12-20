@@ -9,6 +9,7 @@ src/conductor_cli.egg-info
 .mypy_cache
 build
 dist
+env
 
 cond-out
 

@@ -26,6 +26,7 @@ exclude = '''
   | src/conductor/errors/generated.py
   | src/conductor/envs/proto_gen/
   | explorer/
+  | env/
 )
 '''
 
