@@ -184,6 +184,12 @@
     The provided archive contains task output(s) that already exist in the output
     directory '{output_dir}'.
 
+4007:
+  name: UnsupportedArchiveType
+  message: >-
+    The provided archive file was compressed as {archive_type}, which is not
+    supported on your platform.
+
 
 # General Conductor errors (error code 5xxx)
 5001:

@@ -88,8 +88,13 @@ class ConductorRunner:
             cmd.append("--latest")
         return self._run_command(cmd)
 
-    def restore(self, archive_path: pathlib.Path) -> subprocess.CompletedProcess:
-        return self._run_command(["restore", str(archive_path)])
+    def restore(
+        self, archive_path: pathlib.Path, strict: bool
+    ) -> subprocess.CompletedProcess:
+        cmd = ["restore", str(archive_path)]
+        if strict:
+            cmd.append("--strict")
+        return self._run_command(cmd)
 
     def gc(
         self, dry_run: bool = False, verbose: bool = False
