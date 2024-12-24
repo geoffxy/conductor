@@ -1,7 +1,12 @@
 import pathlib
 import shutil
 
-from .conductor_runner import ConductorRunner, count_task_outputs, EXAMPLE_TEMPLATES
+from .conductor_runner import (
+    ConductorRunner,
+    count_task_outputs,
+    EXAMPLE_TEMPLATES,
+    FIXTURE_TEMPLATES,
+)
 from conductor.utils.output_archiving import platform_archive_type
 
 
@@ -138,3 +143,54 @@ def test_archive_restore_latest(tmp_path: pathlib.Path):
     result = cond.restore(output_archive, strict=True)
     assert result.returncode == 0
     assert count_task_outputs(cond.output_path) == 1
+
+
+def test_partial_archive_restore(tmp_path: pathlib.Path):
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["experiments"])
+    result = cond.run("//sweep:threads-args-1")
+    assert result.returncode == 0
+
+    # Make an archive with just this first result.
+    expected_archive_type = platform_archive_type()
+    expected_extension = expected_archive_type.extension()
+    output_archive1 = cond.project_root / f"partial1.tar.{expected_extension}"
+    assert not output_archive1.exists()
+    result = cond.archive(
+        "//sweep:threads-args", output_path=output_archive1, latest=False
+    )
+    assert result.returncode == 0
+    assert output_archive1.exists() and output_archive1.is_file()
+
+    # Run the second experiment.
+    result = cond.run("//sweep:threads-args-2")
+    assert result.returncode == 0
+
+    # Make an archive with both results.
+    output_archive2 = cond.project_root / f"partial2.tar.{expected_extension}"
+    assert not output_archive2.exists()
+    result = cond.archive(
+        "//sweep:threads-args", output_path=output_archive2, latest=False
+    )
+    assert result.returncode == 0
+    assert output_archive2.exists() and output_archive2.is_file()
+
+    shutil.rmtree(cond.output_path)
+    expected_task_out = cond.output_path / "sweep"
+
+    # Restore the first archive - it should succeed.
+    result = cond.restore(output_archive1, strict=False)
+    assert result.returncode == 0
+    assert count_task_outputs(expected_task_out) == 1
+
+    # Restore the second archive - on strict mode it should fail.
+    result = cond.restore(output_archive2, strict=True)
+    assert result.returncode != 0
+    assert count_task_outputs(expected_task_out) == 1
+
+    # Restore on non-strict mode.
+    result = cond.restore(output_archive2, strict=False)
+    if result.returncode != 0:
+        print(result.stdout.decode("utf-8"))
+        print(result.stderr.decode("utf-8"))
+    assert result.returncode == 0
+    assert count_task_outputs(expected_task_out) == 2

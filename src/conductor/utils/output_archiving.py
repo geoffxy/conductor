@@ -150,6 +150,7 @@ def restore_archive(
         archive_version_index_path = staging_path / ARCHIVE_VERSION_INDEX
         archive_version_index = VersionIndex.create_or_load(archive_version_index_path)
 
+        successful_restore_dirs: List[pathlib.Path] = []
         # Copy over versioned tasks, skipping the ones that already exist.
         for task_id, version in archive_version_index.get_all_versions():
             insert_count = ctx.version_index.insert_output_version(
@@ -158,9 +159,15 @@ def restore_archive(
             if insert_count == 0:
                 # Version already exists in the current version index.
                 if expect_no_duplicates:
+                    # We should not have duplicates, so we raise an error.
+                    # NOTE: We clear the successful restore directories before
+                    # raising the error to keep the output directory clean.
+                    for d in successful_restore_dirs:
+                        shutil.rmtree(d, ignore_errors=True)
                     raise DuplicateTaskOutput(output_dir=str(ctx.output_path))
-                # We skip copying over this task.
-                continue
+                else:
+                    # We skip copying over this task.
+                    continue
 
             src_task_path = pathlib.Path(
                 staging_path, task_id.path, f.task_output_dir(task_id, version)
@@ -182,6 +189,7 @@ def restore_archive(
                         str(task_id), str(version)
                     )
                 )
+            successful_restore_dirs.append(dest_task_path)
 
         # Copy over unversioned tasks. We always blindly copy over these outputs.
         for task_id in archive_version_index.get_all_unversioned():
@@ -198,7 +206,7 @@ def restore_archive(
                 ctx.output_path, task_id.path, f.task_output_dir(task_id)
             )
             dest_task_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(src_task_path, dest_task_path)
+            shutil.copytree(src_task_path, dest_task_path, dirs_exist_ok=True)
             if not dest_task_path.is_dir():
                 raise ArchiveFileInvalid().add_extra_context(
                     "Missing copied archived task output for '{}'.".format(str(task_id))
