@@ -1,26 +1,57 @@
+import enum
 import pathlib
+import platform
 import subprocess
 import shutil
-import sqlite3
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 import conductor.filename as f
 from conductor.config import ARCHIVE_VERSION_INDEX, ARCHIVE_STAGING
-from conductor.context import Context
 from conductor.errors import (
     InternalError,
     CreateArchiveFailed,
     ArchiveFileInvalid,
     DuplicateTaskOutput,
+    UnsupportedPlatform,
+    UnsupportedArchiveType,
 )
 from conductor.execution.version_index import VersionIndex, Version
 from conductor.task_identifier import TaskIdentifier
 
+if TYPE_CHECKING:
+    from conductor.context import Context
+
+
+class ArchiveType(enum.Enum):
+    Gzip = "gzip"
+    Zstd = "zstdmt"
+
+    def extension(self):
+        if self == ArchiveType.Gzip:
+            return "gz"
+        elif self == ArchiveType.Zstd:
+            return "zst"
+        else:
+            raise InternalError(details="Unknown archive type.")
+
+
+def platform_archive_type() -> ArchiveType:
+    system = platform.system()
+    if system == "Linux":
+        return ArchiveType.Zstd
+    elif system == "Darwin":
+        return ArchiveType.Gzip
+    else:
+        # Windows is unsupported. We check for platform support at the beginning
+        # of all Conductor commands.
+        raise UnsupportedPlatform()
+
 
 def create_archive(
-    ctx: Context,
+    ctx: "Context",
     tasks_to_archive: List[Tuple[TaskIdentifier, Optional[Version]]],
     output_archive_path: pathlib.Path,
+    archive_type: ArchiveType,
 ) -> None:
     """
     This utility is used to create an archive of the output directories of the
@@ -72,21 +103,19 @@ def create_archive(
             )
 
         # Create the archive.
-        process = subprocess.Popen(
-            [
-                "tar",
-                "-cf",
-                str(output_archive_path),
-                f"--use-compress-program={_compress_program(output_archive_path)}",
-                "-C",  # Files to put in the archive are relative to `ctx.output_path`
-                str(ctx.output_path),
-                str(archive_index_path.relative_to(ctx.output_path)),
-                *output_dirs_str,
-            ],
-            shell=False,
-        )
-        process.wait()
-        if process.returncode != 0:
+        process_args = [
+            "tar",
+            "-cf",
+            str(output_archive_path),
+            "--use-compress-program",
+            archive_type.value,
+            "-C",  # Files to put in the archive are relative to `ctx.output_path`
+            str(ctx.output_path),
+            str(archive_index_path.relative_to(ctx.output_path)),
+            *output_dirs_str,
+        ]
+        result = subprocess.run(process_args, check=False, capture_output=True)
+        if result.returncode != 0:
             raise CreateArchiveFailed().add_extra_context(
                 "The tar utility returned a non-zero error code."
             )
@@ -96,7 +125,12 @@ def create_archive(
         archive_index_path.unlink(missing_ok=True)
 
 
-def restore_archive(ctx: Context, archive_path: pathlib.Path) -> None:
+def restore_archive(
+    ctx: "Context",
+    archive_path: pathlib.Path,
+    archive_type: Optional[ArchiveType] = None,
+    expect_no_duplicates: bool = False,
+) -> None:
     """
     This utility is used to restore the output directories of tasks from an
     archive created by `create_archive`.
@@ -106,22 +140,28 @@ def restore_archive(ctx: Context, archive_path: pathlib.Path) -> None:
         # Extract the archive to a staging location.
         staging_path = ctx.output_path / ARCHIVE_STAGING
         staging_path.mkdir(parents=True, exist_ok=True)
-        _extract_archive(archive_path, staging_path)
+        if archive_type is None:
+            archive_type = _infer_compress_program(archive_path)
+        if not _supports_compress_program(archive_type):
+            raise UnsupportedArchiveType(archive_type=archive_type.value)
+        _extract_archive(archive_path, staging_path, archive_type)
 
         # Load the archive version index.
         archive_version_index_path = staging_path / ARCHIVE_VERSION_INDEX
         archive_version_index = VersionIndex.create_or_load(archive_version_index_path)
 
-        # Transfer the version index entries to the current version index.
-        try:
-            archive_version_index.copy_entries_to(
-                dest=ctx.version_index, tasks=None, latest_only=False
-            )
-        except sqlite3.IntegrityError as ex:
-            raise DuplicateTaskOutput(output_dir=str(ctx.output_path)) from ex
-
-        # Copy over versioned tasks.
+        # Copy over versioned tasks, skipping the ones that already exist.
         for task_id, version in archive_version_index.get_all_versions():
+            insert_count = ctx.version_index.insert_output_version(
+                task_id, version, unchecked=True
+            )
+            if insert_count == 0:
+                # Version already exists in the current version index.
+                if expect_no_duplicates:
+                    raise DuplicateTaskOutput(output_dir=str(ctx.output_path))
+                # We skip copying over this task.
+                continue
+
             src_task_path = pathlib.Path(
                 staging_path, task_id.path, f.task_output_dir(task_id, version)
             )
@@ -143,7 +183,7 @@ def restore_archive(ctx: Context, archive_path: pathlib.Path) -> None:
                     )
                 )
 
-        # Copy over unversioned tasks.
+        # Copy over unversioned tasks. We always blindly copy over these outputs.
         for task_id in archive_version_index.get_all_unversioned():
             src_task_path = pathlib.Path(
                 staging_path, task_id.path, f.task_output_dir(task_id)
@@ -177,21 +217,26 @@ def restore_archive(ctx: Context, archive_path: pathlib.Path) -> None:
         shutil.rmtree(staging_path, ignore_errors=True)
 
 
-def _extract_archive(archive_file: pathlib.Path, staging_path: pathlib.Path):
+def _extract_archive(
+    archive_file: pathlib.Path, staging_path: pathlib.Path, archive_type: ArchiveType
+) -> None:
     try:
-        process = subprocess.Popen(
+        process_args = [
+            "tar",
+            "-xf",
+            str(archive_file),
+        ]
+        if archive_type == ArchiveType.Zstd:
+            process_args.append("--use-compress-program")
+            process_args.append(archive_type.value)
+        process_args.extend(
             [
-                "tar",
-                "-xf",
-                str(archive_file),
-                f"--use-compress-program={_compress_program(archive_file)}",
                 "-C",
                 str(staging_path),
-            ],
-            shell=False,
+            ]
         )
-        process.wait()
-        if process.returncode != 0:
+        result = subprocess.run(process_args, check=False, capture_output=True)
+        if result.returncode != 0:
             raise ArchiveFileInvalid().add_extra_context(
                 "The tar utility returned a non-zero error code."
             )
@@ -200,11 +245,22 @@ def _extract_archive(archive_file: pathlib.Path, staging_path: pathlib.Path):
         raise ArchiveFileInvalid().add_extra_context(str(ex))
 
 
-def _compress_program(archive_file: pathlib.Path) -> str:
+def _infer_compress_program(archive_file: pathlib.Path) -> ArchiveType:
     if archive_file.suffix == ".gz":
         # This is a heuristic we use to support legacy Conductor archives (which
-        # were gzip-compressed).
-        return "gzip"
+        # were gzip-compressed) or archives created on macOS (which does not
+        # have zstd installed by default).
+        return ArchiveType.Gzip
     else:
         # Conductor has switched to using zstd for compression.
-        return "zstdmt"
+        return ArchiveType.Zstd
+
+
+def _supports_compress_program(archive_type: ArchiveType) -> bool:
+    system = platform.system()
+    if archive_type == ArchiveType.Zstd:
+        return system == "Linux"
+    elif archive_type == ArchiveType.Gzip:
+        return system == "Darwin"
+    else:
+        return False

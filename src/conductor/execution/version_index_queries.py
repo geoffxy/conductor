@@ -33,6 +33,16 @@ insert_new_version = """
   VALUES (?, ?, ?, ?)
 """
 
+insert_new_version_unchecked = """
+  INSERT OR IGNORE INTO version_index (
+    task_identifier,
+    timestamp,
+    git_commit_hash,
+    has_uncommitted_changes
+  )
+  VALUES (?, ?, ?, ?)
+"""
+
 latest_task_version = """
   SELECT
     timestamp,

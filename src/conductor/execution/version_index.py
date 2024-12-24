@@ -151,11 +151,22 @@ class VersionIndex:
             timestamp, commit_hash, commit.has_changes if commit is not None else False
         )
 
-    def insert_output_version(self, task_identifier: TaskIdentifier, version: Version):
+    def insert_output_version(
+        self, task_identifier: TaskIdentifier, version: Version, unchecked: bool = False
+    ) -> int:
+        """
+        Insert a versioned task into the index and return the number of rows
+        inserted. This will return 0 rows inserted if the task version is
+        already in the index.
+        """
+        if unchecked:
+            query = q.insert_new_version_unchecked
+        else:
+            query = q.insert_new_version
         cursor = self._conn.cursor()
         has_uncommitted_changes = 1 if version.has_uncommitted_changes else 0
         cursor.execute(
-            q.insert_new_version,
+            query,
             (
                 str(task_identifier),
                 version.timestamp,
@@ -163,6 +174,7 @@ class VersionIndex:
                 has_uncommitted_changes,
             ),
         )
+        return cursor.rowcount
 
     def get_all_versions(self) -> List[Tuple[TaskIdentifier, Version]]:
         cursor = self._conn.cursor()
@@ -246,7 +258,7 @@ class VersionIndex:
                     str(task_id),
                     version.timestamp,
                     version.commit_hash,
-                    version.has_uncommitted_changes,
+                    1 if version.has_uncommitted_changes else 0,
                 )
             )
         return dest.bulk_load(values)

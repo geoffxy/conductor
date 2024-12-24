@@ -12,7 +12,11 @@ from conductor.errors import (
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
 from conductor.utils.user_code import cli_command
-from conductor.utils.output_archiving import create_archive
+from conductor.utils.output_archiving import (
+    create_archive,
+    platform_archive_type,
+    ArchiveType,
+)
 
 
 def register_command(subparsers):
@@ -46,16 +50,18 @@ def register_command(subparsers):
     parser.set_defaults(func=main)
 
 
-def generate_archive_name() -> str:
+def generate_archive_name(archive_type: ArchiveType) -> str:
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d+%H-%M-%S")
-    return f.archive(timestamp=timestamp)
+    return f.archive(timestamp=timestamp, archive_type=archive_type)
 
 
-def handle_output_path(ctx: Context, raw_output_path: Optional[str]) -> pathlib.Path:
+def handle_output_path(
+    ctx: Context, raw_output_path: Optional[str], archive_type: ArchiveType
+) -> pathlib.Path:
     if raw_output_path is None:
         output_path = pathlib.Path(
             ctx.output_path,
-            generate_archive_name(),
+            generate_archive_name(archive_type),
         )
         return output_path
 
@@ -67,7 +73,7 @@ def handle_output_path(ctx: Context, raw_output_path: Optional[str]) -> pathlib.
         if output_path.is_dir():
             # Corresponds to the case where the user provides a path to a
             # directory where the archive should be stored
-            return output_path / generate_archive_name()
+            return output_path / generate_archive_name(archive_type)
         raise OutputFileExists()
 
     elif output_path.parent.exists() and output_path.parent.is_dir():
@@ -105,7 +111,8 @@ def compute_tasks_to_archive(
 @cli_command
 def main(args):
     ctx = Context.from_cwd()
-    output_archive_path = handle_output_path(ctx, args.output)
+    archive_type = platform_archive_type()
+    output_archive_path = handle_output_path(ctx, args.output, archive_type)
 
     # If `None`, we should archive all tasks
     tasks_to_archive = compute_tasks_to_archive(ctx, args.task_identifier)
@@ -119,7 +126,9 @@ def main(args):
         if len(tasks_to_archive_with_versions) == 0:
             raise NoTaskOutputsToArchive()
 
-        create_archive(ctx, tasks_to_archive_with_versions, output_archive_path)
+        create_archive(
+            ctx, tasks_to_archive_with_versions, output_archive_path, archive_type
+        )
 
         # Compute a relative path to the current working directory, if possible
         try:

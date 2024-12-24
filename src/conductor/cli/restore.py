@@ -1,5 +1,4 @@
 import pathlib
-import subprocess
 
 from conductor.context import Context
 from conductor.errors import ArchiveFileInvalid
@@ -17,23 +16,12 @@ def register_command(subparsers):
         type=str,
         help="Path to the archive file to restore.",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="If set, the restore operation will fail if any task output is already present.",
+    )
     parser.set_defaults(func=main)
-
-
-def extract_archive(archive_file: pathlib.Path, staging_path: pathlib.Path):
-    try:
-        process = subprocess.Popen(
-            ["tar", "xzf", str(archive_file), "-C", str(staging_path)],
-            shell=False,
-        )
-        process.wait()
-        if process.returncode != 0:
-            raise ArchiveFileInvalid().add_extra_context(
-                "The tar utility returned a non-zero error code."
-            )
-
-    except OSError as ex:
-        raise ArchiveFileInvalid().add_extra_context(str(ex))
 
 
 @cli_command
@@ -44,4 +32,4 @@ def main(args):
     if not archive_file.is_file():
         raise ArchiveFileInvalid()
 
-    restore_archive(ctx, archive_file)
+    restore_archive(ctx, archive_file, expect_no_duplicates=args.strict)

@@ -19,6 +19,13 @@ for more details about Conductor's archive and restore features.
 
 The path to the archive file to restore.
 
+### `--strict`
+
+By default, Conductor will only restore result versions that do not exist in
+your local results directory. If this flag is set, Conductor will abort the
+restore if any result versions in the archive already exist in your local
+results directory.
+
 ## Optional Arguments
 
 ### `-h` or `--help`

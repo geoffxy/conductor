@@ -554,6 +554,20 @@ class DuplicateTaskOutput(ConductorError):
         )
 
 
+class UnsupportedArchiveType(ConductorError):
+    error_code = 4007
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.archive_type = kwargs["archive_type"]
+
+    def _message(self):
+        return "The provided archive file was compressed as {archive_type}, which is not supported on your platform.".format(
+            archive_type=self.archive_type,
+        )
+
+
 class ConfigParseError(ConductorError):
     error_code = 5001
 
@@ -775,6 +789,7 @@ ERRORS_BY_CODE = {
     4004: CreateArchiveFailed,
     4005: ArchiveFileInvalid,
     4006: DuplicateTaskOutput,
+    4007: UnsupportedArchiveType,
     5001: ConfigParseError,
     5002: ConfigInvalidValue,
     5003: UnsupportedPlatform,
@@ -830,6 +845,7 @@ __all__ = [
     "CreateArchiveFailed",
     "ArchiveFileInvalid",
     "DuplicateTaskOutput",
+    "UnsupportedArchiveType",
     "ConfigParseError",
     "ConfigInvalidValue",
     "UnsupportedPlatform",
