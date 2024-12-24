@@ -12,7 +12,9 @@ from conductor.task_identifier import TaskIdentifier
 from conductor.utils.run_options import RunOptions, OptionValue
 
 
-def assert_serialized_cmdline(cmd_options: str, raw_options: Dict[str, OptionValue]):
+def assert_serialized_cmdline(
+    cmd_options: str, raw_options: Dict[str, OptionValue]
+) -> None:
     pieces = cmd_options.split(" ")
     assert len(pieces) == len(raw_options)
     for option in pieces:
@@ -27,7 +29,7 @@ def assert_serialized_cmdline(cmd_options: str, raw_options: Dict[str, OptionVal
 
 def assert_serialized_json(
     json_path: pathlib.Path, raw_options: Dict[str, OptionValue]
-):
+) -> None:
     assert json_path.is_file()
 
     with open(json_path, "r", encoding="UTF-8") as file:
@@ -35,7 +37,7 @@ def assert_serialized_json(
     assert loaded == raw_options
 
 
-def test_valid(tmp_path: pathlib.Path):
+def test_valid(tmp_path: pathlib.Path) -> None:
     simple: Dict[str, OptionValue] = {
         "hello": 1,
         "world": "hello",
@@ -57,7 +59,7 @@ def test_valid(tmp_path: pathlib.Path):
     assert_serialized_json(json_file, simple)
 
 
-def test_single_option(tmp_path: pathlib.Path):
+def test_single_option(tmp_path: pathlib.Path) -> None:
     single: Dict[str, OptionValue] = {
         "key": "value",
     }
@@ -76,7 +78,7 @@ def test_single_option(tmp_path: pathlib.Path):
     assert_serialized_json(json_file, single)
 
 
-def test_empty():
+def test_empty() -> None:
     empty: Dict[str, OptionValue] = {}
     identifier = TaskIdentifier.from_str("//test:ident")
     options = RunOptions.from_raw(identifier, empty)
@@ -84,7 +86,7 @@ def test_empty():
     assert options.serialize_cmdline() == ""
 
 
-def test_non_string_key():
+def test_non_string_key() -> None:
     numeric_key = {
         "hello": "world",
         3: "asd",
@@ -100,7 +102,7 @@ def test_non_string_key():
         RunOptions.from_raw(identifier, tuple_key)
 
 
-def test_non_primitive_value():
+def test_non_primitive_value() -> None:
     nested_value = {
         "hello": "world",
         "nested": {

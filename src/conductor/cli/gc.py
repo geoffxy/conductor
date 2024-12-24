@@ -14,7 +14,7 @@ _EXPERIMENT_TASK_REGEX = re.compile(
 _REGULAR_TASK_REGEX = re.compile(r"^(?P<name>[a-zA-Z0-9_-]+)\.task$")
 
 
-def register_command(subparsers):
+def register_command(subparsers) -> None:
     parser = subparsers.add_parser(
         "gc",
         help="Removes failed experiment task outputs.",
@@ -37,7 +37,7 @@ def register_command(subparsers):
 
 
 @cli_command
-def main(args):
+def main(args) -> None:
     ctx = Context.from_cwd()
     all_versions_list = ctx.version_index.get_all_versions()
     all_versions = {

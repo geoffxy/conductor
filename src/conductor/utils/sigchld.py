@@ -2,7 +2,7 @@ import contextlib
 import errno
 import os
 import signal
-from typing import List, Optional, Tuple  # pylint: disable=unused-import
+from typing import List, Optional, Tuple
 
 
 class SigchldHelper:
@@ -14,11 +14,11 @@ class SigchldHelper:
             SigchldHelper._Instance = SigchldHelper()
         return SigchldHelper._Instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Maps pids to return codes
         self._returncodes: List[Tuple[int, int]] = []
-        self._read_pipe = None
-        self._write_pipe = None
+        self._read_pipe: Optional[int] = None
+        self._write_pipe: Optional[int] = None
 
     @contextlib.contextmanager
     def track(self):
@@ -35,10 +35,12 @@ class SigchldHelper:
             self._read_pipe = None
 
     def wait(self) -> Tuple[int, int]:
+        assert self._read_pipe is not None
         _ = os.read(self._read_pipe, 1)
         return self._extract_any()
 
     def _add_returncode(self, pid: int, returncode: int) -> None:
+        assert self._write_pipe is not None
         self._returncodes.append((pid, returncode))
         os.write(self._write_pipe, b"\0")
 

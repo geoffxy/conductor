@@ -5,7 +5,7 @@ from conductor.task_identifier import TaskIdentifier
 from .base import TaskType
 
 if TYPE_CHECKING:
-    import conductor.context as c  # pylint: disable=unused-import
+    import conductor.context as c
 
 
 class Group(TaskType):
