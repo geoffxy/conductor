@@ -4,7 +4,7 @@ import subprocess
 from concurrent.futures import Future
 from typing import Optional, TextIO, IO
 
-import conductor.context as c  # pylint: disable=unused-import
+import conductor.context as c
 
 
 class RecordType(enum.Enum):

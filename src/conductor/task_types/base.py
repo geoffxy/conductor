@@ -6,7 +6,7 @@ from conductor.task_identifier import TaskIdentifier
 from conductor.execution.version_index import Version
 
 if TYPE_CHECKING:
-    import conductor.context as c  # pylint: disable=unused-import
+    import conductor.context as c
 
 
 class TaskType:
