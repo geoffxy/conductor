@@ -269,6 +269,6 @@ def _supports_compress_program(archive_type: ArchiveType) -> bool:
     if archive_type == ArchiveType.Zstd:
         return system == "Linux"
     elif archive_type == ArchiveType.Gzip:
-        return system == "Darwin"
+        return system == "Linux" or system == "Darwin"
     else:
         return False
