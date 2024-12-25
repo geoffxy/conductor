@@ -11,9 +11,18 @@ class ExecuteTaskType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     TT_UNSPECIFIED: _ClassVar[ExecuteTaskType]
     TT_RUN_EXPERIMENT: _ClassVar[ExecuteTaskType]
     TT_RUN_COMMAND: _ClassVar[ExecuteTaskType]
+
+class ArchiveType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = ()
+    AT_UNSPECIFIED: _ClassVar[ArchiveType]
+    AT_GZIP: _ClassVar[ArchiveType]
+    AT_ZSTD: _ClassVar[ArchiveType]
 TT_UNSPECIFIED: ExecuteTaskType
 TT_RUN_EXPERIMENT: ExecuteTaskType
 TT_RUN_COMMAND: ExecuteTaskType
+AT_UNSPECIFIED: ArchiveType
+AT_GZIP: ArchiveType
+AT_ZSTD: ArchiveType
 
 class ConductorError(_message.Message):
     __slots__ = ("code", "kwargs", "file_context_path", "file_context_line_number", "extra_context")
@@ -116,14 +125,16 @@ class ExecuteTaskResult(_message.Message):
     def __init__(self, response: _Optional[_Union[ExecuteTaskResponse, _Mapping]] = ..., error: _Optional[_Union[ConductorError, _Mapping]] = ...) -> None: ...
 
 class UnpackTaskOutputsRequest(_message.Message):
-    __slots__ = ("workspace_name", "project_root", "task_archive_path")
+    __slots__ = ("workspace_name", "project_root", "task_archive_path", "archive_type")
     WORKSPACE_NAME_FIELD_NUMBER: _ClassVar[int]
     PROJECT_ROOT_FIELD_NUMBER: _ClassVar[int]
     TASK_ARCHIVE_PATH_FIELD_NUMBER: _ClassVar[int]
+    ARCHIVE_TYPE_FIELD_NUMBER: _ClassVar[int]
     workspace_name: str
     project_root: str
     task_archive_path: str
-    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_archive_path: _Optional[str] = ...) -> None: ...
+    archive_type: ArchiveType
+    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_archive_path: _Optional[str] = ..., archive_type: _Optional[_Union[ArchiveType, str]] = ...) -> None: ...
 
 class UnpackTaskOutputsResult(_message.Message):
     __slots__ = ("response", "error")
@@ -140,16 +151,18 @@ class UnpackTaskOutputsResponse(_message.Message):
     def __init__(self, num_unpacked_tasks: _Optional[int] = ...) -> None: ...
 
 class PackTaskOutputsRequest(_message.Message):
-    __slots__ = ("workspace_name", "project_root", "versioned_tasks", "unversioned_task_identifiers")
+    __slots__ = ("workspace_name", "project_root", "versioned_tasks", "unversioned_task_identifiers", "archive_type")
     WORKSPACE_NAME_FIELD_NUMBER: _ClassVar[int]
     PROJECT_ROOT_FIELD_NUMBER: _ClassVar[int]
     VERSIONED_TASKS_FIELD_NUMBER: _ClassVar[int]
     UNVERSIONED_TASK_IDENTIFIERS_FIELD_NUMBER: _ClassVar[int]
+    ARCHIVE_TYPE_FIELD_NUMBER: _ClassVar[int]
     workspace_name: str
     project_root: str
     versioned_tasks: _containers.RepeatedCompositeFieldContainer[TaskWithVersion]
     unversioned_task_identifiers: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., versioned_tasks: _Optional[_Iterable[_Union[TaskWithVersion, _Mapping]]] = ..., unversioned_task_identifiers: _Optional[_Iterable[str]] = ...) -> None: ...
+    archive_type: ArchiveType
+    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., versioned_tasks: _Optional[_Iterable[_Union[TaskWithVersion, _Mapping]]] = ..., unversioned_task_identifiers: _Optional[_Iterable[str]] = ..., archive_type: _Optional[_Union[ArchiveType, str]] = ...) -> None: ...
 
 class PackTaskOutputsResult(_message.Message):
     __slots__ = ("response", "error")

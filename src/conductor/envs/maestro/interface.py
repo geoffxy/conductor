@@ -3,6 +3,7 @@ import pathlib
 from typing import Dict, NamedTuple, List, Tuple, Optional
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.version_index import Version
+from conductor.utils.output_archiving import ArchiveType
 
 
 class ExecuteTaskResponse(NamedTuple):
@@ -45,6 +46,7 @@ class MaestroInterface:
         workspace_name: str,
         project_root: pathlib.Path,
         archive_path: pathlib.Path,
+        archive_type: ArchiveType,
     ) -> int:
         raise NotImplementedError
 
@@ -54,6 +56,7 @@ class MaestroInterface:
         project_root: pathlib.Path,
         versioned_tasks: List[Tuple[TaskIdentifier, Version]],
         unversioned_tasks: List[TaskIdentifier],
+        archive_type: ArchiveType,
     ) -> PackTaskOutputsResponse:
         raise NotImplementedError
 

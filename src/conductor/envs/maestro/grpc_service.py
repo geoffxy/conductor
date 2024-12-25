@@ -5,6 +5,7 @@ from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskType
 from conductor.errors import ConductorError, InternalError
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
+from conductor.utils.output_archiving import ArchiveType
 
 # pylint: disable=no-member
 # See https://github.com/protocolbuffers/protobuf/issues/10372
@@ -80,8 +81,9 @@ class MaestroGrpc(rpc.MaestroServicer):
             workspace_name = request.workspace_name
             project_root = pathlib.Path(request.project_root)
             archive_path = pathlib.Path(request.task_archive_path)
+            archive_type = _archive_type_from_pb(request.archive_type)
             num_unpacked_tasks = await self._maestro.unpack_task_outputs(
-                workspace_name, project_root, archive_path
+                workspace_name, project_root, archive_path, archive_type
             )
             return pb.UnpackTaskOutputsResult(
                 response=pb.UnpackTaskOutputsResponse(
@@ -97,6 +99,7 @@ class MaestroGrpc(rpc.MaestroServicer):
         try:
             workspace_name = request.workspace_name
             project_root = pathlib.Path(request.project_root)
+            archive_type = _archive_type_from_pb(request.archive_type)
             versioned_tasks = []
             for task in request.versioned_tasks:
                 task_id = TaskIdentifier.from_str(task.task_identifier)
@@ -111,7 +114,11 @@ class MaestroGrpc(rpc.MaestroServicer):
                 task_id = TaskIdentifier.from_str(task_id_str)
                 unversioned_tasks.append(task_id)
             response = await self._maestro.pack_task_outputs(
-                workspace_name, project_root, versioned_tasks, unversioned_tasks
+                workspace_name,
+                project_root,
+                versioned_tasks,
+                unversioned_tasks,
+                archive_type,
             )
             return pb.PackTaskOutputsResult(
                 response=pb.PackTaskOutputsResponse(
@@ -149,3 +156,11 @@ def _error_to_pb(ex: ConductorError) -> pb.ConductorError:
         error.extra_context = ex.extra_context
 
     return error
+
+
+def _archive_type_from_pb(at: pb.ArchiveType) -> ArchiveType:
+    if at == pb.AT_GZIP:
+        return ArchiveType.Gzip
+    if at == pb.AT_ZSTD:
+        return ArchiveType.Zstd
+    raise InternalError(details=f"Unsupported archive type {str(at)}.")

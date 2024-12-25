@@ -164,6 +164,7 @@ class Maestro(MaestroInterface):
         workspace_name: str,
         project_root: pathlib.Path,
         archive_path: pathlib.Path,
+        archive_type: ArchiveType,
     ) -> int:
         full_project_root = self._get_full_project_root(workspace_name, project_root)
         ctx = self._get_context(full_project_root)
@@ -177,7 +178,9 @@ class Maestro(MaestroInterface):
             raise InternalError(
                 details=f"Archive {archive_path} does not exist in the task transfer directory."
             )
-        return restore_archive(ctx, full_archive_path)
+        return restore_archive(
+            ctx, full_archive_path, archive_type, expect_no_duplicates=False
+        )
 
     async def pack_task_outputs(
         self,
@@ -185,6 +188,7 @@ class Maestro(MaestroInterface):
         project_root: pathlib.Path,
         versioned_tasks: List[Tuple[TaskIdentifier, Version]],
         unversioned_tasks: List[TaskIdentifier],
+        archive_type: ArchiveType,
     ) -> PackTaskOutputsResponse:
         full_project_root = self._get_full_project_root(workspace_name, project_root)
         ctx = self._get_context(full_project_root)
@@ -192,14 +196,14 @@ class Maestro(MaestroInterface):
             self._maestro_root / MAESTRO_TASK_TRANSFER_LOCATION / workspace_name
         )
         archive_dir.mkdir(parents=True, exist_ok=True)
-        archive_name = generate_archive_name(ArchiveType.Gzip)
+        archive_name = generate_archive_name(archive_type)
         full_archive_path = archive_dir / archive_name
 
         tasks_to_archive: List[Tuple[TaskIdentifier, Optional[Version]]] = (
             versioned_tasks + [(t, None) for t in unversioned_tasks]
         )
         num_packed = create_archive(
-            ctx, tasks_to_archive, full_archive_path, ArchiveType.Gzip
+            ctx, tasks_to_archive, full_archive_path, archive_type
         )
         return PackTaskOutputsResponse(
             num_packed_tasks=num_packed,

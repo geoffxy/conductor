@@ -82,6 +82,12 @@ enum ExecuteTaskType {
   TT_RUN_COMMAND = 2;
 }
 
+enum ArchiveType {
+  AT_UNSPECIFIED = 0;
+  AT_GZIP = 1;
+  AT_ZSTD = 2;
+}
+
 message TaskDependency {
   string task_identifier = 1;
   TaskVersion version = 2;
@@ -124,6 +130,9 @@ message UnpackTaskOutputsRequest {
 
   // The path to the archive containing the task outputs.
   string task_archive_path = 3;
+
+  // The type of archive to unpack.
+  ArchiveType archive_type = 4;
 }
 
 message UnpackTaskOutputsResult {
@@ -151,6 +160,9 @@ message PackTaskOutputsRequest {
 
   // The unversioned tasks to pack.
   repeated string unversioned_task_identifiers = 4;
+
+  // The type of archive to create.
+  ArchiveType archive_type = 5;
 }
 
 message PackTaskOutputsResult {

@@ -13,6 +13,7 @@ from conductor.task_identifier import TaskIdentifier
 from conductor.errors import ConductorError, InternalError
 from conductor.errors.generated import ERRORS_BY_CODE
 from conductor.execution.version_index import Version
+from conductor.utils.output_archiving import ArchiveType
 
 
 class MaestroGrpcClient:
@@ -110,6 +111,7 @@ class MaestroGrpcClient:
         workspace_name: str,
         workspace_rel_project_root: pathlib.Path,
         archive_path: pathlib.Path,
+        archive_type: ArchiveType,
     ) -> int:
         assert self._stub is not None
         # pylint: disable-next=no-member
@@ -117,6 +119,7 @@ class MaestroGrpcClient:
             workspace_name=workspace_name,
             project_root=str(workspace_rel_project_root),
             task_archive_path=str(archive_path),
+            archive_type=_archive_type_to_pb(archive_type),
         )
         result = self._stub.UnpackTaskOutputs(msg)
         if result.WhichOneof("result") == "error":
@@ -129,12 +132,14 @@ class MaestroGrpcClient:
         workspace_rel_project_root: pathlib.Path,
         versioned_tasks: List[Tuple[TaskIdentifier, Version]],
         unversioned_tasks: List[TaskIdentifier],
+        archive_type: ArchiveType,
     ) -> PackTaskOutputsResponse:
         assert self._stub is not None
         # pylint: disable-next=no-member
         msg = pb.PackTaskOutputsRequest(
             workspace_name=workspace_name,
             project_root=str(workspace_rel_project_root),
+            archive_type=_archive_type_to_pb(archive_type),
         )
         for task_id, version in versioned_tasks:
             vt = msg.versioned_tasks.add()
@@ -183,3 +188,14 @@ def _pb_to_error(ex: pb.ConductorError) -> ConductorError:
     if ex.extra_context is not None:
         error.add_extra_context(ex.extra_context)
     return error
+
+
+# pylint: disable-next=no-member
+def _archive_type_to_pb(archive_type: ArchiveType) -> pb.ArchiveType:
+    if archive_type == ArchiveType.Gzip:
+        # pylint: disable-next=no-member
+        return pb.AT_GZIP
+    elif archive_type == ArchiveType.Zstd:
+        # pylint: disable-next=no-member
+        return pb.AT_ZSTD
+    raise InternalError(details=f"Unsupported archive type {str(archive_type)}.")
