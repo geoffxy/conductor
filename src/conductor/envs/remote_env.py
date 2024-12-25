@@ -108,6 +108,21 @@ class RemoteEnv:
         self._connection.run(f"mkdir -p {str(full_remote_path.parent)}", hide=True)
         self._connection.put(str(local_path), str(full_remote_path))
 
+    def delete_file(self, remote_path: pathlib.Path) -> None:
+        """
+        Deletes a file in the remote environment.
+        """
+        full_remote_path = self._maestro_root / remote_path
+        self._connection.run(f"rm -f {str(full_remote_path)}", hide=True)
+
+    def pull_file(self, remote_path: pathlib.Path, local_path: pathlib.Path) -> None:
+        """
+        Pulls a file from the remote environment to the local machine. The
+        remote path should be a relative path to the Maestro root.
+        """
+        full_remote_path = self._maestro_root / remote_path
+        self._connection.get(str(full_remote_path), str(local_path))
+
     def shutdown(self) -> None:
         """
         Shuts down the remote environment. This terminates the Maestro daemon

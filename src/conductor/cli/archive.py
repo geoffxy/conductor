@@ -1,8 +1,6 @@
 import pathlib
-import datetime
 from typing import List, Optional
 
-import conductor.filename as f
 from conductor.context import Context
 from conductor.errors import (
     OutputFileExists,
@@ -13,6 +11,7 @@ from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
 from conductor.utils.user_code import cli_command
 from conductor.utils.output_archiving import (
+    generate_archive_name,
     create_archive,
     platform_archive_type,
     ArchiveType,
@@ -48,11 +47,6 @@ def register_command(subparsers):
         "the archivable tasks.",
     )
     parser.set_defaults(func=main)
-
-
-def generate_archive_name(archive_type: ArchiveType) -> str:
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d+%H-%M-%S")
-    return f.archive(timestamp=timestamp, archive_type=archive_type)
 
 
 def handle_output_path(
