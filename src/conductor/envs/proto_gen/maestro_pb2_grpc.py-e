@@ -35,20 +35,30 @@ class MaestroStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Ping = channel.unary_unary(
-                '/conductor.Maestro/Ping',
-                request_serializer=maestro__pb2.PingRequest.SerializeToString,
-                response_deserializer=maestro__pb2.PingResponse.FromString,
-                _registered_method=True)
         self.UnpackBundle = channel.unary_unary(
                 '/conductor.Maestro/UnpackBundle',
                 request_serializer=maestro__pb2.UnpackBundleRequest.SerializeToString,
-                response_deserializer=maestro__pb2.UnpackBundleResponse.FromString,
+                response_deserializer=maestro__pb2.UnpackBundleResult.FromString,
+                _registered_method=True)
+        self.ExecuteTask = channel.unary_unary(
+                '/conductor.Maestro/ExecuteTask',
+                request_serializer=maestro__pb2.ExecuteTaskRequest.SerializeToString,
+                response_deserializer=maestro__pb2.ExecuteTaskResult.FromString,
+                _registered_method=True)
+        self.UnpackTaskOutputs = channel.unary_unary(
+                '/conductor.Maestro/UnpackTaskOutputs',
+                request_serializer=maestro__pb2.UnpackTaskOutputsRequest.SerializeToString,
+                response_deserializer=maestro__pb2.UnpackTaskOutputsResult.FromString,
+                _registered_method=True)
+        self.PackTaskOutputs = channel.unary_unary(
+                '/conductor.Maestro/PackTaskOutputs',
+                request_serializer=maestro__pb2.PackTaskOutputsRequest.SerializeToString,
+                response_deserializer=maestro__pb2.PackTaskOutputsResult.FromString,
                 _registered_method=True)
         self.Shutdown = channel.unary_unary(
                 '/conductor.Maestro/Shutdown',
                 request_serializer=maestro__pb2.ShutdownRequest.SerializeToString,
-                response_deserializer=maestro__pb2.ShutdownResponse.FromString,
+                response_deserializer=maestro__pb2.ShutdownResult.FromString,
                 _registered_method=True)
 
 
@@ -56,15 +66,32 @@ class MaestroServicer(object):
     """Conductor's remote daemon service (Maestro).
     """
 
-    def Ping(self, request, context):
-        """A temporary RPC for testing purposes.
+    def UnpackBundle(self, request, context):
+        """Used to initialize a repository (workspace) for the current project.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def UnpackBundle(self, request, context):
-        """Used to initialize a repository (workspace) for the current project.
+    def ExecuteTask(self, request, context):
+        """Used to execute a Conductor task.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UnpackTaskOutputs(self, request, context):
+        """Used to unpack an archive containing task outputs. These are usually the
+        inputs required for a task that we intend to execute in this remote
+        environment.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def PackTaskOutputs(self, request, context):
+        """Used to pack task outputs into an archive. These are the outputs of a task
+        that we ran in this remote environment.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -80,20 +107,30 @@ class MaestroServicer(object):
 
 def add_MaestroServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Ping': grpc.unary_unary_rpc_method_handler(
-                    servicer.Ping,
-                    request_deserializer=maestro__pb2.PingRequest.FromString,
-                    response_serializer=maestro__pb2.PingResponse.SerializeToString,
-            ),
             'UnpackBundle': grpc.unary_unary_rpc_method_handler(
                     servicer.UnpackBundle,
                     request_deserializer=maestro__pb2.UnpackBundleRequest.FromString,
-                    response_serializer=maestro__pb2.UnpackBundleResponse.SerializeToString,
+                    response_serializer=maestro__pb2.UnpackBundleResult.SerializeToString,
+            ),
+            'ExecuteTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecuteTask,
+                    request_deserializer=maestro__pb2.ExecuteTaskRequest.FromString,
+                    response_serializer=maestro__pb2.ExecuteTaskResult.SerializeToString,
+            ),
+            'UnpackTaskOutputs': grpc.unary_unary_rpc_method_handler(
+                    servicer.UnpackTaskOutputs,
+                    request_deserializer=maestro__pb2.UnpackTaskOutputsRequest.FromString,
+                    response_serializer=maestro__pb2.UnpackTaskOutputsResult.SerializeToString,
+            ),
+            'PackTaskOutputs': grpc.unary_unary_rpc_method_handler(
+                    servicer.PackTaskOutputs,
+                    request_deserializer=maestro__pb2.PackTaskOutputsRequest.FromString,
+                    response_serializer=maestro__pb2.PackTaskOutputsResult.SerializeToString,
             ),
             'Shutdown': grpc.unary_unary_rpc_method_handler(
                     servicer.Shutdown,
                     request_deserializer=maestro__pb2.ShutdownRequest.FromString,
-                    response_serializer=maestro__pb2.ShutdownResponse.SerializeToString,
+                    response_serializer=maestro__pb2.ShutdownResult.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -106,33 +143,6 @@ def add_MaestroServicer_to_server(servicer, server):
 class Maestro(object):
     """Conductor's remote daemon service (Maestro).
     """
-
-    @staticmethod
-    def Ping(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/conductor.Maestro/Ping',
-            maestro__pb2.PingRequest.SerializeToString,
-            maestro__pb2.PingResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
 
     @staticmethod
     def UnpackBundle(request,
@@ -150,7 +160,88 @@ class Maestro(object):
             target,
             '/conductor.Maestro/UnpackBundle',
             maestro__pb2.UnpackBundleRequest.SerializeToString,
-            maestro__pb2.UnpackBundleResponse.FromString,
+            maestro__pb2.UnpackBundleResult.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ExecuteTask(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/conductor.Maestro/ExecuteTask',
+            maestro__pb2.ExecuteTaskRequest.SerializeToString,
+            maestro__pb2.ExecuteTaskResult.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UnpackTaskOutputs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/conductor.Maestro/UnpackTaskOutputs',
+            maestro__pb2.UnpackTaskOutputsRequest.SerializeToString,
+            maestro__pb2.UnpackTaskOutputsResult.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PackTaskOutputs(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/conductor.Maestro/PackTaskOutputs',
+            maestro__pb2.PackTaskOutputsRequest.SerializeToString,
+            maestro__pb2.PackTaskOutputsResult.FromString,
             options,
             channel_credentials,
             insecure,
@@ -177,7 +268,7 @@ class Maestro(object):
             target,
             '/conductor.Maestro/Shutdown',
             maestro__pb2.ShutdownRequest.SerializeToString,
-            maestro__pb2.ShutdownResponse.FromString,
+            maestro__pb2.ShutdownResult.FromString,
             options,
             channel_credentials,
             insecure,

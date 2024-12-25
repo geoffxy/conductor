@@ -10,6 +10,15 @@ service Maestro {
   // Used to execute a Conductor task.
   rpc ExecuteTask(ExecuteTaskRequest) returns (ExecuteTaskResult) {}
 
+  // Used to unpack an archive containing task outputs. These are usually the
+  // inputs required for a task that we intend to execute in this remote
+  // environment.
+  rpc UnpackTaskOutputs(UnpackTaskOutputsRequest) returns (UnpackTaskOutputsResult) {}
+
+  // Used to pack task outputs into an archive. These are the outputs of a task
+  // that we ran in this remote environment.
+  rpc PackTaskOutputs(PackTaskOutputsRequest) returns (PackTaskOutputsResult) {}
+
   // Tell the daemon to shut down.
   rpc Shutdown(ShutdownRequest) returns (ShutdownResult) {}
 }
@@ -83,9 +92,17 @@ message TaskVersion {
   string commit_hash = 2;
 }
 
+message TaskWithVersion {
+  string task_identifier = 1;
+  TaskVersion version = 2;
+}
+
 message ExecuteTaskResponse {
   uint64 start_timestamp = 1;
   uint64 end_timestamp = 2;
+  // If the task is a `run_experiment()` task, this will contain the result
+  // version. Otherwise, it will be empty.
+  TaskVersion result_version = 3;
 }
 
 message ExecuteTaskResult {
@@ -93,6 +110,59 @@ message ExecuteTaskResult {
     ExecuteTaskResponse response = 1;
     ConductorError error = 2;
   }
+}
+
+message UnpackTaskOutputsRequest {
+  // The workspace that contains this task.
+  string workspace_name = 1;
+
+  // A relative path to the Conductor project root within the workspace. The
+  // project root is not necessarily the same as the workspace root, but often
+  // can be the same.
+  string project_root = 2;
+
+  // The path to the archive containing the task outputs.
+  string task_archive_path = 3;
+}
+
+message UnpackTaskOutputsResult {
+  oneof result {
+    UnpackTaskOutputsResponse response = 1;
+    ConductorError error = 2;
+  }
+}
+
+message UnpackTaskOutputsResponse {
+  uint64 num_unpacked_tasks = 1;
+}
+
+message PackTaskOutputsRequest {
+  // The workspace that contains this task.
+  string workspace_name = 1;
+
+  // A relative path to the Conductor project root within the workspace. The
+  // project root is not necessarily the same as the workspace root, but often
+  // can be the same.
+  string project_root = 2;
+
+  // The versioned tasks to pack.
+  repeated TaskWithVersion versioned_tasks = 3;
+
+  // The unversioned tasks to pack.
+  repeated string unversioned_task_identifiers = 4;
+}
+
+message PackTaskOutputsResult {
+  oneof result {
+    PackTaskOutputsResponse response = 1;
+    ConductorError error = 2;
+  }
+}
+
+message PackTaskOutputsResponse {
+  uint64 num_packed_tasks = 1;
+  // The path to the archive containing the packed task outputs.
+  string task_archive_path = 2;
 }
 
 message ShutdownRequest { string key = 1; }
