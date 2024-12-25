@@ -2,9 +2,13 @@ import asyncio
 import logging
 import pathlib
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 
-from conductor.config import MAESTRO_WORKSPACE_LOCATION, MAESTRO_WORKSPACE_NAME_FORMAT
+from conductor.config import (
+    MAESTRO_WORKSPACE_LOCATION,
+    MAESTRO_WORKSPACE_NAME_FORMAT,
+    MAESTRO_TASK_TRANSFER_LOCATION,
+)
 from conductor.context import Context
 from conductor.envs.maestro.interface import (
     MaestroInterface,
@@ -20,6 +24,12 @@ from conductor.execution.plan import ExecutionPlan
 from conductor.execution.version_index import Version
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.run import RunCommand, RunExperiment
+from conductor.utils.output_archiving import (
+    create_archive,
+    restore_archive,
+    generate_archive_name,
+    ArchiveType,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -63,18 +73,7 @@ class Maestro(MaestroInterface):
         dep_versions: Dict[TaskIdentifier, Version],
         execute_task_type: ExecuteTaskType,
     ) -> ExecuteTaskResponse:
-        workspace_path = (
-            self._maestro_root / MAESTRO_WORKSPACE_LOCATION / workspace_name
-        )
-        if not workspace_path.exists():
-            raise InternalError(details=f"Workspace {workspace_name} does not exist.")
-
-        full_project_root = workspace_path / project_root
-        if not full_project_root.exists():
-            raise InternalError(
-                details=f"Project root {project_root} does not exist in workspace {workspace_name}."
-            )
-
+        full_project_root = self._get_full_project_root(workspace_name, project_root)
         start_timestamp = int(time.time())
 
         # 1. Load and parse this task's dependencies.
@@ -166,7 +165,19 @@ class Maestro(MaestroInterface):
         project_root: pathlib.Path,
         archive_path: pathlib.Path,
     ) -> int:
-        raise NotImplementedError
+        full_project_root = self._get_full_project_root(workspace_name, project_root)
+        ctx = self._get_context(full_project_root)
+        full_archive_path = (
+            self._maestro_root
+            / MAESTRO_TASK_TRANSFER_LOCATION
+            / workspace_name
+            / archive_path
+        )
+        if not full_archive_path.exists():
+            raise InternalError(
+                details=f"Archive {archive_path} does not exist in the task transfer directory."
+            )
+        return restore_archive(ctx, full_archive_path)
 
     async def pack_task_outputs(
         self,
@@ -175,13 +186,47 @@ class Maestro(MaestroInterface):
         versioned_tasks: List[Tuple[TaskIdentifier, Version]],
         unversioned_tasks: List[TaskIdentifier],
     ) -> PackTaskOutputsResponse:
-        raise NotImplementedError
+        full_project_root = self._get_full_project_root(workspace_name, project_root)
+        ctx = self._get_context(full_project_root)
+        archive_dir = (
+            self._maestro_root / MAESTRO_TASK_TRANSFER_LOCATION / workspace_name
+        )
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        archive_name = generate_archive_name(ArchiveType.Gzip)
+        full_archive_path = archive_dir / archive_name
+
+        tasks_to_archive: List[Tuple[TaskIdentifier, Optional[Version]]] = (
+            versioned_tasks + [(t, None) for t in unversioned_tasks]
+        )
+        num_packed = create_archive(
+            ctx, tasks_to_archive, full_archive_path, ArchiveType.Gzip
+        )
+        return PackTaskOutputsResponse(
+            num_packed_tasks=num_packed,
+            task_archive_path=pathlib.Path(archive_name),
+        )
 
     async def shutdown(self, key: str) -> str:
         logger.info("Received shutdown message with key %s", key)
         loop = asyncio.get_running_loop()
         loop.create_task(_orchestrate_shutdown())
         return "OK"
+
+    def _get_full_project_root(
+        self, workspace_name: str, project_root: pathlib.Path
+    ) -> pathlib.Path:
+        workspace_path = (
+            self._maestro_root / MAESTRO_WORKSPACE_LOCATION / workspace_name
+        )
+        if not workspace_path.exists():
+            raise InternalError(details=f"Workspace {workspace_name} does not exist.")
+
+        full_project_root = workspace_path / project_root
+        if not full_project_root.exists():
+            raise InternalError(
+                details=f"Project root {project_root} does not exist in workspace {workspace_name}."
+            )
+        return full_project_root
 
     def _get_context(self, full_project_root: pathlib.Path) -> Context:
         if full_project_root not in self._contexts:

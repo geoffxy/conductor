@@ -77,5 +77,6 @@ MAESTRO_COND_WHEEL_TEMPLATE = "conductor_cli-{version}-py3-none-any.whl"
 MAESTRO_BUNDLE_LOCATION = "bundles"
 MAESTRO_WORKSPACE_LOCATION = "workspaces"
 MAESTRO_WORKSPACE_NAME_FORMAT = "{name}.{timestamp}"
+MAESTRO_TASK_TRANSFER_LOCATION = "task_outputs"
 
 MAESTRO_PYTHON_VERSION = "3.10.12"

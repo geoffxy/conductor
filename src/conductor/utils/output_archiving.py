@@ -1,3 +1,4 @@
+import datetime
 import enum
 import pathlib
 import platform
@@ -47,12 +48,17 @@ def platform_archive_type() -> ArchiveType:
         raise UnsupportedPlatform()
 
 
+def generate_archive_name(archive_type: ArchiveType) -> str:
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d+%H-%M-%S")
+    return f.archive(timestamp=timestamp, archive_type=archive_type)
+
+
 def create_archive(
     ctx: "Context",
     tasks_to_archive: List[Tuple[TaskIdentifier, Optional[Version]]],
     output_archive_path: pathlib.Path,
     archive_type: ArchiveType,
-) -> None:
+) -> int:
     """
     This utility is used to create an archive of the output directories of the
     given tasks for transport purposes (e.g., moving data to/from a remote
@@ -119,6 +125,7 @@ def create_archive(
             raise CreateArchiveFailed().add_extra_context(
                 "The tar utility returned a non-zero error code."
             )
+        return len(output_dirs_str)
 
     finally:
         # Clean up the archive index file.
@@ -130,7 +137,7 @@ def restore_archive(
     archive_path: pathlib.Path,
     archive_type: Optional[ArchiveType] = None,
     expect_no_duplicates: bool = False,
-) -> None:
+) -> int:
     """
     This utility is used to restore the output directories of tasks from an
     archive created by `create_archive`.
@@ -150,6 +157,7 @@ def restore_archive(
         archive_version_index_path = staging_path / ARCHIVE_VERSION_INDEX
         archive_version_index = VersionIndex.create_or_load(archive_version_index_path)
 
+        restored_task_output_count = 0
         successful_restore_dirs: List[pathlib.Path] = []
         # Copy over versioned tasks, skipping the ones that already exist.
         for task_id, version in archive_version_index.get_all_versions():
@@ -190,6 +198,7 @@ def restore_archive(
                     )
                 )
             successful_restore_dirs.append(dest_task_path)
+            restored_task_output_count += 1
 
         # Copy over unversioned tasks. We always blindly copy over these outputs.
         for task_id in archive_version_index.get_all_unversioned():
@@ -211,9 +220,11 @@ def restore_archive(
                 raise ArchiveFileInvalid().add_extra_context(
                     "Missing copied archived task output for '{}'.".format(str(task_id))
                 )
+            restored_task_output_count += 1
 
         # Safe to commit now.
         ctx.version_index.commit_changes()
+        return restored_task_output_count
 
     except:
         # Something went wrong, so undo our changes.
