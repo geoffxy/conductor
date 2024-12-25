@@ -78,6 +78,7 @@ class MaestroGrpcClient:
             dv.version.timestamp = version.timestamp
             if version.commit_hash is not None:
                 dv.version.commit_hash = version.commit_hash
+            dv.version.has_uncommitted_changes = version.has_uncommitted_changes
         if execute_task_type == ExecuteTaskType.RunExperiment:
             msg.execute_task_type = pb.TT_RUN_EXPERIMENT  # pylint: disable=no-member
         elif execute_task_type == ExecuteTaskType.RunCommand:
@@ -99,7 +100,7 @@ class MaestroGrpcClient:
                 else Version(
                     timestamp=response.version.timestamp,
                     commit_hash=response.version.commit_hash,
-                    has_uncommitted_changes=False,
+                    has_uncommitted_changes=response.version.has_uncommitted_changes,
                 )
             ),
         )
@@ -141,6 +142,7 @@ class MaestroGrpcClient:
             vt.version.timestamp = version.timestamp
             if version.commit_hash is not None:
                 vt.version.commit_hash = version.commit_hash
+            vt.version.has_uncommitted_changes = version.has_uncommitted_changes
         for task_id in unversioned_tasks:
             msg.unversioned_task_identifiers.append(str(task_id))
         result = self._stub.PackTaskOutputs(msg)

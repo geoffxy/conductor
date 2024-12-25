@@ -80,12 +80,14 @@ class TaskDependency(_message.Message):
     def __init__(self, task_identifier: _Optional[str] = ..., version: _Optional[_Union[TaskVersion, _Mapping]] = ...) -> None: ...
 
 class TaskVersion(_message.Message):
-    __slots__ = ("timestamp", "commit_hash")
+    __slots__ = ("timestamp", "commit_hash", "has_uncommitted_changes")
     TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
     COMMIT_HASH_FIELD_NUMBER: _ClassVar[int]
+    HAS_UNCOMMITTED_CHANGES_FIELD_NUMBER: _ClassVar[int]
     timestamp: int
     commit_hash: str
-    def __init__(self, timestamp: _Optional[int] = ..., commit_hash: _Optional[str] = ...) -> None: ...
+    has_uncommitted_changes: bool
+    def __init__(self, timestamp: _Optional[int] = ..., commit_hash: _Optional[str] = ..., has_uncommitted_changes: bool = ...) -> None: ...
 
 class TaskWithVersion(_message.Message):
     __slots__ = ("task_identifier", "version")

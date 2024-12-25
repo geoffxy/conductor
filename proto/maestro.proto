@@ -90,6 +90,7 @@ message TaskDependency {
 message TaskVersion {
   uint64 timestamp = 1;
   string commit_hash = 2;
+  bool has_uncommitted_changes = 3;
 }
 
 message TaskWithVersion {

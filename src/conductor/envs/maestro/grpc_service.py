@@ -103,7 +103,7 @@ class MaestroGrpc(rpc.MaestroServicer):
                 version = Version(
                     task.version.timestamp,
                     task.version.commit_hash,
-                    has_uncommitted_changes=False,
+                    has_uncommitted_changes=task.version.has_uncommitted_changes,
                 )
                 versioned_tasks.append((task_id, version))
             unversioned_tasks = []
