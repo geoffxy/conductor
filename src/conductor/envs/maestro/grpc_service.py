@@ -73,6 +73,55 @@ class MaestroGrpc(rpc.MaestroServicer):
         except ConductorError as ex:
             return pb.ExecuteTaskResult(error=_error_to_pb(ex))
 
+    async def UnpackTaskOutputs(
+        self, request: pb.UnpackTaskOutputsRequest, context
+    ) -> pb.UnpackTaskOutputsResult:
+        try:
+            workspace_name = request.workspace_name
+            project_root = pathlib.Path(request.project_root)
+            archive_path = pathlib.Path(request.task_archive_path)
+            num_unpacked_tasks = await self._maestro.unpack_task_outputs(
+                workspace_name, project_root, archive_path
+            )
+            return pb.UnpackTaskOutputsResult(
+                response=pb.UnpackTaskOutputsResponse(
+                    num_unpacked_tasks=num_unpacked_tasks
+                )
+            )
+        except ConductorError as ex:
+            return pb.UnpackTaskOutputsResult(error=_error_to_pb(ex))
+
+    async def PackTaskOutputs(
+        self, request: pb.PackTaskOutputsRequest, context
+    ) -> pb.PackTaskOutputsResult:
+        try:
+            workspace_name = request.workspace_name
+            project_root = pathlib.Path(request.project_root)
+            versioned_tasks = []
+            for task in request.versioned_tasks:
+                task_id = TaskIdentifier.from_str(task.task_identifier)
+                version = Version(
+                    task.version.timestamp,
+                    task.version.commit_hash,
+                    has_uncommitted_changes=False,
+                )
+                versioned_tasks.append((task_id, version))
+            unversioned_tasks = []
+            for task_id_str in request.unversioned_task_identifiers:
+                task_id = TaskIdentifier.from_str(task_id_str)
+                unversioned_tasks.append(task_id)
+            response = await self._maestro.pack_task_outputs(
+                workspace_name, project_root, versioned_tasks, unversioned_tasks
+            )
+            return pb.PackTaskOutputsResult(
+                response=pb.PackTaskOutputsResponse(
+                    num_packed_tasks=response.num_packed_tasks,
+                    task_archive_path=str(response.task_archive_path),
+                )
+            )
+        except ConductorError as ex:
+            return pb.PackTaskOutputsResult(error=_error_to_pb(ex))
+
     async def Shutdown(self, request: pb.ShutdownRequest, context) -> pb.ShutdownResult:
         try:
             response_message = await self._maestro.shutdown(request.key)

@@ -1,6 +1,6 @@
 import enum
 import pathlib
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, List, Tuple, Optional
 from conductor.task_identifier import TaskIdentifier
 from conductor.execution.version_index import Version
 
@@ -8,11 +8,17 @@ from conductor.execution.version_index import Version
 class ExecuteTaskResponse(NamedTuple):
     start_timestamp: int
     end_timestamp: int
+    version: Optional[Version]
 
 
 class ExecuteTaskType(enum.Enum):
     RunExperiment = "run_experiment"
     RunCommand = "run_command"
+
+
+class PackTaskOutputsResponse(NamedTuple):
+    num_packed_tasks: int
+    task_archive_path: pathlib.Path
 
 
 class MaestroInterface:
@@ -32,6 +38,23 @@ class MaestroInterface:
         dep_versions: Dict[TaskIdentifier, Version],
         execute_task_type: ExecuteTaskType,
     ) -> ExecuteTaskResponse:
+        raise NotImplementedError
+
+    async def unpack_task_outputs(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        archive_path: pathlib.Path,
+    ) -> int:
+        raise NotImplementedError
+
+    async def pack_task_outputs(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        versioned_tasks: List[Tuple[TaskIdentifier, Version]],
+        unversioned_tasks: List[TaskIdentifier],
+    ) -> PackTaskOutputsResponse:
         raise NotImplementedError
 
     async def shutdown(self, key: str) -> str:

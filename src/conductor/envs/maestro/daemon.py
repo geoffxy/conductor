@@ -2,7 +2,7 @@ import asyncio
 import logging
 import pathlib
 import time
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from conductor.config import MAESTRO_WORKSPACE_LOCATION, MAESTRO_WORKSPACE_NAME_FORMAT
 from conductor.context import Context
@@ -10,6 +10,7 @@ from conductor.envs.maestro.interface import (
     MaestroInterface,
     ExecuteTaskResponse,
     ExecuteTaskType,
+    PackTaskOutputsResponse,
 )
 from conductor.errors import InternalError
 from conductor.execution.executor import Executor
@@ -125,6 +126,7 @@ class Maestro(MaestroInterface):
             kwargs["serialize_args_options"] = True
             kwargs["output_path"] = output_path
         elif execute_task_type == ExecuteTaskType.RunCommand:
+            exp_version = None
             output_path = task_to_run.get_output_path(ctx)
             assert output_path is not None
             kwargs["record_output"] = False
@@ -153,8 +155,27 @@ class Maestro(MaestroInterface):
 
         end_timestamp = int(time.time())
         return ExecuteTaskResponse(
-            start_timestamp=start_timestamp, end_timestamp=end_timestamp
+            start_timestamp=start_timestamp,
+            end_timestamp=end_timestamp,
+            version=exp_version,
         )
+
+    async def unpack_task_outputs(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        archive_path: pathlib.Path,
+    ) -> int:
+        raise NotImplementedError
+
+    async def pack_task_outputs(
+        self,
+        workspace_name: str,
+        project_root: pathlib.Path,
+        versioned_tasks: List[Tuple[TaskIdentifier, Version]],
+        unversioned_tasks: List[TaskIdentifier],
+    ) -> PackTaskOutputsResponse:
+        raise NotImplementedError
 
     async def shutdown(self, key: str) -> str:
         logger.info("Received shutdown message with key %s", key)

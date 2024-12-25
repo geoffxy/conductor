@@ -1,10 +1,14 @@
 import grpc
 import pathlib
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple
 
 import conductor.envs.proto_gen.maestro_pb2 as pb
 import conductor.envs.proto_gen.maestro_pb2_grpc as maestro_grpc
-from conductor.envs.maestro.interface import ExecuteTaskResponse, ExecuteTaskType
+from conductor.envs.maestro.interface import (
+    ExecuteTaskResponse,
+    ExecuteTaskType,
+    PackTaskOutputsResponse,
+)
 from conductor.task_identifier import TaskIdentifier
 from conductor.errors import ConductorError, InternalError
 from conductor.errors.generated import ERRORS_BY_CODE
@@ -89,6 +93,63 @@ class MaestroGrpcClient:
         return ExecuteTaskResponse(
             start_timestamp=response.start_timestamp,
             end_timestamp=response.end_timestamp,
+            version=(
+                None
+                if response.version.timestamp == 0
+                else Version(
+                    timestamp=response.version.timestamp,
+                    commit_hash=response.version.commit_hash,
+                    has_uncommitted_changes=False,
+                )
+            ),
+        )
+
+    def unpack_task_outputs(
+        self,
+        workspace_name: str,
+        workspace_rel_project_root: pathlib.Path,
+        archive_path: pathlib.Path,
+    ) -> int:
+        assert self._stub is not None
+        # pylint: disable-next=no-member
+        msg = pb.UnpackTaskOutputsRequest(
+            workspace_name=workspace_name,
+            project_root=str(workspace_rel_project_root),
+            task_archive_path=str(archive_path),
+        )
+        result = self._stub.UnpackTaskOutputs(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        return result.response.num_unpacked_tasks
+
+    def pack_task_outputs(
+        self,
+        workspace_name: str,
+        workspace_rel_project_root: pathlib.Path,
+        versioned_tasks: List[Tuple[TaskIdentifier, Version]],
+        unversioned_tasks: List[TaskIdentifier],
+    ) -> PackTaskOutputsResponse:
+        assert self._stub is not None
+        # pylint: disable-next=no-member
+        msg = pb.PackTaskOutputsRequest(
+            workspace_name=workspace_name,
+            project_root=str(workspace_rel_project_root),
+        )
+        for task_id, version in versioned_tasks:
+            vt = msg.versioned_tasks.add()
+            vt.task_identifier = str(task_id)
+            vt.version.timestamp = version.timestamp
+            if version.commit_hash is not None:
+                vt.version.commit_hash = version.commit_hash
+        for task_id in unversioned_tasks:
+            msg.unversioned_task_identifiers.append(str(task_id))
+        result = self._stub.PackTaskOutputs(msg)
+        if result.WhichOneof("result") == "error":
+            raise _pb_to_error(result.error)
+        response = result.response
+        return PackTaskOutputsResponse(
+            num_packed_tasks=response.num_packed_tasks,
+            task_archive_path=pathlib.Path(response.task_archive_path),
         )
 
     def shutdown(self, key: str) -> str:
