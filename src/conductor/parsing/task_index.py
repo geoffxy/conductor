@@ -7,12 +7,16 @@ from conductor.errors import (
     CyclicDependency,
     DuplicateDependency,
     TaskNotFound,
+    EnvNotFound,
+    EnvNotEnv,
 )
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
 from conductor.utils.user_code import prevent_module_caching
 from conductor.utils.git import Git
+from conductor.task_types.environment import Environment
+from conductor.task_types.run import RunCommand, RunExperiment
 
 
 class TaskIndex:
@@ -64,13 +68,13 @@ class TaskIndex:
         loading the needed tasks. This method will also check to ensure there
         are no cycles in the dependency graph.
         """
-        identifiers_to_load = [(task_identifier, 0)]
+        identifiers_to_load = [(task_identifier, False, 0)]
         visited_identifiers = set()
         curr_path: Set[TaskIdentifier] = set()
 
         with prevent_module_caching():
             while len(identifiers_to_load) > 0:
-                identifier, visit_count = identifiers_to_load.pop()
+                identifier, expect_env, visit_count = identifiers_to_load.pop()
 
                 if visit_count > 0:
                     # We've finished processing this task's children
@@ -89,19 +93,40 @@ class TaskIndex:
                 try:
                     self.load_single_task(identifier)
                 except TaskNotFound as e:
-                    raise e.add_extra_context(
-                        "This error occurred when resolving the transitive dependencies of task '{}'.".format(
-                            str(task_identifier)
-                        )
+                    extra_context = (
+                        "This error occurred when resolving the transitive dependencies "
+                        f"of task '{str(task_identifier)}'."
                     )
+                    if not expect_env:
+                        raise e.add_extra_context(extra_context)
+                    else:
+                        raise EnvNotFound(
+                            task_identifier=str(identifier)
+                        ).add_extra_context(extra_context)
 
-                identifiers_to_load.append((identifier, 1))
+                identifiers_to_load.append((identifier, expect_env, 1))
                 curr_path.add(identifier)
 
-                for dep in self._loaded_tasks[identifier].deps:
+                loaded_task = self._loaded_tasks[identifier]
+                if expect_env and not isinstance(loaded_task, Environment):
+                    raise EnvNotEnv(task_identifier=str(identifier)).add_extra_context(
+                        "This error occurred when resolving the transitive dependencies "
+                        f"of task '{str(task_identifier)}'."
+                    )
+
+                for dep in loaded_task.deps:
                     if dep in visited_identifiers:
                         continue
-                    identifiers_to_load.append((dep, 0))
+                    identifiers_to_load.append((dep, False, 0))
+
+                # Special case: `run_experiment()` and `run_command()` can run
+                # in a remote environment. Environments are defined as a special
+                # "task type", so we need to load them here too.
+                if isinstance(loaded_task, RunExperiment) or isinstance(
+                    loaded_task, RunCommand
+                ):
+                    if loaded_task.env is not None:
+                        identifiers_to_load.append((loaded_task.env, True, 0))
 
     def load_single_task(self, identifier: TaskIdentifier):
         """
@@ -218,6 +243,19 @@ class TaskIndex:
                 curr_path.add(curr_id)
                 stack.append((curr_id, 1))
                 curr_task = self._loaded_tasks[curr_id]
+
+                # For runnable tasks, if they reference an environment, make
+                # sure it exists.
+                if (
+                    isinstance(curr_task, RunCommand)
+                    or isinstance(curr_task, RunExperiment)
+                ) and curr_task.env is not None:
+                    if curr_task.env not in self._loaded_tasks:
+                        raise EnvNotFound(task_identifier=str(curr_task.env))
+                    env_task = self._loaded_tasks[curr_task.env]
+                    if not isinstance(env_task, Environment):
+                        raise EnvNotEnv(task_identifier=str(curr_task.env))
+
                 for dep_id in curr_task.deps:
                     # This task depends on `dep_id`. So `dep_id` has a dependee
                     # and is not a root task.

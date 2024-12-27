@@ -356,6 +356,48 @@ class IncludeFileNotInProject(ConductorError):
         )
 
 
+class EnvNotFound(ConductorError):
+    error_code = 2007
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "Environment '{env_name}' could not be found.".format(
+            env_name=self.env_name,
+        )
+
+
+class DuplicateEnvName(ConductorError):
+    error_code = 2008
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "Environment '{env_name}' was defined more than once. Environment names (regardless of their path) must be unique.".format(
+            env_name=self.env_name,
+        )
+
+
+class EnvNotEnv(ConductorError):
+    error_code = 2009
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.task_identifier = kwargs["task_identifier"]
+
+    def _message(self):
+        return "The identifier '{task_identifier}' does not refer to an environment.".format(
+            task_identifier=self.task_identifier,
+        )
+
+
 class TaskNonZeroExit(ConductorError):
     error_code = 3001
 
@@ -803,6 +845,9 @@ ERRORS_BY_CODE = {
     2004: UnsupportedVersionIndexFormat,
     2005: IncludeFileNotFound,
     2006: IncludeFileNotInProject,
+    2007: EnvNotFound,
+    2008: DuplicateEnvName,
+    2009: EnvNotEnv,
     3001: TaskNonZeroExit,
     3002: TaskFailed,
     3003: OutputDirTaken,
@@ -861,6 +906,9 @@ __all__ = [
     "UnsupportedVersionIndexFormat",
     "IncludeFileNotFound",
     "IncludeFileNotInProject",
+    "EnvNotFound",
+    "DuplicateEnvName",
+    "EnvNotEnv",
     "TaskNonZeroExit",
     "TaskFailed",
     "OutputDirTaken",

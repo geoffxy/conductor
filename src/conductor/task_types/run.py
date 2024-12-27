@@ -27,6 +27,7 @@ class _RunSubprocess(TaskType):
         args: list,
         options: dict,
         parallelizable: bool,
+        env: Optional[str],
     ):
         super().__init__(
             identifier=identifier, cond_file_path=cond_file_path, deps=deps
@@ -38,6 +39,7 @@ class _RunSubprocess(TaskType):
             [run, self._args.serialize_cmdline(), self._options.serialize_cmdline()]
         )
         self._parallelizable = parallelizable
+        self._env = self._parse_env(env)
 
     def __repr__(self) -> str:
         return "".join(
@@ -75,9 +77,21 @@ class _RunSubprocess(TaskType):
     def options(self) -> RunOptions:
         return self._options
 
+    @property
+    def env(self) -> Optional[TaskIdentifier]:
+        return self._env
+
     def _create_new_version(self, ctx: "c.Context") -> None:
         # N.B. Only `RunExperiment` is versioned.
         pass
+
+    def _parse_env(self, candidate_env: Optional[str]) -> Optional[TaskIdentifier]:
+        if candidate_env is None:
+            return None
+        if TaskIdentifier.is_relative_candidate(candidate_env):
+            return TaskIdentifier.from_relative_str(candidate_env, self.identifier.path)
+        else:
+            return TaskIdentifier.from_str(candidate_env)
 
 
 class RunCommand(_RunSubprocess):
@@ -97,6 +111,7 @@ class RunCommand(_RunSubprocess):
         args: list,
         options: dict,
         parallelizable: bool,
+        env: Optional[str],
     ):
         super().__init__(
             identifier=identifier,
@@ -106,6 +121,7 @@ class RunCommand(_RunSubprocess):
             args=args,
             options=options,
             parallelizable=parallelizable,
+            env=env,
         )
 
     @property
@@ -131,6 +147,7 @@ class RunExperiment(_RunSubprocess):
         args: list,
         options: dict,
         parallelizable: bool,
+        env: Optional[str],
     ):
         super().__init__(
             identifier=identifier,
@@ -140,6 +157,7 @@ class RunExperiment(_RunSubprocess):
             args=args,
             options=options,
             parallelizable=parallelizable,
+            env=env,
         )
         self._did_retrieve_version = False
         self._most_relevant_version: Optional[Version] = None

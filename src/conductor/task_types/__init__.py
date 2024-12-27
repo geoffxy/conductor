@@ -16,8 +16,15 @@ _raw_task_types = [
             "args": list,
             "options": dict,
             "deps": [str],
+            "env": Optional[str],
         },
-        defaults={"parallelizable": False, "args": [], "options": {}, "deps": []},
+        defaults={
+            "parallelizable": False,
+            "args": [],
+            "options": {},
+            "deps": [],
+            "env": None,
+        },
         full_type=RunCommand,
     ),
     RawTaskType(
@@ -29,8 +36,15 @@ _raw_task_types = [
             "args": list,
             "options": dict,
             "deps": [str],
+            "env": Optional[str],
         },
-        defaults={"parallelizable": False, "args": [], "options": {}, "deps": []},
+        defaults={
+            "parallelizable": False,
+            "args": [],
+            "options": {},
+            "deps": [],
+            "env": None,
+        },
         full_type=RunExperiment,
     ),
     RawTaskType(

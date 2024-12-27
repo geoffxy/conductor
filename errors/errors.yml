@@ -120,6 +120,19 @@
   name: IncludeFileNotInProject
   message: Encountered an include() of '{included_file}'. However, that file is not inside the project.
 
+2007:
+  name: EnvNotFound
+  message: "Environment '{env_name}' could not be found."
+
+2008:
+  name: DuplicateEnvName
+  message: >-
+    Environment '{env_name}' was defined more than once. Environment names
+    (regardless of their path) must be unique.
+
+2009:
+  name: EnvNotEnv
+  message: "The identifier '{task_identifier}' does not refer to an environment."
 
 # Execution errors (error code 3xxx)
 3001:
