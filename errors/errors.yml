@@ -158,6 +158,10 @@
   name: EnvStartFailed
   message: "Failed to start the environment '{env_name}'."
 
+3010:
+  name: EnvShutdownFailed
+  message: "Failed to shut down the environment '{env_name}'."
+
 
 # Archive and restore errors (error code 4xxx)
 4001:

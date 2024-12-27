@@ -484,6 +484,20 @@ class EnvStartFailed(ConductorError):
         )
 
 
+class EnvShutdownFailed(ConductorError):
+    error_code = 3010
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "Failed to shut down the environment '{env_name}'.".format(
+            env_name=self.env_name,
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -798,6 +812,7 @@ ERRORS_BY_CODE = {
     3007: MissingEnvSupport,
     3008: EnvsRequireGit,
     3009: EnvStartFailed,
+    3010: EnvShutdownFailed,
     4001: OutputFileExists,
     4002: OutputPathDoesNotExist,
     4003: NoTaskOutputsToArchive,
@@ -855,6 +870,7 @@ __all__ = [
     "MissingEnvSupport",
     "EnvsRequireGit",
     "EnvStartFailed",
+    "EnvShutdownFailed",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",
