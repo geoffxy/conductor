@@ -154,6 +154,10 @@
   name: EnvsRequireGit
   message: To use a Conductor environments, your project must be tracked in a Git repository.
 
+3009:
+  name: EnvStartFailed
+  message: "Failed to start the environment '{env_name}'."
+
 
 # Archive and restore errors (error code 4xxx)
 4001:

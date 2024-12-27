@@ -470,6 +470,20 @@ class EnvsRequireGit(ConductorError):
         )
 
 
+class EnvStartFailed(ConductorError):
+    error_code = 3009
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "Failed to start the environment '{env_name}'.".format(
+            env_name=self.env_name,
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -783,6 +797,7 @@ ERRORS_BY_CODE = {
     3006: CombineOutputFileConflict,
     3007: MissingEnvSupport,
     3008: EnvsRequireGit,
+    3009: EnvStartFailed,
     4001: OutputFileExists,
     4002: OutputPathDoesNotExist,
     4003: NoTaskOutputsToArchive,
@@ -839,6 +854,7 @@ __all__ = [
     "CombineOutputFileConflict",
     "MissingEnvSupport",
     "EnvsRequireGit",
+    "EnvStartFailed",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",
