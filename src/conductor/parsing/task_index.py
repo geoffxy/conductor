@@ -9,6 +9,7 @@ from conductor.errors import (
     TaskNotFound,
     EnvNotFound,
     EnvNotEnv,
+    DuplicateEnvName,
 )
 from conductor.parsing.task_loader import TaskLoader
 from conductor.task_identifier import TaskIdentifier
@@ -30,6 +31,7 @@ class TaskIndex:
         # Used to manage task loading caching. If we have called
         # `load_all_known_tasks()` before, we avoid running it again.
         self._all_loaded = False
+        self._loaded_envs: Dict[str, Environment] = {}
 
     def get_task(self, identifier: TaskIdentifier) -> TaskType:
         """
@@ -101,7 +103,7 @@ class TaskIndex:
                         raise e.add_extra_context(extra_context)
                     else:
                         raise EnvNotFound(
-                            task_identifier=str(identifier)
+                            env_name=str(identifier.name)
                         ).add_extra_context(extra_context)
 
                 identifiers_to_load.append((identifier, expect_env, 1))
@@ -144,9 +146,14 @@ class TaskIndex:
             )
 
         raw_task = self._loaded_raw_tasks[rel_path][identifier.name]
-        self._loaded_tasks[identifier] = self._materialize_raw_task(
-            identifier, raw_task
-        )
+        materialized_task = self._materialize_raw_task(identifier, raw_task)
+
+        if isinstance(materialized_task, Environment):
+            if identifier.name in self._loaded_envs:
+                raise DuplicateEnvName(env_name=identifier.name)
+            self._loaded_envs[identifier.name] = materialized_task
+
+        self._loaded_tasks[identifier] = materialized_task
 
     def load_all_tasks_in_cond_file(self, rel_cond_file_path: pathlib.Path) -> int:
         """
@@ -251,10 +258,10 @@ class TaskIndex:
                     or isinstance(curr_task, RunExperiment)
                 ) and curr_task.env is not None:
                     if curr_task.env not in self._loaded_tasks:
-                        raise EnvNotFound(task_identifier=str(curr_task.env))
+                        raise EnvNotFound(env_name=curr_task.env.name)
                     env_task = self._loaded_tasks[curr_task.env]
                     if not isinstance(env_task, Environment):
-                        raise EnvNotEnv(task_identifier=str(curr_task.env))
+                        raise EnvNotEnv(env_name=curr_task.env.name)
 
                 for dep_id in curr_task.deps:
                     # This task depends on `dep_id`. So `dep_id` has a dependee
@@ -268,6 +275,15 @@ class TaskIndex:
                 continue
             root_candidates[task_id] = 0
             do_traversal(task_id)
+
+        # Check for duplicate envs.
+        env_names = set()
+        for task in self._loaded_tasks.values():
+            if not isinstance(task, Environment):
+                continue
+            if task.identifier.name in env_names:
+                raise DuplicateEnvName(env_name=task.identifier.name)
+            env_names.add(task.identifier.name)
 
         # Return the root tasks.
         return [

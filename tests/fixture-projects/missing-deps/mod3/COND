@@ -1,0 +1,18 @@
+run_command(
+  name="test4",
+  run="echo test4",
+  env="//mod3:my_env",
+)
+
+run_command(
+  name="test5",
+  run="echo test5",
+  env="//:my_env",
+  deps=[":test4"]
+)
+
+environment(
+  name="my_env",
+  host="localhost",
+  user="ubuntu",
+)

@@ -1,8 +1,9 @@
 import pathlib
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Sequence
 
 from conductor.task_identifier import TaskIdentifier
 from .base import TaskType
+from conductor.errors import InternalError
 
 if TYPE_CHECKING:
     import conductor.context as c
@@ -17,7 +18,15 @@ class Environment(TaskType):
         stop: Optional[str],
         host: str,
         user: str,
+        # Note that `deps` is supposed to be an empty sequence.
+        deps: Sequence[TaskIdentifier],
     ):
+        if len(deps) > 0:
+            # This is an internal error because we perform validation earlier.
+            raise InternalError(
+                details=f"Environment '{str(identifier)}' cannot have dependencies."
+            )
+
         super().__init__(identifier=identifier, cond_file_path=cond_file_path, deps=[])
         self._start = start
         self._stop = stop
