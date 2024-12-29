@@ -2,3 +2,9 @@ group(
   name="start",
   deps=["//mod1:test1"],
 )
+
+environment(
+  name="my_env",
+  host="localhost",
+  user="ubuntu",
+)

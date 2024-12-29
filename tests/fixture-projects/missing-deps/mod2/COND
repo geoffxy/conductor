@@ -1,0 +1,5 @@
+run_experiment(
+  name="test3",
+  run="echo test3",
+  env="//mod2:missing_env",
+)

@@ -60,9 +60,9 @@ def test_missing_deps_loading(tmp_path: pathlib.Path):
     git = Git(cond.project_root)
     task_index = TaskIndex(cond.project_root)
     load_results = task_index.load_all_known_tasks(git)
-    assert len(load_results) == 2  # 2 COND files
+    assert len(load_results) == 5  # 5 COND files
     num_loaded_tasks = sum([num_loaded for _, num_loaded, _ in load_results])
-    assert num_loaded_tasks == 2  # 2 tasks in total
+    assert num_loaded_tasks == 9  # 9 tasks in total
 
     with pytest.raises(TaskNotFound) as ex:
         task_index.validate_all_loaded_tasks()

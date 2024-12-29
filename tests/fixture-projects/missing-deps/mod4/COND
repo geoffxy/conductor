@@ -1,0 +1,10 @@
+run_experiment(
+  name="test6",
+  run="echo test6",
+  env=":not_an_env",
+)
+
+run_command(
+  name="not_an_env",
+  run="echo not_an_env",
+)
