@@ -92,6 +92,13 @@ class TaskType:
         """
         return True
 
+    def get_output_version(self, ctx: "c.Context") -> Optional[Version]:
+        """
+        If this task is versioned, this method returns the most relevant version
+        of the task's outputs.
+        """
+        return None
+
     def get_output_path(
         self,
         ctx: "c.Context",

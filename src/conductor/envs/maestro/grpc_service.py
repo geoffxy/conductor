@@ -1,4 +1,6 @@
 import pathlib
+from typing import Optional
+
 import conductor.envs.proto_gen.maestro_pb2_grpc as rpc
 import conductor.envs.proto_gen.maestro_pb2 as pb
 from conductor.envs.maestro.interface import MaestroInterface, ExecuteTaskType
@@ -58,12 +60,20 @@ class MaestroGrpc(rpc.MaestroServicer):
                 raise InternalError(
                     details=f"Unsupported execute task type {str(request.execute_task_type)}."
                 )
+            output_version: Optional[Version] = None
+            if request.result_version.timestamp != 0:
+                output_version = Version(
+                    request.result_version.timestamp,
+                    request.result_version.commit_hash,
+                    has_uncommitted_changes=request.result_version.has_uncommitted_changes,
+                )
             response = await self._maestro.execute_task(
                 workspace_name,
                 project_root,
                 task_identifier,
                 dep_versions,
                 execute_task_type,
+                output_version,
             )
             return pb.ExecuteTaskResult(
                 response=pb.ExecuteTaskResponse(

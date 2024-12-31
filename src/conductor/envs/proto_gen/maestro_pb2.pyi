@@ -67,18 +67,20 @@ class UnpackBundleResult(_message.Message):
     def __init__(self, response: _Optional[_Union[UnpackBundleResponse, _Mapping]] = ..., error: _Optional[_Union[ConductorError, _Mapping]] = ...) -> None: ...
 
 class ExecuteTaskRequest(_message.Message):
-    __slots__ = ("workspace_name", "project_root", "task_identifier", "dep_versions", "execute_task_type")
+    __slots__ = ("workspace_name", "project_root", "task_identifier", "dep_versions", "execute_task_type", "result_version")
     WORKSPACE_NAME_FIELD_NUMBER: _ClassVar[int]
     PROJECT_ROOT_FIELD_NUMBER: _ClassVar[int]
     TASK_IDENTIFIER_FIELD_NUMBER: _ClassVar[int]
     DEP_VERSIONS_FIELD_NUMBER: _ClassVar[int]
     EXECUTE_TASK_TYPE_FIELD_NUMBER: _ClassVar[int]
+    RESULT_VERSION_FIELD_NUMBER: _ClassVar[int]
     workspace_name: str
     project_root: str
     task_identifier: str
     dep_versions: _containers.RepeatedCompositeFieldContainer[TaskDependency]
     execute_task_type: ExecuteTaskType
-    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ..., dep_versions: _Optional[_Iterable[_Union[TaskDependency, _Mapping]]] = ..., execute_task_type: _Optional[_Union[ExecuteTaskType, str]] = ...) -> None: ...
+    result_version: TaskVersion
+    def __init__(self, workspace_name: _Optional[str] = ..., project_root: _Optional[str] = ..., task_identifier: _Optional[str] = ..., dep_versions: _Optional[_Iterable[_Union[TaskDependency, _Mapping]]] = ..., execute_task_type: _Optional[_Union[ExecuteTaskType, str]] = ..., result_version: _Optional[_Union[TaskVersion, _Mapping]] = ...) -> None: ...
 
 class TaskDependency(_message.Message):
     __slots__ = ("task_identifier", "version")
@@ -107,14 +109,12 @@ class TaskWithVersion(_message.Message):
     def __init__(self, task_identifier: _Optional[str] = ..., version: _Optional[_Union[TaskVersion, _Mapping]] = ...) -> None: ...
 
 class ExecuteTaskResponse(_message.Message):
-    __slots__ = ("start_timestamp", "end_timestamp", "result_version")
+    __slots__ = ("start_timestamp", "end_timestamp")
     START_TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
     END_TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
-    RESULT_VERSION_FIELD_NUMBER: _ClassVar[int]
     start_timestamp: int
     end_timestamp: int
-    result_version: TaskVersion
-    def __init__(self, start_timestamp: _Optional[int] = ..., end_timestamp: _Optional[int] = ..., result_version: _Optional[_Union[TaskVersion, _Mapping]] = ...) -> None: ...
+    def __init__(self, start_timestamp: _Optional[int] = ..., end_timestamp: _Optional[int] = ...) -> None: ...
 
 class ExecuteTaskResult(_message.Message):
     __slots__ = ("response", "error")

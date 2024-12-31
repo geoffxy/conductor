@@ -174,6 +174,10 @@ class RunExperiment(_RunSubprocess):
     def record_output(self) -> bool:
         return True
 
+    def get_output_version(self, ctx: "c.Context") -> Optional[Version]:
+        self._ensure_most_relevant_existing_version_computed(ctx)
+        return self._most_relevant_version
+
     def get_output_path(self, ctx: "c.Context") -> Optional[pathlib.Path]:
         self._ensure_most_relevant_existing_version_computed(ctx)
         if self._most_relevant_version is None:

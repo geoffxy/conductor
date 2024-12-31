@@ -258,6 +258,7 @@ class ExecutionPlanner:
             workspace_rel_project_root=workspace_rel_project_root,
             task=lt.task,
             dep_versions={},
+            output_version=None,
         )
         transfer_from_env = TransferResults(
             initial_state=OperationState.QUEUED,

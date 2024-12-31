@@ -72,6 +72,7 @@ class Maestro(MaestroInterface):
         task_identifier: TaskIdentifier,
         dep_versions: Dict[TaskIdentifier, Version],
         execute_task_type: ExecuteTaskType,
+        output_version: Optional[Version],
     ) -> ExecuteTaskResponse:
         full_project_root = self._get_full_project_root(workspace_name, project_root)
         start_timestamp = int(time.time())
@@ -117,15 +118,14 @@ class Maestro(MaestroInterface):
         if execute_task_type == ExecuteTaskType.RunExperiment:
             assert isinstance(task_to_run, RunExperiment)
             # We need it to be versioned.
-            exp_version = task_to_run.create_new_version(ctx)
+            assert output_version is not None
             output_path = task_to_run.get_output_path(ctx)
             assert output_path is not None
             kwargs["record_output"] = True
-            kwargs["version_to_record"] = exp_version
+            kwargs["version_to_record"] = output_version
             kwargs["serialize_args_options"] = True
             kwargs["output_path"] = output_path
         elif execute_task_type == ExecuteTaskType.RunCommand:
-            exp_version = None
             output_path = task_to_run.get_output_path(ctx)
             assert output_path is not None
             kwargs["record_output"] = False
@@ -156,7 +156,6 @@ class Maestro(MaestroInterface):
         return ExecuteTaskResponse(
             start_timestamp=start_timestamp,
             end_timestamp=end_timestamp,
-            version=exp_version,
         )
 
     async def unpack_task_outputs(
