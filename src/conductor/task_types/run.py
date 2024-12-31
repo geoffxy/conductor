@@ -81,6 +81,10 @@ class _RunSubprocess(TaskType):
     def env(self) -> Optional[TaskIdentifier]:
         return self._env
 
+    @property
+    def runs_in_env(self) -> bool:
+        return self._env is not None
+
     def _create_new_version(self, ctx: "c.Context") -> None:
         # N.B. Only `RunExperiment` is versioned.
         pass

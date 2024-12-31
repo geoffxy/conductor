@@ -1,17 +1,24 @@
 from typing import Dict, List, Optional
 
 from conductor.context import Context
+from conductor.errors import InternalError, EnvsRequireGit
 from conductor.execution.ops.combine_outputs import CombineOutputs
 from conductor.execution.ops.noop import NoOp
 from conductor.execution.ops.operation import Operation
+from conductor.execution.ops.run_remote_task import RunRemoteTask
 from conductor.execution.ops.run_task_executable import RunTaskExecutable
+from conductor.execution.ops.shutdown_remote_env import ShutdownRemoteEnv
+from conductor.execution.ops.start_remote_env import StartRemoteEnv
+from conductor.execution.ops.transfer_repo import TransferRepo
+from conductor.execution.ops.transfer_results import TransferResults, TransferDirection
 from conductor.execution.planning.lowering import LoweringTask, LoweringState
 from conductor.execution.plan import ExecutionPlan
 from conductor.execution.operation_state import OperationState
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
-from conductor.task_types.group import Group
 from conductor.task_types.combine import Combine
+from conductor.task_types.environment import Environment
+from conductor.task_types.group import Group
 from conductor.task_types.run import RunCommand, RunExperiment
 
 
@@ -77,26 +84,39 @@ class ExecutionPlanner:
                     stack.append(dep)
 
             elif lt.state == LoweringState.SECOND_VISIT:
-                new_op = self._create_local_operation(lt)
+                if lt.task.runs_in_env:
+                    ops = self._create_env_operations(lt)
+                    assert len(ops) > 1
 
-                # Hook the new dependency into the graph.
-                for dep in lt.deps:
-                    for dep_op in dep.output_ops:
-                        new_op.add_exe_dep(dep_op)
-                        dep_op.add_dep_of(new_op)
-                lt.output_ops.append(new_op)
+                    # ops[0] is the first task to run, ops[-1] is the last.
+                    # So the deps of the `lt` task should be the deps of
+                    # `ops[0]`.
+                    for dep in lt.deps:
+                        for dep_op in dep.output_ops:
+                            ops[0].add_exe_dep(dep_op)
+                            dep_op.add_dep_of(ops[0])
+                    lt.output_ops.append(ops[-1])
 
-                # If this operation has no dependencies, it is part of
-                # `initial_operations`.
-                if len(new_op.exe_deps) == 0:
-                    initial_operations.append(new_op)
+                    all_ops.extend(ops)
+                    num_tasks_to_run += len(ops)
 
-                all_ops.append(new_op)
+                else:
+                    new_op = self._create_local_operation(lt)
 
-                # N.B. Right now there's a 1-to-1 correspondence between
-                # tasks and operations. But with remote execution, this will
-                # change.
-                num_tasks_to_run += 1
+                    # Hook the new dependency into the graph.
+                    for dep in lt.deps:
+                        for dep_op in dep.output_ops:
+                            new_op.add_exe_dep(dep_op)
+                            dep_op.add_dep_of(new_op)
+                    lt.output_ops.append(new_op)
+
+                    # If this operation has no dependencies, it is part of
+                    # `initial_operations`.
+                    if len(new_op.exe_deps) == 0:
+                        initial_operations.append(new_op)
+
+                    all_ops.append(new_op)
+                    num_tasks_to_run += 1
 
         return ExecutionPlan(
             task_to_run=task_to_run,
@@ -181,6 +201,98 @@ class ExecutionPlanner:
         else:
             # This indicates a bug: we added a new task type but did
             # not update the planner.
-            raise NotImplementedError(f"Unsupported task type: {lt.task}")
+            raise InternalError(details=f"Unsupported task type: {lt.task}")
 
         return new_op
+
+    def _create_env_operations(self, lt: LoweringTask) -> List[Operation]:
+        """
+        This is used when the task maps to multiple operations (when the task
+        runs inside a remote environment).
+        """
+        assert isinstance(lt.task, RunCommand) or isinstance(lt.task, RunExperiment)
+        assert lt.task.env is not None
+
+        git_root = self._ctx.git.git_root()
+        if git_root is None:
+            raise EnvsRequireGit()
+
+        # Each remote task maps to the following operations:
+        # - Start the remote env
+        # - Transfer repo
+        # - Transfer dependency outputs
+        # - Run task
+        # - Transfer results back
+        # - Shutdown the remote env
+
+        env_task = self._ctx.task_index.get_task(lt.task.env)
+        assert isinstance(env_task, Environment)
+        env_name = env_task.identifier.name
+        env_startstop_working_path = env_task.get_working_path(self._ctx)
+        workspace_rel_project_root = self._ctx.project_root.relative_to(git_root)
+
+        # NOTE: This does not yet handle task output versions.
+        start_env = StartRemoteEnv(
+            initial_state=OperationState.QUEUED,
+            env_name=env_name,
+            start_runnable=env_task.start,
+            working_path=env_startstop_working_path,
+            remote_host=env_task.host,
+            remote_user=env_task.user,
+        )
+        transfer_repo = TransferRepo(
+            initial_state=OperationState.QUEUED,
+            env_name=env_name,
+        )
+        transfer_to_env = TransferResults(
+            initial_state=OperationState.QUEUED,
+            env_name=env_name,
+            direction=TransferDirection.ToEnv,
+            workspace_rel_project_root=workspace_rel_project_root,
+            versioned_tasks=[],
+            unversioned_tasks=[],
+        )
+        run_task = RunRemoteTask(
+            initial_state=OperationState.QUEUED,
+            env_name=env_name,
+            workspace_rel_project_root=workspace_rel_project_root,
+            task=lt.task,
+            dep_versions={},
+        )
+        transfer_from_env = TransferResults(
+            initial_state=OperationState.QUEUED,
+            env_name=env_name,
+            direction=TransferDirection.FromEnv,
+            workspace_rel_project_root=workspace_rel_project_root,
+            versioned_tasks=[],
+            unversioned_tasks=[],
+        )
+        shutdown_env = ShutdownRemoteEnv(
+            initial_state=OperationState.QUEUED,
+            env_name=env_name,
+            shutdown_runnable=env_task.stop,
+            working_path=env_startstop_working_path,
+        )
+
+        ops = [
+            start_env,
+            transfer_repo,
+            transfer_to_env,
+            run_task,
+            transfer_from_env,
+            shutdown_env,
+        ]
+        _link_ops(ops)
+        return ops
+
+
+def _link_ops(ops: List[Operation]) -> None:
+    """
+    Links operations together based on dependencies.
+    """
+    for idx, op in enumerate(ops):
+        if idx == 0:
+            continue
+        prev_op = ops[idx - 1]
+        prev_op.add_dep_of(op)
+        op.add_exe_dep(prev_op)

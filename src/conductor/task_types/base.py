@@ -58,6 +58,13 @@ class TaskType:
     def parallelizable(self) -> bool:
         return False
 
+    @property
+    def runs_in_env(self) -> bool:
+        """
+        If True, this task is supposed to run in an environment.
+        """
+        return False
+
     def traverse(self, ctx: "c.Context", visitor: Callable[["TaskType"], None]) -> None:
         """
         Performs a pre-order traversal of the dependency graph starting at
