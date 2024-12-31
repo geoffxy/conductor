@@ -231,6 +231,22 @@ class ExecutionPlanner:
         env_startstop_working_path = env_task.get_working_path(self._ctx)
         workspace_rel_project_root = self._ctx.project_root.relative_to(git_root)
 
+        if isinstance(lt.task, RunExperiment):
+            output_version = lt.task.create_new_version(self._ctx)
+        else:
+            output_version = None
+
+        # Collect dependencies.
+        versioned_task_deps = []
+        unversioned_task_deps = []
+        for dep in lt.task.deps:
+            dep_task = self._ctx.task_index.get_task(dep)
+            out_version = dep_task.get_output_version(self._ctx)
+            if out_version is not None:
+                versioned_task_deps.append((dep, out_version))
+            else:
+                unversioned_task_deps.append(dep)
+
         # NOTE: This does not yet handle task output versions.
         start_env = StartRemoteEnv(
             initial_state=OperationState.QUEUED,
@@ -249,24 +265,28 @@ class ExecutionPlanner:
             env_name=env_name,
             direction=TransferDirection.ToEnv,
             workspace_rel_project_root=workspace_rel_project_root,
-            versioned_tasks=[],
-            unversioned_tasks=[],
+            versioned_tasks=versioned_task_deps,
+            unversioned_tasks=unversioned_task_deps,
         )
         run_task = RunRemoteTask(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
             workspace_rel_project_root=workspace_rel_project_root,
             task=lt.task,
-            dep_versions={},
-            output_version=None,
+            dep_versions={k: v for k, v in versioned_task_deps},
+            output_version=output_version,
         )
         transfer_from_env = TransferResults(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
             direction=TransferDirection.FromEnv,
             workspace_rel_project_root=workspace_rel_project_root,
-            versioned_tasks=[],
-            unversioned_tasks=[],
+            versioned_tasks=(
+                [] if output_version is None else [(lt.task.identifier, output_version)]
+            ),
+            unversioned_tasks=(
+                [] if output_version is not None else [lt.task.identifier]
+            ),
         )
         shutdown_env = ShutdownRemoteEnv(
             initial_state=OperationState.QUEUED,
