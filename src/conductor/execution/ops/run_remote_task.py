@@ -56,13 +56,15 @@ class RunRemoteTask(Operation):
         client = remote_env.client()
         workspace_name = remote_env.workspace_name()
         # NOTE: This can be made asynchronous if needed.
-        client.execute_task(
+        response = client.execute_task(
             workspace_name,
             self._project_root,
             self._task.identifier,
             self._dep_versions,
             execute_task_type,
         )
+        if response.version is not None:
+            ctx.env_task_versions[self._task.identifier] = response.version
         return OperationExecutionHandle.from_sync_execution()
 
     def finish_execution(self, handle: OperationExecutionHandle, ctx: Context) -> None:

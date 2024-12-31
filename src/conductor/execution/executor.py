@@ -137,6 +137,7 @@ class Executor:
             self._reset()
             plan.reset_waiting_on()
             self._num_tasks_to_run = plan.num_tasks_to_run
+            ctx.env_task_versions.clear()
             start = time.time()
 
             # 1. Print out any cached tasks.
