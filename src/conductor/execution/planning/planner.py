@@ -247,7 +247,6 @@ class ExecutionPlanner:
             else:
                 unversioned_task_deps.append(dep)
 
-        # NOTE: This does not yet handle task output versions.
         start_env = StartRemoteEnv(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
