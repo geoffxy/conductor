@@ -53,6 +53,26 @@ class Operation:
         """
         return False
 
+    def start_progress_message(self) -> Optional[str]:
+        """
+        A message to display when this operation starts executing.
+        """
+        return None
+
+    def finish_progress_message(self) -> Optional[str]:
+        """
+        A message to display when this operation successfully finishes
+        executing.
+        """
+        return None
+
+    def error_progress_message(self) -> Optional[str]:
+        """
+        A message to display when this operation finishes executing with an
+        error.
+        """
+        return None
+
     # Execution-related methods.
 
     def start_execution(

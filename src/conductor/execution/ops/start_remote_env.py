@@ -28,6 +28,12 @@ class StartRemoteEnv(Operation):
         self._remote_host = remote_host
         self._remote_user = remote_user
 
+    def start_progress_message(self) -> Optional[str]:
+        return f"Starting environment '{self._env_name}'..."
+
+    def error_progress_message(self) -> Optional[str]:
+        return f"Failed to start environment '{self._env_name}'."
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:

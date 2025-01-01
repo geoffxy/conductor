@@ -126,6 +126,8 @@ class Executor:
 
         # If `silent` is set to `True`, the executor will not print any output
         self._silent = silent
+        # Used for tracking newlines when printing progress messages.
+        self._needs_newline_separator = False
 
     def run_plan(
         self,
@@ -250,9 +252,17 @@ class Executor:
                 next_op.set_state(OperationState.SKIPPED)
                 self._process_finished_op(next_op)
             else:
+                start_progress_msg = next_op.start_progress_message()
+                if start_progress_msg is not None and not self._silent:
+                    if not avoid_leading_newline and self._needs_newline_separator:
+                        print()
+                        self._needs_newline_separator = False
+                    print_cyan("→ {}".format(start_progress_msg))
+
                 if next_op.main_task is not None and not self._silent:
                     if not avoid_leading_newline:
                         print()
+                    self._needs_newline_separator = False
                     print_cyan(
                         "✱ Running {}... {}".format(
                             str(next_op.main_task.identifier),
@@ -304,6 +314,12 @@ class Executor:
                 print_green(
                     "✓ {} completed successfully.".format(op.main_task.identifier)
                 )
+            finish_msg = op.finish_progress_message()
+            if finish_msg is not None and not self._silent:
+                if self._needs_newline_separator:
+                    print()
+                    self._needs_newline_separator = False
+                print_green("→ {}".format(finish_msg))
         except ConductorAbort:
             op.set_state(OperationState.ABORTED)
             # N.B. A slot may be leaked here, but it does not matter because we
@@ -328,6 +344,8 @@ class Executor:
             if dep_of.waiting_on > 0:
                 continue
             self._ready_to_run.enqueue_op(dep_of)
+        if finished_op.main_task is not None:
+            self._needs_newline_separator = True
 
     def _report_execution_results(self, plan: ExecutionPlan, elapsed_time: float):
         all_succeeded = all(map(lambda op: op.succeeded(), self._completed_ops))
@@ -400,11 +418,18 @@ class Executor:
             raise failed_task_ops[0].stored_error
 
     def _print_op_failed(self, op: Operation):
-        if op.main_task is None:
-            return
         if self._silent:
             return
-        print_red("✘ {} failed.".format(op.main_task.identifier))
+
+        if op.main_task is not None:
+            print_red("✘ {} failed.".format(op.main_task.identifier))
+
+        error_msg = op.error_progress_message()
+        if error_msg is not None:
+            if self._needs_newline_separator:
+                print()
+                self._needs_newline_separator = False
+            print_red("→ {}".format(error_msg))
 
     def _get_progress_string(self):
         return "({}/{})".format(str(self._num_tasks_dequeued), self._num_tasks_to_run)
