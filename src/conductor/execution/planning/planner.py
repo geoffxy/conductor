@@ -97,6 +97,9 @@ class ExecutionPlanner:
                             dep_op.add_dep_of(ops[0])
                     lt.output_ops.append(ops[-1])
 
+                    if len(ops[0].exe_deps) == 0:
+                        initial_operations.append(ops[0])
+
                     all_ops.extend(ops)
                     num_tasks_to_run += len(ops)
 
