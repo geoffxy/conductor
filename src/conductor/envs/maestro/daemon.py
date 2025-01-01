@@ -62,7 +62,8 @@ class Maestro(MaestroInterface):
         process = await asyncio.create_subprocess_exec(*clone_args)
         await process.wait()
         if process.returncode != 0:
-            raise RuntimeError("Failed to unpack the bundle.")
+            raise InternalError(details="Failed to unpack the bundle.")
+        logger.info("Unpacked bundle %s to workspace %s", str(bundle_path), workspace_name)
         return workspace_name
 
     async def execute_task(
