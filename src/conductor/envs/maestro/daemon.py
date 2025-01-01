@@ -63,7 +63,9 @@ class Maestro(MaestroInterface):
         await process.wait()
         if process.returncode != 0:
             raise InternalError(details="Failed to unpack the bundle.")
-        logger.info("Unpacked bundle %s to workspace %s", str(bundle_path), workspace_name)
+        logger.info(
+            "Unpacked bundle %s to workspace %s", str(bundle_path), workspace_name
+        )
         return workspace_name
 
     async def execute_task(
@@ -120,7 +122,7 @@ class Maestro(MaestroInterface):
             assert isinstance(task_to_run, RunExperiment)
             # We need it to be versioned.
             assert output_version is not None
-            output_path = task_to_run.get_output_path(ctx)
+            output_path = task_to_run.get_specific_output_path(ctx, output_version)
             assert output_path is not None
             kwargs["record_output"] = True
             kwargs["version_to_record"] = output_version
