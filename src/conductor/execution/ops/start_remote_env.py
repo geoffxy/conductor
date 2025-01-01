@@ -31,9 +31,6 @@ class StartRemoteEnv(Operation):
     def start_progress_message(self) -> Optional[str]:
         return f"Starting environment '{self._env_name}'..."
 
-    def finish_progress_message(self) -> Optional[str]:
-        return f"Environment '{self._env_name}' has successfully started."
-
     def error_progress_message(self) -> Optional[str]:
         return f"Failed to start environment '{self._env_name}'."
 

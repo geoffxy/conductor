@@ -26,10 +26,10 @@ class ShutdownRemoteEnv(Operation):
         return f"Shutting down environment '{self._env_name}'..."
 
     def finish_progress_message(self) -> Optional[str]:
-        return f"Environment '{self._env_name}' has successfully shutdown."
+        return f"Environment '{self._env_name}' has successfully shut down."
 
     def error_progress_message(self) -> Optional[str]:
-        return f"Failed to shutdown environment '{self._env_name}'."
+        return f"Failed to shut down environment '{self._env_name}'."
 
     def start_execution(
         self, ctx: Context, slot: Optional[int]
