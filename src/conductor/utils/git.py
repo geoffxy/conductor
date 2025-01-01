@@ -50,7 +50,6 @@ class Git:
             ["git", "rev-parse", "--path-format=absolute", "--git-dir"],
             cwd=self._project_root,
             check=False,
-            stderr=subprocess.DEVNULL,
             capture_output=True,
         )
         if result.returncode != 0:

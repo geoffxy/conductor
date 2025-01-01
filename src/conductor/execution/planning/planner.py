@@ -97,6 +97,9 @@ class ExecutionPlanner:
                             dep_op.add_dep_of(ops[0])
                     lt.output_ops.append(ops[-1])
 
+                    if len(ops[0].exe_deps) == 0:
+                        initial_operations.append(ops[0])
+
                     all_ops.extend(ops)
                     num_tasks_to_run += len(ops)
 
@@ -247,6 +250,7 @@ class ExecutionPlanner:
             else:
                 unversioned_task_deps.append(dep)
 
+        ops: List[Operation] = []
         start_env = StartRemoteEnv(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
@@ -255,18 +259,25 @@ class ExecutionPlanner:
             remote_host=env_task.host,
             remote_user=env_task.user,
         )
+        ops.append(start_env)
+
         transfer_repo = TransferRepo(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
         )
-        transfer_to_env = TransferResults(
-            initial_state=OperationState.QUEUED,
-            env_name=env_name,
-            direction=TransferDirection.ToEnv,
-            workspace_rel_project_root=workspace_rel_project_root,
-            versioned_tasks=versioned_task_deps,
-            unversioned_tasks=unversioned_task_deps,
-        )
+        ops.append(transfer_repo)
+
+        if len(versioned_task_deps) > 0 or len(unversioned_task_deps) > 0:
+            transfer_to_env = TransferResults(
+                initial_state=OperationState.QUEUED,
+                env_name=env_name,
+                direction=TransferDirection.ToEnv,
+                workspace_rel_project_root=workspace_rel_project_root,
+                versioned_tasks=versioned_task_deps,
+                unversioned_tasks=unversioned_task_deps,
+            )
+            ops.append(transfer_to_env)
+
         run_task = RunRemoteTask(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
@@ -275,6 +286,8 @@ class ExecutionPlanner:
             dep_versions={k: v for k, v in versioned_task_deps},
             output_version=output_version,
         )
+        ops.append(run_task)
+
         transfer_from_env = TransferResults(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
@@ -287,21 +300,16 @@ class ExecutionPlanner:
                 [] if output_version is not None else [lt.task.identifier]
             ),
         )
+        ops.append(transfer_from_env)
+
         shutdown_env = ShutdownRemoteEnv(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
             shutdown_runnable=env_task.stop,
             working_path=env_startstop_working_path,
         )
+        ops.append(shutdown_env)
 
-        ops = [
-            start_env,
-            transfer_repo,
-            transfer_to_env,
-            run_task,
-            transfer_from_env,
-            shutdown_env,
-        ]
         _link_ops(ops)
         return ops
 

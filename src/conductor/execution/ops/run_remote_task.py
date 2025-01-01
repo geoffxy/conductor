@@ -34,6 +34,14 @@ class RunRemoteTask(Operation):
         self._project_root = workspace_rel_project_root
         self._output_version = output_version
 
+    @property
+    def associated_task(self) -> Optional[TaskType]:
+        return self._task
+
+    @property
+    def main_task(self) -> Optional[TaskType]:
+        return self._task
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:
