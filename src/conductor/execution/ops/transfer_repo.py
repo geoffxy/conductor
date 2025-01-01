@@ -18,6 +18,15 @@ class TransferRepo(Operation):
         super().__init__(initial_state)
         self._env_name = env_name
 
+    def start_progress_message(self) -> Optional[str]:
+        return f"Transferring project to environment '{self._env_name}'..."
+
+    def finish_progress_message(self) -> Optional[str]:
+        return f"Successfully transferred project to environment '{self._env_name}'."
+
+    def error_progress_message(self) -> Optional[str]:
+        return f"Failed to transfer project to environment '{self._env_name}'."
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:

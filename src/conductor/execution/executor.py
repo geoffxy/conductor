@@ -250,6 +250,10 @@ class Executor:
                 next_op.set_state(OperationState.SKIPPED)
                 self._process_finished_op(next_op)
             else:
+                start_progress_msg = next_op.start_progress_message()
+                if start_progress_msg is not None and not self._silent:
+                    print_cyan("→ {}".format(start_progress_msg))
+
                 if next_op.main_task is not None and not self._silent:
                     if not avoid_leading_newline:
                         print()
@@ -304,6 +308,9 @@ class Executor:
                 print_green(
                     "✓ {} completed successfully.".format(op.main_task.identifier)
                 )
+            finish_msg = op.finish_progress_message()
+            if finish_msg is not None and not self._silent:
+                print_green("→ {}".format(finish_msg))
         except ConductorAbort:
             op.set_state(OperationState.ABORTED)
             # N.B. A slot may be leaked here, but it does not matter because we
@@ -400,11 +407,15 @@ class Executor:
             raise failed_task_ops[0].stored_error
 
     def _print_op_failed(self, op: Operation):
-        if op.main_task is None:
-            return
         if self._silent:
             return
-        print_red("✘ {} failed.".format(op.main_task.identifier))
+
+        if op.main_task is not None:
+            print_red("✘ {} failed.".format(op.main_task.identifier))
+
+        error_msg = op.error_progress_message()
+        if error_msg is not None:
+            print_red("→ {}".format(error_msg))
 
     def _get_progress_string(self):
         return "({}/{})".format(str(self._num_tasks_dequeued), self._num_tasks_to_run)
