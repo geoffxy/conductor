@@ -74,6 +74,10 @@ message ExecuteTaskRequest {
 
   // The type of task to run.
   ExecuteTaskType execute_task_type = 5;
+
+  // If the task is a `run_experiment()` task, this must contain the result
+  // version to create. Otherwise, it will be empty.
+  TaskVersion result_version = 6;
 }
 
 enum ExecuteTaskType {
@@ -107,9 +111,6 @@ message TaskWithVersion {
 message ExecuteTaskResponse {
   uint64 start_timestamp = 1;
   uint64 end_timestamp = 2;
-  // If the task is a `run_experiment()` task, this will contain the result
-  // version. Otherwise, it will be empty.
-  TaskVersion result_version = 3;
 }
 
 message ExecuteTaskResult {

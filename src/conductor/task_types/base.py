@@ -58,6 +58,13 @@ class TaskType:
     def parallelizable(self) -> bool:
         return False
 
+    @property
+    def runs_in_env(self) -> bool:
+        """
+        If True, this task is supposed to run in an environment.
+        """
+        return False
+
     def traverse(self, ctx: "c.Context", visitor: Callable[["TaskType"], None]) -> None:
         """
         Performs a pre-order traversal of the dependency graph starting at
@@ -84,6 +91,13 @@ class TaskType:
         that the task does not need to be executed again.
         """
         return True
+
+    def get_output_version(self, ctx: "c.Context") -> Optional[Version]:
+        """
+        If this task is versioned, this method returns the most relevant version
+        of the task's outputs.
+        """
+        return None
 
     def get_output_path(
         self,

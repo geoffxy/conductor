@@ -37,6 +37,26 @@ class Git:
         )
         return result.returncode == 0
 
+    def git_root(self) -> Optional[pathlib.Path]:
+        """
+        Returns an absolute path to the root directory of the git repository, if
+        the project is using Git. Otherwise, returns `None`.
+
+        The root directory of the repository is not necessarily the same as the
+        project root (e.g., if the Conductor project is defined in a
+        subdirectory of the current repository).
+        """
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-dir"],
+            cwd=self._project_root,
+            check=False,
+            stderr=subprocess.DEVNULL,
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            return None
+        return pathlib.Path(result.stdout.decode("utf-8")).parent
+
     def current_commit(self) -> Optional[Commit]:
         """
         Retrieves the project's current commit hash and whether or not there are

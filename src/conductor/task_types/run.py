@@ -81,6 +81,10 @@ class _RunSubprocess(TaskType):
     def env(self) -> Optional[TaskIdentifier]:
         return self._env
 
+    @property
+    def runs_in_env(self) -> bool:
+        return self._env is not None
+
     def _create_new_version(self, ctx: "c.Context") -> None:
         # N.B. Only `RunExperiment` is versioned.
         pass
@@ -169,6 +173,10 @@ class RunExperiment(_RunSubprocess):
     @property
     def record_output(self) -> bool:
         return True
+
+    def get_output_version(self, ctx: "c.Context") -> Optional[Version]:
+        self._ensure_most_relevant_existing_version_computed(ctx)
+        return self._most_relevant_version
 
     def get_output_path(self, ctx: "c.Context") -> Optional[pathlib.Path]:
         self._ensure_most_relevant_existing_version_computed(ctx)

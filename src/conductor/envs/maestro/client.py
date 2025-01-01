@@ -65,6 +65,7 @@ class MaestroGrpcClient:
         task_identifier: TaskIdentifier,
         dep_versions: Dict[TaskIdentifier, Version],
         execute_task_type: ExecuteTaskType,
+        output_version: Optional[Version],
     ) -> ExecuteTaskResponse:
         assert self._stub is not None
         # pylint: disable-next=no-member
@@ -88,6 +89,13 @@ class MaestroGrpcClient:
             raise InternalError(
                 details=f"Unsupported execute task type {str(execute_task_type)}."
             )
+        if output_version is not None:
+            msg.result_version.timestamp = output_version.timestamp
+            if output_version.commit_hash is not None:
+                msg.result_version.commit_hash = output_version.commit_hash
+            msg.result_version.has_uncommitted_changes = (
+                output_version.has_uncommitted_changes
+            )
         result = self._stub.ExecuteTask(msg)
         if result.WhichOneof("result") == "error":
             raise _pb_to_error(result.error)
@@ -95,15 +103,6 @@ class MaestroGrpcClient:
         return ExecuteTaskResponse(
             start_timestamp=response.start_timestamp,
             end_timestamp=response.end_timestamp,
-            version=(
-                None
-                if response.version.timestamp == 0
-                else Version(
-                    timestamp=response.version.timestamp,
-                    commit_hash=response.version.commit_hash,
-                    has_uncommitted_changes=response.version.has_uncommitted_changes,
-                )
-            ),
         )
 
     def unpack_task_outputs(

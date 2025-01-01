@@ -33,6 +33,22 @@ class Environment(TaskType):
         self._host = host
         self._user = user
 
+    @property
+    def start(self) -> Optional[str]:
+        return self._start
+
+    @property
+    def stop(self) -> Optional[str]:
+        return self._stop
+
+    @property
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def user(self) -> str:
+        return self._user
+
     def __repr__(self) -> str:
         # To reduce verbosity, we do not print out the other properties.
         return super().__repr__() + ")"

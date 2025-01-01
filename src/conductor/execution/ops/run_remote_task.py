@@ -25,12 +25,14 @@ class RunRemoteTask(Operation):
         workspace_rel_project_root: pathlib.Path,
         task: TaskType,
         dep_versions: Dict[TaskIdentifier, Version],
+        output_version: Optional[Version],
     ) -> None:
         super().__init__(initial_state)
         self._env_name = env_name
         self._task = task
         self._dep_versions = dep_versions
         self._project_root = workspace_rel_project_root
+        self._output_version = output_version
 
     def start_execution(
         self, ctx: Context, slot: Optional[int]
@@ -62,6 +64,7 @@ class RunRemoteTask(Operation):
             self._task.identifier,
             self._dep_versions,
             execute_task_type,
+            self._output_version,
         )
         return OperationExecutionHandle.from_sync_execution()
 

@@ -9,7 +9,6 @@ from conductor.utils.output_archiving import ArchiveType
 class ExecuteTaskResponse(NamedTuple):
     start_timestamp: int
     end_timestamp: int
-    version: Optional[Version]
 
 
 class ExecuteTaskType(enum.Enum):
@@ -38,6 +37,7 @@ class MaestroInterface:
         task_identifier: TaskIdentifier,
         dep_versions: Dict[TaskIdentifier, Version],
         execute_task_type: ExecuteTaskType,
+        output_version: Optional[Version],
     ) -> ExecuteTaskResponse:
         raise NotImplementedError
 

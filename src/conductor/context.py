@@ -1,13 +1,14 @@
 import itertools
 import pathlib
-from typing import Optional
+from typing import Optional, Dict
 
 from conductor.config import CONFIG_FILE_NAME, OUTPUT_DIR, VERSION_INDEX_NAME
 from conductor.config_file import ConfigFile
 from conductor.envs.manager import EnvManager
 from conductor.errors import MissingProjectRoot, OutputDirTaken
-from conductor.execution.version_index import VersionIndex
+from conductor.execution.version_index import VersionIndex, Version
 from conductor.parsing.task_index import TaskIndex
+from conductor.task_identifier import TaskIdentifier
 from conductor.utils.git import Git
 from conductor.utils.tee import TeeProcessor
 
@@ -42,6 +43,10 @@ class Context:
         self._tee_processor: Optional[TeeProcessor] = None
 
         self._env_manager: Optional[EnvManager] = EnvManager.create()
+
+        # Used during execution to store task output versions that are passed
+        # between tasks executed in a remote environment.
+        self._env_task_versions: Dict[TaskIdentifier, Version] = {}
 
     @classmethod
     def from_cwd(cls) -> "Context":
@@ -99,6 +104,10 @@ class Context:
     @property
     def envs(self) -> Optional[EnvManager]:
         return self._env_manager
+
+    @property
+    def env_task_versions(self) -> Dict[TaskIdentifier, Version]:
+        return self._env_task_versions
 
     def _ensure_output_dir_exists(self) -> None:
         self.output_path.mkdir(exist_ok=True)
