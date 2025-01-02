@@ -42,5 +42,5 @@ class EnvManager:
     def get_remote_env(self, name: str) -> "RemoteEnv":
         return self._impl.get_remote_env(name)
 
-    def shutdown_remote_env(self, name: str) -> None:
-        return self._impl.shutdown_remote_env(name)
+    def shutdown_remote_env(self, name: str, missing_ok: bool = False) -> None:
+        return self._impl.shutdown_remote_env(name, missing_ok)
