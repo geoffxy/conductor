@@ -195,7 +195,14 @@ class Executor:
         finally:
             if ctx.envs is not None:
                 for env_name in plan.used_envs:
-                    ctx.envs.shutdown_remote_env(env_name, missing_ok=True)
+                    try:
+                        ctx.envs.shutdown_remote_env(env_name, missing_ok=True)
+                    except Exception as ex:  # pylint: disable=broad-exception-caught
+                        print_yellow(
+                            "Unexpected error while shutting down remote environment '{}': {}".format(
+                                env_name, str(ex)
+                            )
+                        )
 
     def _reset(self) -> None:
         self._ready_to_run.clear()
