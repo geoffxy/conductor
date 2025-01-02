@@ -13,5 +13,5 @@ run_command(
 
 environment(
   name="my_env",
-  connect_config="cfg.sh",
+  connect_config="./cfg.sh",
 )
