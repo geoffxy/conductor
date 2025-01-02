@@ -7,6 +7,7 @@ from conductor.execution.optim_rules.rule import OptimizerRule
 from conductor.execution.plan import ExecutionPlan
 from conductor.execution.ops.run_remote_task import RunRemoteTask
 from conductor.execution.ops.run_task_executable import RunTaskExecutable
+from conductor.execution.optim_rules.utils import unlink_op
 
 
 class EliminateShutdownStartEnv(OptimizerRule):
@@ -61,8 +62,8 @@ class EliminateShutdownStartEnv(OptimizerRule):
 
         for pair in pairs_to_remove:
             # Unlink the ops from the graph.
-            _unlink_op(pair.shutdown_op)
-            _unlink_op(pair.start_op)
+            unlink_op(pair.shutdown_op)
+            unlink_op(pair.start_op)
             plan.all_ops.remove(pair.shutdown_op)
             plan.all_ops.remove(pair.start_op)
 
@@ -151,26 +152,3 @@ class _Pair:
             if isinstance(op, (RunRemoteTask, RunTaskExecutable)):
                 return False
         return True
-
-
-def _unlink_op(op: Operation) -> None:
-    # Our dependencies
-    exe_deps = op.exe_deps
-    # Tasks that depend on us
-    deps_of = op.deps_of
-
-    for dep in exe_deps:
-        dep.deps_of.remove(op)
-
-    for dep_of in deps_of:
-        dep_of.exe_deps.remove(op)
-
-    # Tasks that depend on us now have our dependencies.
-    for dep_of in deps_of:
-        for dep in exe_deps:
-            dep_of.add_exe_dep(dep)
-
-    # Our dependencies are now forwarded to our deps_of
-    for dep in exe_deps:
-        for dep_of in deps_of:
-            dep.add_dep_of(dep_of)
