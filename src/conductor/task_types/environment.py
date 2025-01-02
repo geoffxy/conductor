@@ -16,8 +16,7 @@ class Environment(TaskType):
         cond_file_path: pathlib.Path,
         start: Optional[str],
         stop: Optional[str],
-        host: str,
-        user: str,
+        connect_config: str,
         # Note that `deps` is supposed to be an empty sequence.
         deps: Sequence[TaskIdentifier],
     ):
@@ -30,8 +29,7 @@ class Environment(TaskType):
         super().__init__(identifier=identifier, cond_file_path=cond_file_path, deps=[])
         self._start = start
         self._stop = stop
-        self._host = host
-        self._user = user
+        self._connect_config = connect_config
 
     @property
     def start(self) -> Optional[str]:
@@ -42,12 +40,8 @@ class Environment(TaskType):
         return self._stop
 
     @property
-    def host(self) -> str:
-        return self._host
-
-    @property
-    def user(self) -> str:
-        return self._user
+    def connect_config(self) -> str:
+        return self._connect_config
 
     def __repr__(self) -> str:
         # To reduce verbosity, we do not print out the other properties.

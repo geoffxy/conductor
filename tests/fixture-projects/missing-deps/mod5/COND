@@ -1,0 +1,19 @@
+environment(
+  name="invalid0",
+  connect_config"./cfg0.sh",  # Non-existent
+)
+
+environment(
+  name="invalid1",
+  connect_config="./cfg1.sh",
+)
+
+environment(
+  name="invalid2",
+  connect_config="./cfg2.sh",
+)
+
+environment(
+  name="valid",
+  connect_config="./cfg3.sh",
+)

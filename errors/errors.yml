@@ -175,6 +175,17 @@
   name: EnvShutdownFailed
   message: "Failed to shut down the environment '{env_name}'."
 
+3011:
+  name: EnvConfigScriptFailed
+  message: >-
+    Failed to run the environment connection configuration script for environment '{env_name}'.
+
+3012:
+  name: EnvConfigInvalid
+  message: >-
+    The environment connection configuration script for environment '{env_name}'
+    returned an invalid configuration.
+
 
 # Archive and restore errors (error code 4xxx)
 4001:

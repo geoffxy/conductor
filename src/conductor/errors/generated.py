@@ -540,6 +540,34 @@ class EnvShutdownFailed(ConductorError):
         )
 
 
+class EnvConfigScriptFailed(ConductorError):
+    error_code = 3011
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "Failed to run the environment connection configuration script for environment '{env_name}'.".format(
+            env_name=self.env_name,
+        )
+
+
+class EnvConfigInvalid(ConductorError):
+    error_code = 3012
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "The environment connection configuration script for environment '{env_name}' returned an invalid configuration.".format(
+            env_name=self.env_name,
+        )
+
+
 class OutputFileExists(ConductorError):
     error_code = 4001
 
@@ -858,6 +886,8 @@ ERRORS_BY_CODE = {
     3008: EnvsRequireGit,
     3009: EnvStartFailed,
     3010: EnvShutdownFailed,
+    3011: EnvConfigScriptFailed,
+    3012: EnvConfigInvalid,
     4001: OutputFileExists,
     4002: OutputPathDoesNotExist,
     4003: NoTaskOutputsToArchive,
@@ -919,6 +949,8 @@ __all__ = [
     "EnvsRequireGit",
     "EnvStartFailed",
     "EnvShutdownFailed",
+    "EnvConfigScriptFailed",
+    "EnvConfigInvalid",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",

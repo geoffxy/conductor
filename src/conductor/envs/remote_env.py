@@ -1,7 +1,7 @@
 import pathlib
 import time
 import io
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 from fabric import Connection
 
@@ -18,13 +18,13 @@ class RemoteEnv:
     """
 
     @classmethod
-    def start(cls, host: str, user: str) -> "RemoteEnv":
+    def start(cls, host: str, user: str, config: Dict[str, Any]) -> "RemoteEnv":
         """
         Starts a remote environment on `user@host`. This method is blocking and
         will return after the environment has been started.
         """
         # Open the SSH connection and set up the tunnel.
-        conn = Connection(host=host, user=user)
+        conn = Connection(host=host, user=user, connect_kwargs=config)
         conn.open()
         # NOTE: Need to cycle through ports until we find one that is open.
         port = 7583
