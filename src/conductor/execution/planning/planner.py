@@ -103,7 +103,7 @@ class ExecutionPlanner:
                         initial_operations.append(ops[0])
 
                     all_ops.extend(ops)
-                    num_tasks_to_run += len(ops)
+                    num_tasks_to_run += 1
 
                 else:
                     new_op = self._create_local_operation(lt)
