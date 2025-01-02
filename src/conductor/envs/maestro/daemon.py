@@ -146,6 +146,7 @@ class Maestro(MaestroInterface):
         plan = ExecutionPlan(
             task_to_run=task_to_run,
             all_ops=[op],
+            root_op=op,
             initial_ops=[op],
             cached_tasks=[],
             num_tasks_to_run=1,

@@ -8,6 +8,12 @@ class OptimizerRule:
     Represents an optimization rule that can be applied to an execution plan.
     """
 
+    def name(self) -> str:
+        """
+        Returns the name of the rule.
+        """
+        raise NotImplementedError
+
     def apply(self, plan: ExecutionPlan) -> Tuple[bool, ExecutionPlan]:
         """
         Attempt to apply this rule to the given plan. Returns a tuple of whether
