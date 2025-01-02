@@ -1,4 +1,4 @@
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from conductor.envs.remote_env import RemoteEnv
@@ -34,8 +34,10 @@ class EnvManager:
 
         self._impl: mgr_impl.EnvManagerImpl = impl
 
-    def start_remote_env(self, name: str, host: str, user: str) -> "RemoteEnv":
-        return self._impl.start_remote_env(name, host, user)
+    def start_remote_env(
+        self, name: str, host: str, user: str, config: Dict[str, Any]
+    ) -> "RemoteEnv":
+        return self._impl.start_remote_env(name, host, user, config)
 
     def get_remote_env(self, name: str) -> "RemoteEnv":
         return self._impl.get_remote_env(name)

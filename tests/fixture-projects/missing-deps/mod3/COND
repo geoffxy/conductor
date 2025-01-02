@@ -13,6 +13,5 @@ run_command(
 
 environment(
   name="my_env",
-  host="localhost",
-  user="ubuntu",
+  connect_config="cfg.sh",
 )

@@ -65,8 +65,7 @@ _raw_task_types = [
             "name": str,
             "start": Optional[str],
             "stop": Optional[str],
-            "host": str,
-            "user": str,
+            "connect_config": str,
         },
         defaults={
             "start": None,

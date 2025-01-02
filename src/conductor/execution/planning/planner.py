@@ -256,8 +256,7 @@ class ExecutionPlanner:
             env_name=env_name,
             start_runnable=env_task.start,
             working_path=env_startstop_working_path,
-            remote_host=env_task.host,
-            remote_user=env_task.user,
+            connect_config_runnable=env_task.connect_config,
         )
         ops.append(start_env)
 
