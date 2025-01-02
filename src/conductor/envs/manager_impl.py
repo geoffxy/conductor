@@ -24,11 +24,14 @@ class EnvManagerImpl:
     def get_remote_env(self, name: str) -> RemoteEnv:
         return self._active_envs[name]
 
-    def shutdown_remote_env(self, name: str) -> None:
+    def shutdown_remote_env(self, name: str, missing_ok: bool) -> None:
         try:
             self._active_envs[name].shutdown()
             del self._active_envs[name]
         except KeyError as ex:
+            if missing_ok:
+                return
+
             # This is a internal error as we should not be trying to stop an
             # environment that does not exist.
             raise InternalError(

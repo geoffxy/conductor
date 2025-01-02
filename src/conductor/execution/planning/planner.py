@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
 
 from conductor.context import Context
 from conductor.errors import InternalError, EnvsRequireGit
@@ -45,6 +45,7 @@ class ExecutionPlanner:
         cached_tasks: List[TaskType] = []
         task_to_run = self._ctx.task_index.get_task(task_id)
         num_tasks_to_run = 0
+        used_envs: Set[str] = set()
 
         # First pass (depth first):
         # 1. Prune tasks that do not need to execute (due to having cached results).
@@ -85,8 +86,9 @@ class ExecutionPlanner:
 
             elif lt.state == LoweringState.SECOND_VISIT:
                 if lt.task.runs_in_env:
-                    ops = self._create_env_operations(lt)
+                    env_name, ops = self._create_env_operations(lt)
                     assert len(ops) > 1
+                    used_envs.add(env_name)
 
                     # ops[0] is the first task to run, ops[-1] is the last.
                     # So the deps of the `lt` task should be the deps of
@@ -127,6 +129,7 @@ class ExecutionPlanner:
             initial_ops=initial_operations,
             cached_tasks=cached_tasks,
             num_tasks_to_run=num_tasks_to_run,
+            used_envs=used_envs,
         )
 
     def _create_local_operation(self, lt: LoweringTask) -> Operation:
@@ -208,7 +211,7 @@ class ExecutionPlanner:
 
         return new_op
 
-    def _create_env_operations(self, lt: LoweringTask) -> List[Operation]:
+    def _create_env_operations(self, lt: LoweringTask) -> Tuple[str, List[Operation]]:
         """
         This is used when the task maps to multiple operations (when the task
         runs inside a remote environment).
@@ -310,7 +313,7 @@ class ExecutionPlanner:
         ops.append(shutdown_env)
 
         _link_ops(ops)
-        return ops
+        return env_name, ops
 
 
 def _link_ops(ops: List[Operation]) -> None:

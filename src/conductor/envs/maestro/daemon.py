@@ -149,6 +149,7 @@ class Maestro(MaestroInterface):
             initial_ops=[op],
             cached_tasks=[],
             num_tasks_to_run=1,
+            used_envs=set(),
         )
         executor = Executor(execution_slots=1, silent=True)
         executor.run_plan(plan, ctx)

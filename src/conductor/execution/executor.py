@@ -192,6 +192,11 @@ class Executor:
                 print()
             raise
 
+        finally:
+            if ctx.envs is not None:
+                for env_name in plan.used_envs:
+                    ctx.envs.shutdown_remote_env(env_name, missing_ok=True)
+
     def _reset(self) -> None:
         self._ready_to_run.clear()
         self._completed_ops.clear()
