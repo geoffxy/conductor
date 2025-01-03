@@ -7,7 +7,7 @@ from conductor.execution.optim_rules.rule import OptimizerRule
 from conductor.execution.plan import ExecutionPlan
 from conductor.execution.ops.run_remote_task import RunRemoteTask
 from conductor.execution.ops.run_task_executable import RunTaskExecutable
-from conductor.execution.optim_rules.utils import unlink_op
+from conductor.execution.optim_rules.utils import unlink_op, traverse_op_dag
 
 
 class EliminateShutdownStartEnv(OptimizerRule):
@@ -75,20 +75,12 @@ class EliminateShutdownStartEnv(OptimizerRule):
     def _find_start_env_ops(self, root_op: Operation) -> List[StartRemoteEnv]:
         start_ops: List[StartRemoteEnv] = []
 
-        stack = [root_op]
-        visited: Set[int] = set()
-
-        while len(stack) > 0:
-            op = stack.pop()
-            if id(op) in visited:
-                continue
-
-            visited.add(id(op))
+        def visitor(op: Operation) -> None:
+            nonlocal start_ops
             if isinstance(op, StartRemoteEnv):
                 start_ops.append(op)
 
-            stack.extend(op.exe_deps)
-
+        traverse_op_dag(root_op, visitor)
         return start_ops
 
     def _find_closest_shutdown_ops(

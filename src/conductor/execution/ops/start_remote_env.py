@@ -40,6 +40,15 @@ class StartRemoteEnv(Operation):
     def env_name(self) -> str:
         return self._env_name
 
+    def clone_without_deps(self) -> "StartRemoteEnv":
+        return StartRemoteEnv(
+            initial_state=self._state,
+            env_name=self._env_name,
+            start_runnable=self._start_runnable,
+            working_path=self._working_path,
+            connect_config_runnable=self._connect_config_runnable,
+        )
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:

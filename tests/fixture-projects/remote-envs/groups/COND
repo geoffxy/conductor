@@ -1,0 +1,56 @@
+environment(
+  name="group_env",
+  connect_config="",
+)
+
+run_experiment(
+  name="first",
+  run="echo 1",
+  env=":group_env",
+)
+
+run_experiment(
+  name="second",
+  run="echo 2",
+  env=":group_env",
+)
+
+run_experiment(
+  name="third",
+  run="echo 3",
+  env=":group_env",
+)
+
+group(
+  name="test_group",
+  deps=[":first", ":second", ":third"],
+)
+
+run_experiment_group(
+  name="complex1",
+  run="echo 1",
+  env=":group_env",
+  experiments=[
+    ExperimentInstance(
+      name=f"complex1-{idx}"
+    )
+    for idx in range(3)
+  ],
+)
+
+run_experiment_group(
+  name="complex2",
+  run="echo 2",
+  env=":group_env",
+  experiments=[
+    ExperimentInstance(
+      name=f"complex2-{idx}"
+    )
+    for idx in range(3)
+  ],
+)
+
+group(
+  name="complex",
+  deps=[":complex1", ":complex2"],
+)
