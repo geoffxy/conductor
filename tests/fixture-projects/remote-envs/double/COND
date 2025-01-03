@@ -15,3 +15,15 @@ environment(
   name="second_test_env",
   connect_config="",
 )
+
+run_command(
+  name="test_third",
+  run="echo 3",
+  env=":second_test_env",
+  deps=[":test_group"],
+)
+
+group(
+  name="test_group",
+  deps=[":test_second"],
+)

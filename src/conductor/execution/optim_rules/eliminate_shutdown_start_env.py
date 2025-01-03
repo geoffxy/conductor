@@ -121,8 +121,13 @@ class _Pair:
         # This is based on heuristics.
         # - If we have Shutdown -> Start.
         # - If the operations between Shutdown and Start are "fast" operations.
-        if self.start_op.exe_deps.index(self.shutdown_op) != -1:
+        try:
+            self.start_op.exe_deps.index(self.shutdown_op)
             return True
+        except ValueError:
+            # This means that the shutdown op is not a direct dependency of the
+            # start op.
+            pass
 
         # Find all paths between start and shutdown and check that they are all
         # "trivial".

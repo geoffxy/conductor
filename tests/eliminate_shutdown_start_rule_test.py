@@ -141,6 +141,40 @@ def test_simple_double(tmp_path: pathlib.Path) -> None:
     assert num_shutdown == 1
 
 
+def test_simple_multi(tmp_path: pathlib.Path) -> None:
+    cond = ConductorRunner.from_template(tmp_path, FIXTURE_TEMPLATES["remote-envs"])
+    ctx = create_git_project(cond.project_root)
+    task_id = TaskIdentifier.from_str("//double:test_third")
+    ctx.task_index.load_transitive_closure(task_id)
+    planner = ExecutionPlanner(ctx)
+    raw_plan = planner.create_plan_for(task_id)
+
+    assert raw_plan.num_tasks_to_run == 4
+    num_start = 0
+    num_shutdown = 0
+
+    def visitor(op: Operation) -> None:
+        nonlocal num_start, num_shutdown
+        if isinstance(op, StartRemoteEnv):
+            num_start += 1
+        elif isinstance(op, ShutdownRemoteEnv):
+            num_shutdown += 1
+
+    traverse_plan(raw_plan, visitor)
+    assert num_start == 3
+    assert num_shutdown == 3
+
+    rule = EliminateShutdownStartEnv()
+    changed, new_plan = rule.apply(raw_plan)
+    assert changed
+
+    num_start = 0
+    num_shutdown = 0
+    traverse_plan(new_plan, visitor)
+    assert num_start == 1
+    assert num_shutdown == 1
+
+
 def create_git_project(project_root: pathlib.Path) -> Context:
     project_root.mkdir(exist_ok=True)
     cond_config_file = project_root / "cond_config.toml"

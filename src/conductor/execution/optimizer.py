@@ -1,13 +1,16 @@
 from typing import Tuple, List
 
 from conductor.execution.optim_rules.rule import OptimizerRule
+from conductor.execution.optim_rules.eliminate_shutdown_start_env import (
+    EliminateShutdownStartEnv,
+)
 from conductor.execution.plan import ExecutionPlan
 
 
 class ExecutionPlanOptimizer:
     @classmethod
     def with_default_rules(cls) -> "ExecutionPlanOptimizer":
-        return cls([])
+        return cls([EliminateShutdownStartEnv()])
 
     def __init__(self, rules: List[OptimizerRule]) -> None:
         self._rules = rules
