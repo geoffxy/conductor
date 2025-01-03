@@ -1,0 +1,10 @@
+run_experiment(
+  name="test",
+  run="echo 1",
+  env=":test_env",
+)
+
+environment(
+  name="test_env",
+  connect_config="",
+)

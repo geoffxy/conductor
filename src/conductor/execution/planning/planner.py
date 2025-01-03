@@ -53,6 +53,8 @@ class ExecutionPlanner:
         root = LoweringTask.initial(task_to_run)
         stack = [root]
         visited: Dict[TaskIdentifier, LoweringTask] = {}
+        root_op: Optional[Operation] = None
+
         while len(stack) > 0:
             lt = stack.pop()
 
@@ -105,6 +107,9 @@ class ExecutionPlanner:
                     all_ops.extend(ops)
                     num_tasks_to_run += 1
 
+                    if len(stack) == 0:
+                        root_op = ops[-1]
+
                 else:
                     new_op = self._create_local_operation(lt)
 
@@ -123,9 +128,13 @@ class ExecutionPlanner:
                     all_ops.append(new_op)
                     num_tasks_to_run += 1
 
+                    if len(stack) == 0:
+                        root_op = new_op
+
         return ExecutionPlan(
             task_to_run=task_to_run,
             all_ops=all_ops,
+            root_op=root_op,
             initial_ops=initial_operations,
             cached_tasks=cached_tasks,
             num_tasks_to_run=num_tasks_to_run,

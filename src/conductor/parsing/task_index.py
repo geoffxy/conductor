@@ -127,7 +127,10 @@ class TaskIndex:
                 if isinstance(loaded_task, RunExperiment) or isinstance(
                     loaded_task, RunCommand
                 ):
-                    if loaded_task.env is not None:
+                    if (
+                        loaded_task.env is not None
+                        and loaded_task.env not in visited_identifiers
+                    ):
                         identifiers_to_load.append((loaded_task.env, True, 0))
 
     def load_single_task(self, identifier: TaskIdentifier):

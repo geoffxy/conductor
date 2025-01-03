@@ -36,6 +36,10 @@ class StartRemoteEnv(Operation):
     def error_progress_message(self) -> Optional[str]:
         return f"Failed to start environment '{self._env_name}'."
 
+    @property
+    def env_name(self) -> str:
+        return self._env_name
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:

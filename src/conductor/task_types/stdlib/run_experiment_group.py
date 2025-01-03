@@ -18,6 +18,7 @@ def run_experiment_group(
     name: str,
     run: str,
     experiments: Iterable[ExperimentInstance],
+    env: Optional[str] = None,
     chain_experiments: bool = False,
     deps: Optional[Sequence[str]] = None,
 ) -> None:
@@ -52,6 +53,7 @@ def run_experiment_group(
                 args=experiment.args,
                 options=experiment.options,
                 deps=experiment_deps,
+                env=env,
             )
             experiment_identifier = ":" + experiment.name
             relative_experiment_identifiers.append(experiment_identifier)
