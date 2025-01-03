@@ -107,7 +107,7 @@ class ExecutionPlanner:
                     all_ops.extend(ops)
                     num_tasks_to_run += 1
 
-                    if root_op is None:
+                    if len(stack) == 0:
                         root_op = ops[-1]
 
                 else:
@@ -128,7 +128,7 @@ class ExecutionPlanner:
                     all_ops.append(new_op)
                     num_tasks_to_run += 1
 
-                    if root_op is None:
+                    if len(stack) == 0:
                         root_op = new_op
 
         assert root_op is not None

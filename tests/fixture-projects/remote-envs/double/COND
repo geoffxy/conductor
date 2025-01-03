@@ -1,0 +1,17 @@
+run_experiment(
+  name="test_first",
+  run="echo 1",
+  env=":second_test_env",
+)
+
+run_experiment(
+  name="test_second",
+  run="echo 2",
+  env=":second_test_env",
+  deps=[":test_first"],
+)
+
+environment(
+  name="second_test_env",
+  connect_config="",
+)
