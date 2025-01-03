@@ -35,6 +35,14 @@ class ShutdownRemoteEnv(Operation):
     def env_name(self) -> str:
         return self._env_name
 
+    def clone_without_deps(self) -> "ShutdownRemoteEnv":
+        return ShutdownRemoteEnv(
+            initial_state=self._state,
+            env_name=self._env_name,
+            shutdown_runnable=self._shutdown_runnable,
+            working_path=self._working_path,
+        )
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:

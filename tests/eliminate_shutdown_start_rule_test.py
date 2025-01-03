@@ -1,5 +1,5 @@
 import pathlib
-from typing import List, Callable, Set
+from typing import List
 
 from .conductor_runner import ConductorRunner, FIXTURE_TEMPLATES
 from conductor.context import Context
@@ -9,7 +9,7 @@ from conductor.execution.ops.operation import Operation
 from conductor.execution.optim_rules.eliminate_shutdown_start_env import (
     EliminateShutdownStartEnv,
 )
-from conductor.execution.plan import ExecutionPlan
+from conductor.execution.optim_rules.utils import traverse_plan
 from conductor.execution.planning.planner import ExecutionPlanner
 from conductor.task_types.base import TaskType
 from conductor.task_types.environment import Environment
@@ -194,21 +194,3 @@ def add_to_task_index(
         ctx.task_index._loaded_tasks[env.identifier] = env
         # pylint: disable-next=protected-access
         ctx.task_index._loaded_envs[env.identifier.name] = env
-
-
-def traverse_plan(plan: ExecutionPlan, visitor: Callable[[Operation], None]) -> None:
-    if plan.root_op is None:
-        return
-
-    stack = [plan.root_op]
-    visited: Set[int] = set()
-
-    while len(stack) > 0:
-        op = stack.pop()
-        if id(op) in visited:
-            continue
-
-        visited.add(id(op))
-        visitor(op)
-
-        stack.extend(op.exe_deps)
