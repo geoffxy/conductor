@@ -187,4 +187,5 @@ FIXTURE_TEMPLATES = {
     "include": pathlib.Path(_TESTS_DIR, "fixture-projects", "include"),
     "cyclic-deps": pathlib.Path(_TESTS_DIR, "fixture-projects", "cyclic-deps"),
     "missing-deps": pathlib.Path(_TESTS_DIR, "fixture-projects", "missing-deps"),
+    "remote-envs": pathlib.Path(_TESTS_DIR, "fixture-projects", "remote-envs"),
 }
