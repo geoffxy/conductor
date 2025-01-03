@@ -24,6 +24,9 @@ class EliminateShutdownStartEnv(OptimizerRule):
         return "EliminateShutdownStartEnv"
 
     def apply(self, plan: ExecutionPlan) -> Tuple[bool, ExecutionPlan]:
+        if plan.root_op is None:
+            return False, plan
+
         # 1. Find all StartEnv ops.
         start_ops = self._find_start_env_ops(plan.root_op)
 

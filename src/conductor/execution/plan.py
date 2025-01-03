@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Optional
 
 from conductor.execution.ops.operation import Operation
 from conductor.task_types.base import TaskType
@@ -14,7 +14,7 @@ class ExecutionPlan:
         *,
         task_to_run: TaskType,
         all_ops: List[Operation],
-        root_op: Operation,
+        root_op: Optional[Operation],
         initial_ops: List[Operation],
         cached_tasks: List[TaskType],
         num_tasks_to_run: int,

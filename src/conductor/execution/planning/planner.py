@@ -131,7 +131,6 @@ class ExecutionPlanner:
                     if len(stack) == 0:
                         root_op = new_op
 
-        assert root_op is not None
         return ExecutionPlan(
             task_to_run=task_to_run,
             all_ops=all_ops,

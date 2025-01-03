@@ -197,6 +197,9 @@ def add_to_task_index(
 
 
 def traverse_plan(plan: ExecutionPlan, visitor: Callable[[Operation], None]) -> None:
+    if plan.root_op is None:
+        return
+
     stack = [plan.root_op]
     visited: Set[int] = set()
 
