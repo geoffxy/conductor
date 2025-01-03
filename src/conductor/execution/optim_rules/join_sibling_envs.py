@@ -1,9 +1,11 @@
 import itertools
 from typing import Tuple, List, Set, Dict, Optional
 
+from conductor.execution.operation_state import OperationState
 from conductor.execution.ops.operation import Operation
 from conductor.execution.ops.start_remote_env import StartRemoteEnv
 from conductor.execution.ops.shutdown_remote_env import ShutdownRemoteEnv
+from conductor.execution.ops.transfer_repo import TransferRepo
 from conductor.execution.optim_rules.rule import OptimizerRule
 from conductor.execution.optim_rules.utils import (
     traverse_op_dag,
@@ -100,6 +102,11 @@ class JoinSiblingEnvs(OptimizerRule):
                 assert isinstance(ops_in_group[0], ShutdownRemoteEnv)
                 common_start = start_ops[0].clone_without_deps()
                 common_end = ops_in_group[0].clone_without_deps()
+                xfer = TransferRepo(
+                    initial_state=OperationState.QUEUED, env_name=env_name
+                )
+                xfer.add_exe_dep(common_start)
+                common_start.add_dep_of(xfer)
 
                 # Link the common start op to just before all the start ops.
                 for start_op in start_ops:
@@ -111,10 +118,10 @@ class JoinSiblingEnvs(OptimizerRule):
                         common_start.add_exe_dep(dep)
                         dep.add_dep_of(common_start)
 
-                    # Place the common start op to just before the start op.
+                    # Place the xfer op just before the start op.
                     start_op.exe_deps.clear()
-                    common_start.add_dep_of(start_op)
-                    start_op.add_exe_dep(common_start)
+                    xfer.add_dep_of(start_op)
+                    start_op.add_exe_dep(xfer)
 
                 # Link the common end op to just after all the end ops. Also
                 # make it a dependency on the common ancestor.
@@ -161,6 +168,13 @@ class JoinSiblingEnvs(OptimizerRule):
         candidates: List[Tuple[Operation, List[Operation]]],
         id_map: Dict[int, Operation],
     ) -> List[Tuple[List[Operation], Operation]]:
+        # We create groupings based on the closest common ancestor. The
+        # `candidates` list contains a list of operations reachable from each
+        # shutdown op. We take the largest common set of reachable operations --
+        # this corresponds to the closest common ancestor. We find the largest
+        # intersection among two shutdown operations. Then we try to expand it
+        # from the remaining candidates to form a group. We repeat until there
+        # are no more groupings left.
         candidate_sets = [
             (id(op), set([id(rop) for rop in reachable]), reachable)
             for op, reachable in candidates

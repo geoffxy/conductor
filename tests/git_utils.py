@@ -1,6 +1,8 @@
 import pathlib
 import subprocess
 
+from conductor.context import Context
+
 
 def setup_git(repository_root: pathlib.Path, initialize: bool):
     results = subprocess.run(["git", "init"], cwd=repository_root, check=False)
@@ -31,3 +33,11 @@ def create_commit(repository_root: pathlib.Path, message: str) -> str:
     )
     assert get_hash_results.returncode == 0
     return get_hash_results.stdout.strip()
+
+
+def create_git_project(project_root: pathlib.Path) -> Context:
+    project_root.mkdir(exist_ok=True)
+    cond_config_file = project_root / "cond_config.toml"
+    cond_config_file.touch()
+    setup_git(project_root, initialize=True)
+    return Context(project_root)
