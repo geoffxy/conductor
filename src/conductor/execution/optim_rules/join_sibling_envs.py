@@ -136,9 +136,17 @@ class JoinSiblingEnvs(OptimizerRule):
                 for op in itertools.chain(start_ops, ops_in_group):  # type: ignore
                     unlink_op(op)
                     plan.all_ops.remove(op)
+                    try:
+                        plan.initial_ops.remove(op)
+                    except ValueError:
+                        pass
 
                 plan.all_ops.append(common_start)
                 plan.all_ops.append(common_end)
+                plan.all_ops.append(xfer)
+
+                if len(common_start.exe_deps) == 0:
+                    plan.initial_ops.append(common_start)
 
         return True, plan
 
