@@ -152,7 +152,7 @@ def main(args):
             raise AtLeastCommitNotAncestor()
 
     ep = ExecutionPlanner(ctx)
-    plan = ep.create_plan_for(
+    plan = ep.create_optimized_plan_for(
         task_identifier, run_again=args.again, at_least_commit=commit
     )
     executor = Executor(execution_slots=num_jobs)

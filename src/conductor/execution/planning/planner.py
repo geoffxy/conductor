@@ -11,9 +11,10 @@ from conductor.execution.ops.shutdown_remote_env import ShutdownRemoteEnv
 from conductor.execution.ops.start_remote_env import StartRemoteEnv
 from conductor.execution.ops.transfer_repo import TransferRepo
 from conductor.execution.ops.transfer_results import TransferResults, TransferDirection
+from conductor.execution.operation_state import OperationState
+from conductor.execution.optimizer import ExecutionPlanOptimizer
 from conductor.execution.planning.lowering import LoweringTask, LoweringState
 from conductor.execution.plan import ExecutionPlan
-from conductor.execution.operation_state import OperationState
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.base import TaskType
 from conductor.task_types.combine import Combine
@@ -25,6 +26,26 @@ from conductor.task_types.run import RunCommand, RunExperiment
 class ExecutionPlanner:
     def __init__(self, ctx: Context) -> None:
         self._ctx = ctx
+        self._optimizer = ExecutionPlanOptimizer.with_default_rules()
+
+    def create_optimized_plan_for(
+        self,
+        task_id: TaskIdentifier,
+        run_again: bool = False,
+        at_least_commit: Optional[str] = None,
+    ) -> "ExecutionPlan":
+        """
+        Creates an optimized `ExecutionPlan` for the given task.
+
+        This function creates a plan for the given task and then applies
+        optimization rules to remove unneeded operations.
+        """
+        raw_plan = self.create_plan_for(task_id, run_again, at_least_commit)
+        if len(raw_plan.used_envs) == 0:
+            # No need to optimize if the plan is not using any environments.
+            return raw_plan
+        optimized_plan, _ = self._optimizer.optimize(raw_plan, max_passes=10)
+        return optimized_plan
 
     def create_plan_for(
         self,
