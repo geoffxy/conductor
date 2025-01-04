@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List, Set
+from typing import Tuple, Dict, List
 
 from conductor.execution.ops.operation import Operation
 from conductor.execution.ops.shutdown_remote_env import ShutdownRemoteEnv
@@ -28,27 +28,30 @@ class EliminateTransferRepos(OptimizerRule):
             # repo has not been transferred. If True, then the env is active and
             # the repo has been transferred.
             stack: List[Tuple[Operation, Dict[str, bool]]] = [(initial_op, {})]
-            visited: Set[int] = set()
+            # N.B. The task graph is a DAG. We do not track visited nodes
+            # because we need to traverse all possible paths.
             while len(stack) > 0:
-                op, active_envs = stack.pop()
+                try:
+                    op, active_envs = stack.pop()
 
-                if id(op) in visited:
-                    continue
-                visited.add(id(op))
+                    next_envs = active_envs.copy()
+                    if isinstance(op, StartRemoteEnv):
+                        next_envs[op.env_name] = False
+                    elif isinstance(op, ShutdownRemoteEnv):
+                        del next_envs[op.env_name]
+                    elif isinstance(op, TransferRepo):
+                        if next_envs[op.env_name]:
+                            ops_to_remove.append(op)
+                        else:
+                            next_envs[op.env_name] = True
 
-                next_envs = active_envs.copy()
-                if isinstance(op, StartRemoteEnv):
-                    next_envs[op.env_name] = False
-                elif isinstance(op, ShutdownRemoteEnv):
-                    del next_envs[op.env_name]
-                elif isinstance(op, TransferRepo):
-                    if next_envs[op.env_name]:
-                        ops_to_remove.append(op)
-                    else:
-                        next_envs[op.env_name] = True
-
-                for next_op in op.deps_of:
-                    stack.append((next_op, next_envs))
+                    for next_op in op.deps_of:
+                        stack.append((next_op, next_envs))
+                except KeyError:
+                    # This happens if we are on a path that was originally not
+                    # in an environment but has joined a path that is now in an
+                    # environment. In this case, we skip the path.
+                    pass
 
         if len(ops_to_remove) == 0:
             return False, plan

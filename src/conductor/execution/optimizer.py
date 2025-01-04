@@ -7,6 +7,9 @@ from conductor.execution.optim_rules.eliminate_shutdown_start_env import (
 from conductor.execution.optim_rules.eliminate_transfer_repos import (
     EliminateTransferRepos,
 )
+from conductor.execution.optim_rules.eliminate_dep_transfers import (
+    EliminateDepTransfers,
+)
 from conductor.execution.optim_rules.join_sibling_envs import JoinSiblingEnvs
 from conductor.execution.plan import ExecutionPlan
 
@@ -17,8 +20,9 @@ class ExecutionPlanOptimizer:
         return cls(
             [
                 JoinSiblingEnvs(),
-                EliminateTransferRepos(),
                 EliminateShutdownStartEnv(),
+                EliminateTransferRepos(),
+                EliminateDepTransfers(),
             ]
         )
 
