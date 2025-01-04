@@ -44,6 +44,22 @@ class TransferResults(Operation):
         self._unversioned_tasks = unversioned_tasks
         self._direction = direction
 
+    @property
+    def direction(self) -> TransferDirection:
+        return self._direction
+
+    @property
+    def env_name(self) -> str:
+        return self._env_name
+
+    @property
+    def versioned_tasks(self) -> List[Tuple[TaskIdentifier, Version]]:
+        return self._versioned_tasks
+
+    @property
+    def unversioned_tasks(self) -> List[TaskIdentifier]:
+        return self._unversioned_tasks
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:
