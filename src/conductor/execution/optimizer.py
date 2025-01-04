@@ -4,13 +4,23 @@ from conductor.execution.optim_rules.rule import OptimizerRule
 from conductor.execution.optim_rules.eliminate_shutdown_start_env import (
     EliminateShutdownStartEnv,
 )
+from conductor.execution.optim_rules.eliminate_transfer_repos import (
+    EliminateTransferRepos,
+)
+from conductor.execution.optim_rules.join_sibling_envs import JoinSiblingEnvs
 from conductor.execution.plan import ExecutionPlan
 
 
 class ExecutionPlanOptimizer:
     @classmethod
     def with_default_rules(cls) -> "ExecutionPlanOptimizer":
-        return cls([EliminateShutdownStartEnv()])
+        return cls(
+            [
+                JoinSiblingEnvs(),
+                EliminateTransferRepos(),
+                EliminateShutdownStartEnv(),
+            ]
+        )
 
     def __init__(self, rules: List[OptimizerRule]) -> None:
         self._rules = rules
