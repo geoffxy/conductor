@@ -233,6 +233,15 @@ class JoinSiblingEnvs(OptimizerRule):
                 if op_id == rop_id:
                     continue
 
+                # If we have [start, shutdown] --> [start, shutdown] -> other op
+                # then the two groups will have a common ancestor. But we do not
+                # want this case. We can detect these occurrences by checking
+                # for subset relationships in the reachable set.
+                if reachable_set.issubset(
+                    rop_reachable_set
+                ) or rop_reachable_set.issubset(reachable_set):
+                    continue
+
                 common = reachable_set.intersection(rop_reachable_set)
                 if len(common) > best_so_far_len:
                     best_so_far = [op_id, rop_id]
