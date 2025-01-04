@@ -31,37 +31,43 @@ class EliminateDepTransfers(OptimizerRule):
             stack: List[Tuple[Operation, Dict[str, _ExistingResults]]] = [
                 (initial_op, {})
             ]
-            visited: Set[int] = set()
+            # N.B. The task graph is a DAG. We do not track visited nodes
+            # because we need to traverse all possible paths.
             while len(stack) > 0:
-                op, env_results = stack.pop()
+                try:
+                    op, env_results = stack.pop()
 
-                if id(op) in visited:
-                    continue
-                visited.add(id(op))
+                    next_env_results = self._clone_env_results(env_results)
+                    if isinstance(op, StartRemoteEnv):
+                        next_env_results[op.env_name] = _ExistingResults()
 
-                next_env_results = self._clone_env_results(env_results)
-                if isinstance(op, StartRemoteEnv):
-                    next_env_results[op.env_name] = _ExistingResults()
+                    elif isinstance(op, ShutdownRemoteEnv):
+                        del next_env_results[op.env_name]
 
-                elif isinstance(op, ShutdownRemoteEnv):
-                    del next_env_results[op.env_name]
+                    elif isinstance(op, TransferResults):
+                        rr = next_env_results[op.env_name].reconcile_transfer_op(op)
+                        for versioned_to_remove in rr.versioned:
+                            op.versioned_tasks.remove(versioned_to_remove)
+                        for unversioned_to_remove in rr.unversioned:
+                            op.unversioned_tasks.remove(unversioned_to_remove)
+                        if (
+                            len(op.versioned_tasks) == 0
+                            and len(op.unversioned_tasks) == 0
+                        ):
+                            ops_to_remove.append(op)
+                        if len(rr.versioned) > 0 or len(rr.unversioned) > 0:
+                            made_changes = True
 
-                elif isinstance(op, TransferResults):
-                    rr = next_env_results[op.env_name].reconcile_transfer_op(op)
-                    for versioned_to_remove in rr.versioned:
-                        op.versioned_tasks.remove(versioned_to_remove)
-                    for unversioned_to_remove in rr.unversioned:
-                        op.unversioned_tasks.remove(unversioned_to_remove)
-                    if len(op.versioned_tasks) == 0 and len(op.unversioned_tasks) == 0:
-                        ops_to_remove.append(op)
-                    if len(rr.versioned) > 0 or len(rr.unversioned) > 0:
-                        made_changes = True
+                    elif isinstance(op, RunRemoteTask):
+                        next_env_results[op.env_name].reconcile_run(op)
 
-                elif isinstance(op, RunRemoteTask):
-                    next_env_results[op.env_name].reconcile_run(op)
-
-                for next_op in op.deps_of:
-                    stack.append((next_op, next_env_results))
+                    for next_op in op.deps_of:
+                        stack.append((next_op, next_env_results))
+                except KeyError:
+                    # This happens if we are on a path that was originally not
+                    # in an environment but has joined a path that is now in an
+                    # environment. In this case, we skip the path.
+                    pass
 
         if len(ops_to_remove) == 0:
             return made_changes, plan
