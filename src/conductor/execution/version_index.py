@@ -53,6 +53,9 @@ class Version:
             and self.has_uncommitted_changes == other.has_uncommitted_changes
         )
 
+    def __hash__(self) -> int:
+        return hash((self._timestamp, self._commit_hash, self._has_uncommitted_changes))
+
 
 class VersionIndex:
     """

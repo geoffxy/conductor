@@ -1,0 +1,41 @@
+environment(
+  name="xfer",
+  connect_config="",
+)
+
+run_command(
+  name="base_simple",
+  run="echo 1",
+)
+
+run_experiment(
+  name="simple",
+  run="echo 2",
+  env=":xfer",
+  deps=[":base_simple"],
+)
+
+run_experiment(
+  name="base_simple2",
+  run="echo 2",
+  env=":xfer",
+)
+
+run_command(
+  name="simple2",
+  run="echo 3",
+  env=":xfer",
+  deps=[":base_simple2"],
+)
+
+run_experiment(
+  name="partial",
+  run="echo 1",
+  env=":xfer",
+  deps=[":simple2", ":non_env"],
+)
+
+run_experiment(
+  name="non_env",
+  run="echo 1",
+)

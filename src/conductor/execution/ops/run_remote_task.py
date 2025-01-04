@@ -42,6 +42,14 @@ class RunRemoteTask(Operation):
     def main_task(self) -> Optional[TaskType]:
         return self._task
 
+    @property
+    def env_name(self) -> str:
+        return self._env_name
+
+    @property
+    def output_version(self) -> Optional[Version]:
+        return self._output_version
+
     def start_execution(
         self, ctx: Context, slot: Optional[int]
     ) -> OperationExecutionHandle:
