@@ -6,7 +6,6 @@ from conductor.execution.ops.start_remote_env import StartRemoteEnv
 from conductor.execution.ops.operation import Operation
 from conductor.execution.ops.transfer_repo import TransferRepo
 from conductor.execution.ops.transfer_results import TransferResults, TransferDirection
-from conductor.execution.optim_rules.join_sibling_envs import JoinSiblingEnvs
 from conductor.execution.optim_rules.utils import traverse_plan
 from conductor.execution.planning.planner import ExecutionPlanner
 from conductor.task_identifier import TaskIdentifier
