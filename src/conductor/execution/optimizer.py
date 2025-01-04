@@ -19,10 +19,10 @@ class ExecutionPlanOptimizer:
     def with_default_rules(cls) -> "ExecutionPlanOptimizer":
         return cls(
             [
-                JoinSiblingEnvs(),
                 EliminateShutdownStartEnv(),
                 EliminateTransferRepos(),
                 EliminateDepTransfers(),
+                JoinSiblingEnvs(),
             ]
         )
 
