@@ -4,7 +4,7 @@ id: run-experiment
 ---
 
 ```python
-run_experiment(name, run, parallelizable=False, args=[], options={}, deps=[])
+run_experiment(name, run, parallelizable=False, args=[], options={}, env=None, deps=[])
 ```
 
 A `run_experiment()` task runs the command specified in the `run` argument. The
@@ -100,6 +100,14 @@ run_experiment(
 
 Conductor will execute the task shown above by running `./run.sh arg1 --foo=3
 --bar=true` in `bash`.
+
+### `env`
+
+**Type:** Task identifier (default: `None`)
+
+The identifier of the remote [environment](directives/environment.md) in which
+to run this task, if any. This identifier can be fully qualified or relative,
+just like identifiers in `deps`.
 
 ### `deps`
 

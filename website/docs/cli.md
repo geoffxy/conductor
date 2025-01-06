@@ -17,6 +17,9 @@ each of Conductor's subcommands.
 - [`cond restore`](cli/restore.md): Restore results from an archive generated
   by `cond archive`
 - [`cond clean`](cli/clean.md): Remove Conductor's output files
+- [`cond gc`](cli/gc.md): Remove task output files associated with failed tasks
+- [`cond explorer`](cli/explorer.md): Launches Conductor's results explorer user
+  interface
 
 ## `cond` Options
 

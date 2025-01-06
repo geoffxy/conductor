@@ -26,6 +26,7 @@ module.exports = {
           collapsed: false,
           items: [
             'directives/include',
+            'directives/environment',
           ],
         },
         {
