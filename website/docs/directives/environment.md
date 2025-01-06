@@ -60,8 +60,8 @@ host (e.g., a dynamic IP that is assigned after a cloud VM starts).
 This executable must generate a TOML string with the following format
 
 ```toml title="Example generated configuration"
-host = 192.168.0.1
-user = geoffxy
+host = "192.168.0.1"
+user = "geoffxy"
 ```
 
 Here `host` must refer to a SSH-able host (e.g., IP address, domain name, SSH
@@ -99,6 +99,6 @@ environment(
 ```
 
 ```bash title="config.sh"
-echo "host = 192.168.0.1"
-echo "user = geoffxy"
+echo "host = \"192.168.0.1\""
+echo "user = \"geoffxy\""
 ```
