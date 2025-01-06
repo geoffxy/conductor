@@ -11,6 +11,23 @@ This command launches Conductor's results explorer user interface. This tool is
 used to interactively examine the experiment result versions managed by
 Conductor.
 
+:::note
+
+To use Conductor's results explorer, you need to have installed Conductor with
+the `[explorer]` extra.
+
+```bash
+pip3 install conductor-cli[explorer]
+```
+
+or
+
+```bash
+pip3 install conductor-cli[all]
+```
+
+:::
+
 ## Optional Arguments
 
 ### `--port`

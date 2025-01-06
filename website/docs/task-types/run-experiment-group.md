@@ -4,7 +4,7 @@ id: run-experiment-group
 ---
 
 ```python
-run_experiment_group(name, run, experiments=[], chain_experiments=False, deps=[])
+run_experiment_group(name, run, experiments=[], chain_experiments=False, env=None, deps=[])
 ```
 
 A `run_experiment_group()` task lets you specify a list of experiments that
@@ -82,6 +82,14 @@ argument does.
 This argument is useful when you want to run different experiment _groups_
 concurrently, but do not want the experiments within one group to run
 concurrently.
+
+### `env`
+
+**Type:** Task identifier (default: `None`)
+
+The identifier of the remote [environment](directives/environment.md) in which
+to run this experiment group, if any. This identifier can be fully qualified or
+relative, just like identifiers in `deps`.
 
 ### `deps`
 
