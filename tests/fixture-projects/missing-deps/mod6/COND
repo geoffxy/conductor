@@ -1,0 +1,11 @@
+run_command(
+  name="abs_file",
+  run="echo 1",
+  env=":mod6_env",
+)
+
+environment(
+  name="mod6_env",
+  connect_config="./cfg.sh",
+  extra_files=["/abs/path/to/file.txt"],
+)

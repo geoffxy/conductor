@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional
+from typing import Optional, List, Tuple
 
 from conductor.context import Context
 from conductor.errors import (
@@ -45,29 +45,8 @@ class TransferRepo(Operation):
         if not ctx.git.is_used():
             raise EnvsRequireGit()
 
-        env_def = ctx.task_index.get_env(self._env_name)
-        env_def_path = env_def.identifier.path
-        env_extra_files = env_def.extra_files
-
         # Compute paths to the extra files and verify they exist before proceeding.
-        extra_file_paths = []  # (absolute path on local, relative path in the repo)
-        repo_root_path = ctx.git.git_root()
-        assert repo_root_path is not None
-        extra_file_path_prefix = ctx.project_root / env_def_path
-        for rel_extra_file in env_extra_files:
-            full_extra_file_path = extra_file_path_prefix / rel_extra_file
-            if not full_extra_file_path.exists():
-                raise EnvExtraFileNotFound(
-                    env_name=self._env_name, extra_file=str(rel_extra_file)
-                )
-            try:
-                # Make sure the extra file is within the repository root.
-                dest_file_path = full_extra_file_path.relative_to(repo_root_path)
-                extra_file_paths.append((full_extra_file_path, dest_file_path))
-            except ValueError as ex:
-                raise EnvExtraFileNotInRepository(
-                    env_name=self._env_name, extra_file=str(rel_extra_file)
-                ) from ex
+        extra_file_paths = self._validate_and_process_extra_files(ctx)
 
         # Create a bundle of the current repository.
         repo_name = ctx.project_root.name
@@ -98,3 +77,35 @@ class TransferRepo(Operation):
 
     def finish_execution(self, handle: OperationExecutionHandle, ctx: Context) -> None:
         pass
+
+    def _validate_and_process_extra_files(
+        self, ctx: Context
+    ) -> List[Tuple[pathlib.Path, pathlib.Path]]:
+        """
+        Compute paths to the extra files and verify they exist.
+        """
+
+        env_def = ctx.task_index.get_env(self._env_name)
+        env_def_path = env_def.identifier.path
+        env_extra_files = env_def.extra_files
+
+        extra_file_paths = []  # (absolute path on local, relative path in the repo)
+        repo_root_path = ctx.git.git_root()
+        assert repo_root_path is not None
+        extra_file_path_prefix = ctx.project_root / env_def_path
+        for rel_extra_file in env_extra_files:
+            full_extra_file_path = (extra_file_path_prefix / rel_extra_file).resolve()
+            if not full_extra_file_path.exists():
+                raise EnvExtraFileNotFound(
+                    env_name=self._env_name, extra_file=str(rel_extra_file)
+                )
+            try:
+                # Make sure the extra file is within the repository root.
+                dest_file_path = full_extra_file_path.relative_to(repo_root_path)
+                extra_file_paths.append((full_extra_file_path, dest_file_path))
+            except ValueError as ex:
+                raise EnvExtraFileNotInRepository(
+                    env_name=self._env_name, extra_file=str(rel_extra_file)
+                ) from ex
+
+        return extra_file_paths
