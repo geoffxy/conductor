@@ -296,8 +296,6 @@ class ExecutionPlanner:
         transfer_repo = TransferRepo(
             initial_state=OperationState.QUEUED,
             env_name=env_name,
-            env_def_path=env_task.identifier.path,
-            extra_files=env_task.extra_files,
         )
         ops.append(transfer_repo)
 
