@@ -389,15 +389,18 @@ class Executor:
         else:
             # At least one task must have failed.
             failed_task_ops: List[Operation] = []
+            failed_non_task_ops: List[Operation] = []
             skipped_tasks: List[TaskIdentifier] = []
             for op in self._completed_ops:
-                if op.main_task is None:
-                    continue
-                if op.state == OperationState.SKIPPED:
-                    skipped_tasks.append(op.main_task.identifier)
-                elif op.state == OperationState.FAILED:
-                    failed_task_ops.append(op)
-            assert len(failed_task_ops) > 0
+                if op.main_task is not None:
+                    if op.state == OperationState.SKIPPED:
+                        skipped_tasks.append(op.main_task.identifier)
+                    elif op.state == OperationState.FAILED:
+                        failed_task_ops.append(op)
+                else:
+                    if op.state == OperationState.FAILED:
+                        failed_non_task_ops.append(op)
+            assert len(failed_task_ops) > 0 or len(failed_non_task_ops) > 0
             if not self._silent:
                 print()
                 print_red(
@@ -407,27 +410,45 @@ class Executor:
                     bold=True,
                 )
                 print()
-                print_bold("Failed task(s):")
-                for failed in failed_task_ops:
-                    assert failed.main_task is not None
-                    print("  {}".format(failed.main_task.identifier))
-                    assert failed.stored_error is not None
-                    print(
-                        "    {}".format(
-                            failed.stored_error.printable_message(
-                                omit_file_context=True
+                if len(failed_task_ops) > 0:
+                    print_bold("Failed task(s):")
+                    for failed in failed_task_ops:
+                        assert failed.main_task is not None
+                        print("  {}".format(failed.main_task.identifier))
+                        assert failed.stored_error is not None
+                        print(
+                            "    {}".format(
+                                failed.stored_error.printable_message(
+                                    omit_file_context=True
+                                )
                             )
                         )
-                    )
-                print()
+                    print()
                 if len(skipped_tasks) > 0:
                     print_bold("Skipped task(s) (one or more dependencies failed):")
                     for skipped in skipped_tasks:
                         print("  {}".format(skipped))
                     print()
+                if len(failed_non_task_ops) > 0:
+                    print_bold("Other failure(s):")
+                    for failed in failed_non_task_ops:
+                        assert failed.stored_error is not None
+                        print(
+                            "  {}".format(
+                                failed.stored_error.printable_message(
+                                    omit_file_context=True
+                                )
+                            )
+                        )
+                    print()
 
-            assert failed_task_ops[0].stored_error is not None
-            raise failed_task_ops[0].stored_error
+            if len(failed_task_ops) > 0:
+                assert failed_task_ops[0].stored_error is not None
+                raise failed_task_ops[0].stored_error
+            else:
+                assert len(failed_non_task_ops) > 0
+                assert failed_non_task_ops[0].stored_error is not None
+                raise failed_non_task_ops[0].stored_error
 
     def _print_op_failed(self, op: Operation):
         if self._silent:
