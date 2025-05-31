@@ -16,7 +16,11 @@ META_PATH = os.path.join("src", "conductor", "__init__.py")
 README_PATH = "README.md"
 PYTHON_REQUIRES = ">=3.8"
 
-PACKAGE_DATA = {}
+PACKAGE_DATA = {
+    "conductor.envs.resources": ["install_pyenv.sh"],
+    # N.B. We also include the Maestro wheel file in the package data (see
+    # the __main__ section).
+}
 PACKAGE_DIR = {"": "src"}
 
 ENTRY_POINTS = {
@@ -100,10 +104,14 @@ def find_meta(meta):
 
 
 if __name__ == "__main__":
+    VERSION = find_meta("version")
+    maestro_file = f"conductor_cli-{VERSION}-py3-none-any.whl"
+    PACKAGE_DATA["conductor.envs.resources"].append(maestro_file)
+
     setup(
         name=NAME,
         description=find_meta("description"),
-        version=find_meta("version"),
+        version=VERSION,
         author=find_meta("author"),
         author_email=find_meta("email"),
         maintainer=find_meta("author"),
