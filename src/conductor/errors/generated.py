@@ -507,7 +507,7 @@ class MissingEnvSupport(ConductorError):
 
 
     def _message(self):
-        return "This feature requires support for Conductor environments. Please install Conductor with the [env] features.".format(
+        return "This feature requires support for Conductor environments. Please install Conductor with the [envs] extra.".format(
 
         )
 

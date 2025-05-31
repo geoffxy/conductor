@@ -169,7 +169,7 @@
 
 3007:
   name: MissingEnvSupport
-  message: This feature requires support for Conductor environments. Please install Conductor with the [env] features.
+  message: This feature requires support for Conductor environments. Please install Conductor with the [envs] extra.
 
 3008:
   name: EnvsRequireGit
