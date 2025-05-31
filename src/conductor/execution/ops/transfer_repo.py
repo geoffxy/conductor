@@ -1,8 +1,13 @@
 import pathlib
-from typing import Optional
+from typing import Optional, List
 
 from conductor.context import Context
-from conductor.errors import MissingEnvSupport, EnvsRequireGit
+from conductor.errors import (
+    MissingEnvSupport,
+    EnvsRequireGit,
+    EnvExtraFileNotFound,
+    EnvExtraFileNotInRepository,
+)
 from conductor.execution.handle import OperationExecutionHandle
 from conductor.execution.ops.operation import Operation
 from conductor.execution.operation_state import OperationState
@@ -14,9 +19,17 @@ class TransferRepo(Operation):
     Transfers the current repository to a given remote environment.
     """
 
-    def __init__(self, initial_state: OperationState, env_name: str) -> None:
+    def __init__(
+        self,
+        initial_state: OperationState,
+        env_name: str,
+        env_def_path: pathlib.Path,
+        extra_files: List[pathlib.Path],
+    ) -> None:
         super().__init__(initial_state)
         self._env_name = env_name
+        self._env_def_path = env_def_path
+        self._extra_files = extra_files
 
     def start_progress_message(self) -> Optional[str]:
         return f"Transferring project to environment '{self._env_name}'..."
@@ -36,6 +49,26 @@ class TransferRepo(Operation):
         if not ctx.git.is_used():
             raise EnvsRequireGit()
 
+        # Compute paths to the extra files and verify they exist before proceeding.
+        extra_file_paths = []  # (absolute path on local, relative path in the repo)
+        repo_root_path = ctx.git.git_root()
+        assert repo_root_path is not None
+        extra_file_path_prefix = ctx.project_root / self._env_def_path
+        for rel_extra_file in self._extra_files:
+            full_extra_file_path = extra_file_path_prefix / rel_extra_file
+            if not full_extra_file_path.exists():
+                raise EnvExtraFileNotFound(
+                    env_name=self._env_name, extra_file=str(rel_extra_file)
+                )
+            try:
+                # Make sure the extra file is within the repository root.
+                dest_file_path = full_extra_file_path.relative_to(repo_root_path)
+                extra_file_paths.append((full_extra_file_path, dest_file_path))
+            except ValueError:
+                raise EnvExtraFileNotInRepository(
+                    env_name=self._env_name, extra_file=str(rel_extra_file)
+                )
+
         # Create a bundle of the current repository.
         repo_name = ctx.project_root.name
         bundle_name = f"{repo_name}.bundle"
@@ -54,6 +87,12 @@ class TransferRepo(Operation):
         client = remote_env.client()
         workspace_name = client.unpack_bundle(remote_bundle_path)
         remote_env.set_workspace_name(workspace_name)
+
+        # Transfer the extra files to the remote environment.
+        for local_abs_path, remote_repo_rel_path in extra_file_paths:
+            remote_env.transfer_file(
+                local_abs_path, remote_repo_rel_path, inside_workspace=True
+            )
 
         return OperationExecutionHandle.from_sync_execution()
 

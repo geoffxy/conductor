@@ -66,10 +66,12 @@ _raw_task_types = [
             "start": Optional[str],
             "stop": Optional[str],
             "connect_config": str,
+            "extra_files": [str],
         },
         defaults={
             "start": None,
             "stop": None,
+            "extra_files": [],
         },
         full_type=Environment,
     ),
