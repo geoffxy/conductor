@@ -29,6 +29,7 @@ def test_simple_no_change_manual(tmp_path: pathlib.Path) -> None:
         start=None,
         stop=None,
         connect_config="",
+        extra_files=[],
         deps=[],
     )
     run = RunExperiment(

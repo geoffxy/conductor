@@ -398,6 +398,20 @@ class EnvNotEnv(ConductorError):
         )
 
 
+class EnvExtraFilesNotRelative(ConductorError):
+    error_code = 2010
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+
+    def _message(self):
+        return "The environment '{env_name}' has extra files whose paths are not relative. All extra files must be declared using relative paths (relative to the COND file containing the environment() directive).".format(
+            env_name=self.env_name,
+        )
+
+
 class TaskNonZeroExit(ConductorError):
     error_code = 3001
 
@@ -565,6 +579,38 @@ class EnvConfigInvalid(ConductorError):
     def _message(self):
         return "The environment connection configuration script for environment '{env_name}' returned an invalid configuration.".format(
             env_name=self.env_name,
+        )
+
+
+class EnvExtraFileNotFound(ConductorError):
+    error_code = 3013
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+        self.extra_file = kwargs["extra_file"]
+
+    def _message(self):
+        return "The environment '{env_name}' has an extra file '{extra_file}' that does not exist. Please make sure that all extra files exist and are within the project's repository. They should be declared relative to the environment's COND file.".format(
+            env_name=self.env_name,
+            extra_file=self.extra_file,
+        )
+
+
+class EnvExtraFileNotInRepository(ConductorError):
+    error_code = 3014
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.env_name = kwargs["env_name"]
+        self.extra_file = kwargs["extra_file"]
+
+    def _message(self):
+        return "The environment '{env_name}' has an extra file '{extra_file}' that is not located inside the repository root. Please make sure that all extra files are under the repository root.".format(
+            env_name=self.env_name,
+            extra_file=self.extra_file,
         )
 
 
@@ -876,6 +922,7 @@ ERRORS_BY_CODE = {
     2007: EnvNotFound,
     2008: DuplicateEnvName,
     2009: EnvNotEnv,
+    2010: EnvExtraFilesNotRelative,
     3001: TaskNonZeroExit,
     3002: TaskFailed,
     3003: OutputDirTaken,
@@ -888,6 +935,8 @@ ERRORS_BY_CODE = {
     3010: EnvShutdownFailed,
     3011: EnvConfigScriptFailed,
     3012: EnvConfigInvalid,
+    3013: EnvExtraFileNotFound,
+    3014: EnvExtraFileNotInRepository,
     4001: OutputFileExists,
     4002: OutputPathDoesNotExist,
     4003: NoTaskOutputsToArchive,
@@ -939,6 +988,7 @@ __all__ = [
     "EnvNotFound",
     "DuplicateEnvName",
     "EnvNotEnv",
+    "EnvExtraFilesNotRelative",
     "TaskNonZeroExit",
     "TaskFailed",
     "OutputDirTaken",
@@ -951,6 +1001,8 @@ __all__ = [
     "EnvShutdownFailed",
     "EnvConfigScriptFailed",
     "EnvConfigInvalid",
+    "EnvExtraFileNotFound",
+    "EnvExtraFileNotInRepository",
     "OutputFileExists",
     "OutputPathDoesNotExist",
     "NoTaskOutputsToArchive",

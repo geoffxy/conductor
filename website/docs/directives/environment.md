@@ -4,7 +4,7 @@ id: environment
 ---
 
 ```python
-environment(name, connect_config, start=None, stop=None)
+environment(name, connect_config, start=None, stop=None, extra_files=[])
 ```
 
 The `environment()` directive lets you define a remote environment where tasks
@@ -83,6 +83,21 @@ your remote environment is a cloud VM, this script can be used to start the VM.
 An optional executable to run to "stop" (i.e., shutdown) the remote environment.
 For example, if your remote environment is a cloud VM, this script can be used
 to shutdown the VM.
+
+### `extra_files`
+
+**Type:** List of paths (default: `[]`)
+
+A list of untracked files that you want to be copied into the remote
+environment. The paths are relative to the `COND` file containing your
+`environment()` directive. Note that these files must be within your repository
+root.
+
+By default, Conductor copies your repository into the remote environment.
+However, this process only includes tracked files and you may have files you
+need that are deliberately not checked into your repository (e.g., user-specific
+configuration files or secrets). Include them here to have them copied into your
+environment.
 
 ## Usage Example
 

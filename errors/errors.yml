@@ -134,6 +134,14 @@
   name: EnvNotEnv
   message: "The identifier '{task_identifier}' does not refer to an environment."
 
+2010:
+  name: EnvExtraFilesNotRelative
+  message: >-
+    The environment '{env_name}' has extra files whose paths are not relative.
+    All extra files must be declared using relative paths (relative to the COND
+    file containing the environment() directive).
+
+
 # Execution errors (error code 3xxx)
 3001:
   name: TaskNonZeroExit
@@ -185,6 +193,21 @@
   message: >-
     The environment connection configuration script for environment '{env_name}'
     returned an invalid configuration.
+
+3013:
+  name: EnvExtraFileNotFound
+  message: >-
+    The environment '{env_name}' has an extra file '{extra_file}' that does not
+    exist. Please make sure that all extra files exist and are within the
+    project's repository. They should be declared relative to the environment's
+    COND file.
+
+3014:
+  name: EnvExtraFileNotInRepository
+  message: >-
+    The environment '{env_name}' has an extra file '{extra_file}' that is not
+    located inside the repository root. Please make sure that all extra files
+    are under the repository root.
 
 
 # Archive and restore errors (error code 4xxx)

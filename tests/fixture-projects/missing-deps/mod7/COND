@@ -1,0 +1,35 @@
+run_command(
+  name="no_file",
+  run="echo 1",
+  env=":mod7_env_missing",
+)
+
+run_command(
+  name="simple",
+  run="echo 1",
+  env=":mod7_env_exists",
+)
+
+run_command(
+  name="file_outside",
+  run="echo 1",
+  env=":mod7_env_file_outside",
+)
+
+environment(
+  name="mod7_env_missing",
+  connect_config="./cfg.sh",
+  extra_files=["missing.txt"],
+)
+
+environment(
+  name="mod7_env_exists",
+  connect_config="./cfg.sh",
+  extra_files=["cfg.sh"],
+)
+
+environment(
+  name="mod7_env_file_outside",
+  connect_config="./cfg.sh",
+  extra_files=["../../outside.txt"],
+)

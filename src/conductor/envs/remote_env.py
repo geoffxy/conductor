@@ -5,10 +5,11 @@ from typing import Any, Optional, Dict
 
 from fabric import Connection
 
+from conductor.config import MAESTRO_ROOT, MAESTRO_VENV_NAME, MAESTRO_WORKSPACE_LOCATION
 from conductor.envs.tunneled_ssh_connection import TunneledSshConnection
 from conductor.envs.install_maestro import ensure_maestro_installed
-from conductor.config import MAESTRO_ROOT, MAESTRO_VENV_NAME
 from conductor.envs.maestro.client import MaestroGrpcClient
+from conductor.errors import InternalError
 
 
 class RemoteEnv:
@@ -96,15 +97,36 @@ class RemoteEnv:
         return self._workspace_name
 
     def transfer_file(
-        self, local_path: pathlib.Path, remote_path: pathlib.Path
+        self,
+        local_path: pathlib.Path,
+        remote_path: pathlib.Path,
+        inside_workspace: bool = False,
     ) -> None:
         """
         Transfers a file from the local machine to the remote environment. The
-        remote path should be a relative path. This method will place the file
-        under the Maestro root.
+        remote path should be a relative path.
+
+        By default, this method will place the file under the Maestro root. If
+        you set `inside_workspace` to True, it will place the file inside the
+        current workspace root. You can only do this after setting the workspace
+        name with `set_workspace_name()`.
         """
         # Make sure the path (including parent directories) exists.
-        full_remote_path = self._maestro_root / remote_path
+        if not inside_workspace:
+            full_remote_path = self._maestro_root / remote_path
+        else:
+            if self._workspace_name is None:
+                raise InternalError(
+                    details="Called transfer_file(inside_workspace=True) before "
+                    "setting the workspace name."
+                )
+            full_remote_path = (
+                self._maestro_root
+                / MAESTRO_WORKSPACE_LOCATION
+                / self._workspace_name
+                / remote_path
+            )
+
         self._connection.run(f"mkdir -p {str(full_remote_path.parent)}", hide=True)
         self._connection.put(str(local_path), str(full_remote_path))
 

@@ -61,6 +61,14 @@ class TaskIndex:
         """
         return self._loaded_tasks
 
+    def get_env(self, env_name: str) -> Environment:
+        """
+        Returns the environment with the specified name, if it has been loaded.
+        """
+        if env_name in self._loaded_envs:
+            return self._loaded_envs[env_name]
+        raise EnvNotFound(env_name=env_name)
+
     def load_transitive_closure(self, task_identifier: TaskIdentifier):
         """
         Ensures all tasks in the transitive closure of the specified
