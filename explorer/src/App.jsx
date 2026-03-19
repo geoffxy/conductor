@@ -34,6 +34,7 @@ const App = () => {
           taskId,
           deps,
           taskType: rawTask.task_type,
+          runnableDetails: rawTask.runnable_details,
         });
       }
       setTaskGraph({

@@ -1,8 +1,16 @@
 .task-node {
-  border: 1px solid #000;
+  border: 1px solid #787878;
   border-radius: 8px;
   padding: 8px;
   min-width: 150px;
+
+  transition: box-shadow 0.25s ease;
+}
+
+.task-node:hover {
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
 }
 
 .task-node p {
@@ -54,6 +62,55 @@
   outline: 2px solid #2d6cdf;
   outline-offset: 2px;
   border-radius: 3px;
+}
+
+.task-top .task-info-container {
+  position: relative;
+  display: inline-flex;
+}
+
+.task-info-tooltip {
+  position: fixed;
+  z-index: 10000;
+  min-width: 175px;
+  max-width: min(360px, 80vw);
+  max-height: 220px;
+  overflow: auto;
+  padding: 15px;
+  border: 1px solid #787878;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.task-info-tooltip pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 1.25em;
+  line-height: 1.25;
+}
+
+.tooltip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.tooltip-content,
+.tooltip-content p {
+  font-size: 1.1em;
+}
+
+.tooltip-content p {
+  margin: 0 0 5px 0;
+}
+
+.tooltip-content ul {
+  margin: 0;
+  padding-left: 25px;
 }
 
 .task-bottom {

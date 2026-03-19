@@ -63,3 +63,16 @@ class RunOptions:
         """
         with open(file_path, "w", encoding="UTF-8") as file:
             json.dump(self._options, file, indent=2, sort_keys=True)
+
+    def serialize_str_dict(self) -> Dict[str, str]:
+        """
+        Serializes the options into a dictionary of strings. This is used for
+        passing the options to the frontend explorer.
+        """
+        str_dict = {}
+        for key, value in self._options.items():
+            if isinstance(value, bool):
+                str_dict[key] = "true" if value else "false"
+            else:
+                str_dict[key] = str(value)
+        return str_dict

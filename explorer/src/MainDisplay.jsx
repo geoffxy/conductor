@@ -95,7 +95,13 @@ const MainDisplayImpl = ({ taskGraph, versions }) => {
     <div
       style={{ height: "calc(100vh - 70px)", marginTop: "70px", zIndex: "1" }}
     >
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+        zIndex="0"
+      >
         <Controls />
       </ReactFlow>
     </div>

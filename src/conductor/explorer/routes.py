@@ -8,6 +8,7 @@ from conductor.context import Context
 from conductor.errors import ConductorError
 from conductor.explorer.workspace import Workspace
 from conductor.task_identifier import TaskIdentifier
+from conductor.task_types.run import RunExperiment, RunCommand
 import conductor.explorer as explorer_module
 import conductor.explorer.models as m
 
@@ -67,6 +68,15 @@ def get_task_graph() -> m.TaskGraph:
                 task_type=m.TaskType.from_cond(task),
                 identifier=m.TaskIdentifier.from_cond(task.identifier),
                 deps=[m.TaskIdentifier.from_cond(dep) for dep in task.deps],
+                runnable_details=(
+                    m.TaskRunnableDetails(
+                        run=task.raw_run,
+                        args=task.args.serialize_str_list(),
+                        options=task.options.serialize_str_dict(),
+                    )
+                    if isinstance(task, (RunExperiment, RunCommand))
+                    else None
+                ),
             )
             for _, task in index.get_all_loaded_tasks().items()
         ]

@@ -52,3 +52,16 @@ class RunArguments:
         """
         with open(file_path, "w", encoding="UTF-8") as file:
             json.dump(self._args, file, indent=2)
+
+    def serialize_str_list(self) -> List[str]:
+        """
+        Serializes the options into a list of strings. This is used when
+        passing the arguments to the frontend explorer.
+        """
+        str_args = []
+        for arg in self._args:
+            if isinstance(arg, bool):
+                str_args.append("true" if arg else "false")
+            else:
+                str_args.append(str(arg))
+        return str_args
