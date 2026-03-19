@@ -1,7 +1,8 @@
 .task-node {
   border: 1px solid #000;
-  border-radius: 3px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 150px;
 }
 
 .task-node p {
@@ -13,26 +14,62 @@
   font-size: 1em;
   font-weight: 600;
   text-align: left;
-  margin-bottom: 5px;
 }
 
 .task-node.experiment {
   background-color: #eaf3fd;
 }
 
+.task-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  gap: 10px;
+}
+
+.task-top .task-info-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #666;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.task-top .task-info-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.task-top .task-info-button:hover {
+  color: #333;
+}
+
+.task-top .task-info-button:focus-visible {
+  outline: 2px solid #2d6cdf;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 .task-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
 }
 
 .task-bottom .task-type {
-  font-size: 0.4em;
+  font-size: 0.8em;
   font-weight: 400;
   text-align: right;
   color: #555;
 }
 
 .task-bottom .task-versions {
-  font-size: 0.4em;
+  font-size: 0.8em;
 }

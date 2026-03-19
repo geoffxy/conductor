@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { Handle, Position } from "@xyflow/react";
+import { VscInfo } from "react-icons/vsc";
 import "./TaskNode.css";
 
 function taskTypeClass(taskType) {
@@ -14,6 +15,20 @@ function taskTypeClass(taskType) {
   } else {
     console.error("Unknown task type", taskType);
   }
+}
+
+function TaskInfoButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      className="task-info-button"
+      aria-label="Task info"
+      title="Task info"
+      onClick={onClick}
+    >
+      <VscInfo />
+    </button>
+  );
 }
 
 const TaskNode = ({ data }) => {
@@ -37,7 +52,17 @@ const TaskNode = ({ data }) => {
         style={{ visibility: "hidden" }}
       />
       <div className={`task-node ${taskTypeClassName}`} ref={nodeRef}>
-        <p className="task-id">{task.taskId.toString()}</p>
+        <div className="task-top">
+          <p className="task-id">{task.taskId.toString()}</p>
+          {task.taskType == "run_experiment" ||
+          task.taskType == "run_command" ? (
+            <TaskInfoButton
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            />
+          ) : null}
+        </div>
         <div className="task-bottom">
           <p className="task-type">{task.taskType}</p>
           {versions.length > 0 && (
