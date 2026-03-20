@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from conductor.context import Context
 from conductor.errors import ConductorError
 from conductor.explorer.workspace import Workspace
+from conductor.explorer.version_graph import compute_version_graph
 from conductor.task_identifier import TaskIdentifier
 from conductor.task_types.run import RunExperiment, RunCommand
 import conductor.explorer as explorer_module
@@ -104,6 +105,31 @@ def get_task_graph() -> m.TaskGraph:
         )
     except ConductorError as ex:
         raise HTTPException(status_code=400, detail=ex.printable_message()) from ex
+
+
+@app.get("/api/1/version_graph")
+def get_version_graph(task_id: str) -> m.VersionGraph:
+    """
+    Retrieves a condensed commit graph for all versions of the specified task.
+    """
+    assert ctx is not None
+    try:
+        cond_task_id = TaskIdentifier.from_str(task_id)
+    except ConductorError as ex:
+        raise HTTPException(status_code=400, detail=ex.printable_message()) from ex
+
+    ctx.use_cloned_version_index()
+    task_versions = [
+        version
+        for _, version in ctx.version_index.get_versioned_tasks(
+            tasks=[cond_task_id],
+            latest_only=False,
+        )
+    ]
+
+    return compute_version_graph(
+        task_id=cond_task_id, versions=task_versions, git=ctx.git
+    )
 
 
 # Serve the static pages.
