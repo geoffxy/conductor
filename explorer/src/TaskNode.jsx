@@ -170,6 +170,7 @@ function TaskInfoTooltipContent({ runnableDetails }) {
 }
 
 function VersionBadge({ commitHash, timestamp }) {
+  // Heuristic way to compute a short hash.
   const shortHash = commitHash.slice(0, 7);
   const timestampDate = new Date(timestamp * 1000);
   const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
