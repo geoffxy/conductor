@@ -49,6 +49,7 @@ const App = () => {
         parsedVersions[taskId.toString()] = {
           taskId,
           versions: rawVersion.versions,
+          currentVersion: rawVersion.current_version,
         };
       }
       setVersions(parsedVersions);

@@ -34,17 +34,33 @@ def get_all_versions() -> List[m.TaskResults]:
     Retrieve all versioned results that Conductor manages.
     """
     assert ctx is not None
-    version_index = ctx.version_index.clone()
-    all_results = version_index.get_all_versions()
+    ctx.use_cloned_version_index()
+    ctx.task_index.load_all_known_tasks(ctx.git)
+    all_results = ctx.version_index.get_all_versions()
     mapped: Dict[TaskIdentifier, List[m.ResultVersion]] = {}
     for task_id, version in all_results:
         if task_id not in mapped:
             mapped[task_id] = []
         mapped[task_id].append(m.ResultVersion.from_version(version))
-    list_results = [
-        m.TaskResults(identifier=m.TaskIdentifier.from_cond(task_id), versions=versions)
-        for task_id, versions in mapped.items()
-    ]
+
+    list_results = []
+    for task_id, versions in mapped.items():
+        # Compute the current version for this task, if relevant. The UI
+        # displays this information.
+        current_version = None
+        task = ctx.task_index.get_task(task_id)
+        if isinstance(task, RunExperiment):
+            version = task.get_output_version(ctx)
+            if version is not None:
+                current_version = m.ResultVersion.from_version(version)
+        list_results.append(
+            m.TaskResults(
+                identifier=m.TaskIdentifier.from_cond(task_id),
+                versions=versions,
+                current_version=current_version,
+            )
+        )
+
     list_results.sort(key=lambda r: r.identifier.display)
     return list_results
 

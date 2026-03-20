@@ -60,6 +60,7 @@ class ResultVersion(BaseModel):
 class TaskResults(BaseModel):
     identifier: TaskIdentifier
     versions: List[ResultVersion]
+    current_version: Optional[ResultVersion] = None
 
 
 class TaskRunnableDetails(BaseModel):

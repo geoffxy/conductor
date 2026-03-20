@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
 import { VscInfo } from "react-icons/vsc";
+import { format, formatDistanceToNow } from "date-fns";
 import "./TaskNode.css";
 
 function taskTypeClass(taskType) {
@@ -155,13 +156,53 @@ function TaskInfoTooltipContent({ runnableDetails }) {
   );
 }
 
+function VersionBadge({ commitHash, timestamp }) {
+  const shortHash = commitHash.slice(0, 7);
+  const timestampDate = new Date((timestamp - 60 * 60 * 24 * 8) * 1000);
+  const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
+  const isOlderThanOneWeek = Date.now() - timestampDate.getTime() > oneWeekInMs;
+
+  const formattedTime = isOlderThanOneWeek
+    ? format(timestampDate, "yyyy-MM-dd 'at' HH:mm")
+    : formatDistanceToNow(timestampDate, { addSuffix: true });
+
+  return (
+    <div className="version-badge">
+      <div className="version-badge-hash">{shortHash}</div>
+      <div className="version-badge-time">{formattedTime}</div>
+    </div>
+  );
+}
+
+function TaskVersionInfo({ versionInfo }) {
+  const { versions, currentVersion } = versionInfo;
+  const numVersions = versions?.length ?? 0;
+  if (numVersions === 0) {
+    return (
+      <div className="task-version-info">
+        <div>No versions available.</div>
+      </div>
+    );
+  } else {
+    return (
+      <div className="task-version-info">
+        <VersionBadge
+          commitHash={currentVersion.commit_hash}
+          timestamp={currentVersion.timestamp}
+        />
+      </div>
+    );
+  }
+}
+
 const TaskNode = ({ data }) => {
   const nodeRef = useRef();
   const infoButtonRef = useRef(null);
   const [showTooltip, setShowTooltip] = useState(false);
-  const { task, receiveNodeDimensions, versions } = data;
+  const { task, receiveNodeDimensions, versionInfo } = data;
   const taskTypeClassName = taskTypeClass(task.taskType);
   const hasRunnableDetails = task.runnableDetails != null;
+  const shouldHaveVersions = task.taskType === "run_experiment";
 
   useEffect(() => {
     if (!hasRunnableDetails && showTooltip) {
@@ -185,37 +226,37 @@ const TaskNode = ({ data }) => {
         style={{ visibility: "hidden" }}
       />
       <div className={`task-node ${taskTypeClassName}`} ref={nodeRef}>
-        <div className="task-top">
-          <p className="task-id">{task.taskId.toString()}</p>
-          {hasRunnableDetails ? (
-            <div className="task-info-container">
-              <TaskInfoButton
-                buttonRef={infoButtonRef}
-                showTooltip={showTooltip}
-                onMouseEnter={() => {
-                  setShowTooltip(true);
-                }}
-                onMouseLeave={() => {
-                  setShowTooltip(false);
-                }}
-              />
-              <TaskInfoTooltip
-                runnableDetails={task.runnableDetails}
-                anchorRef={infoButtonRef}
-                showTooltip={showTooltip}
-                onClose={() => {
-                  setShowTooltip(false);
-                }}
-              />
-            </div>
-          ) : null}
+        <div className={`task-node-body-content ${taskTypeClassName}`}>
+          <div className="task-top">
+            <p className="task-id">{task.taskId.toString()}</p>
+            {hasRunnableDetails ? (
+              <div className="task-info-container">
+                <TaskInfoButton
+                  buttonRef={infoButtonRef}
+                  showTooltip={showTooltip}
+                  onMouseEnter={() => {
+                    setShowTooltip(true);
+                  }}
+                  onMouseLeave={() => {
+                    setShowTooltip(false);
+                  }}
+                />
+                <TaskInfoTooltip
+                  runnableDetails={task.runnableDetails}
+                  anchorRef={infoButtonRef}
+                  showTooltip={showTooltip}
+                  onClose={() => {
+                    setShowTooltip(false);
+                  }}
+                />
+              </div>
+            ) : null}
+          </div>
+          <div className="task-bottom">
+            <p className="task-type">{task.taskType}</p>
+          </div>
         </div>
-        <div className="task-bottom">
-          <p className="task-type">{task.taskType}</p>
-          {versions.length > 0 && (
-            <p className="task-versions">Versions: {versions.length}</p>
-          )}
-        </div>
+        {shouldHaveVersions && <TaskVersionInfo versionInfo={versionInfo} />}
       </div>
       <Handle
         type="target"

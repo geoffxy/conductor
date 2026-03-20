@@ -20,11 +20,14 @@ function taskGraphToNodesAndEdges(taskGraph, receiveNodeDimensions, versions) {
     const versionInfo = versions[task.taskId.toString()];
     let versionsForTask = [];
     if (versionInfo != null) {
-      versionsForTask = versionInfo.versions;
+      versionsForTask = {
+        versions: versionInfo.versions,
+        currentVersion: versionInfo.currentVersion,
+      };
     }
     nodes.push({
       id: task.taskId.toString(),
-      data: { task, receiveNodeDimensions, versions: versionsForTask },
+      data: { task, receiveNodeDimensions, versionInfo: versionsForTask },
       type: "taskNode",
       // N.B. This is a placeholder position. We use Dagre to compute the actual
       // layout.
