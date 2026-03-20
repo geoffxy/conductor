@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
-import { VscInfo } from "react-icons/vsc";
+import { VscInfo, VscSearch } from "react-icons/vsc";
 import { format, formatDistanceToNow } from "date-fns";
 import "./TaskNode.css";
 
@@ -37,6 +37,19 @@ function TaskInfoButton({
       onMouseLeave={onMouseLeave}
     >
       <VscInfo />
+    </button>
+  );
+}
+
+function TaskVersionButton({ numVersions }) {
+  return (
+    <button
+      type="button"
+      className="task-version-button"
+      aria-label={`View versions (${numVersions})`}
+    >
+      <VscSearch />
+      <span className="task-version-count">{numVersions}</span>
     </button>
   );
 }
@@ -158,7 +171,7 @@ function TaskInfoTooltipContent({ runnableDetails }) {
 
 function VersionBadge({ commitHash, timestamp }) {
   const shortHash = commitHash.slice(0, 7);
-  const timestampDate = new Date((timestamp - 60 * 60 * 24 * 8) * 1000);
+  const timestampDate = new Date(timestamp * 1000);
   const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
   const isOlderThanOneWeek = Date.now() - timestampDate.getTime() > oneWeekInMs;
 
@@ -190,6 +203,7 @@ function TaskVersionInfo({ versionInfo }) {
           commitHash={currentVersion.commit_hash}
           timestamp={currentVersion.timestamp}
         />
+        <TaskVersionButton numVersions={numVersions} />
       </div>
     );
   }

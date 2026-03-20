@@ -151,7 +151,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
 }
 
 .version-badge {
@@ -172,4 +172,39 @@
   color: #fff;
   padding: 0 4px;
   border-radius: 0 3px 3px 0;
+}
+
+.task-version-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: #586273;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.task-version-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.task-version-button:hover {
+  color: #333;
+}
+
+.task-version-button:focus-visible {
+  outline: 2px solid #2d6cdf;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.task-version-count {
+  font-size: 0.9em;
+  font-weight: 600;
 }
