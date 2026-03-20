@@ -5,7 +5,6 @@ from typing import Any, Iterable, Optional
 from conductor.config import TASK_OUTPUT_DIR_SUFFIX, CONFIG_FILE_NAME
 from .conductor_runner import ConductorRunner, FIXTURE_TEMPLATES
 
-
 CHECK_FILE_PATH = pathlib.Path("copy" + TASK_OUTPUT_DIR_SUFFIX, "copied.txt")
 
 
