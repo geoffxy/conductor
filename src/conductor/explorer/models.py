@@ -1,5 +1,5 @@
 import enum
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel
 
 import conductor.task_identifier as ci
@@ -60,12 +60,20 @@ class ResultVersion(BaseModel):
 class TaskResults(BaseModel):
     identifier: TaskIdentifier
     versions: List[ResultVersion]
+    current_version: Optional[ResultVersion] = None
+
+
+class TaskRunnableDetails(BaseModel):
+    run: str
+    args: List[str]
+    options: Dict[str, str]
 
 
 class Task(BaseModel):
     task_type: TaskType
     identifier: TaskIdentifier
     deps: List[TaskIdentifier]
+    runnable_details: Optional[TaskRunnableDetails] = None
 
 
 class TaskGraph(BaseModel):

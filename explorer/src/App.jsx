@@ -34,6 +34,7 @@ const App = () => {
           taskId,
           deps,
           taskType: rawTask.task_type,
+          runnableDetails: rawTask.runnable_details,
         });
       }
       setTaskGraph({
@@ -48,6 +49,7 @@ const App = () => {
         parsedVersions[taskId.toString()] = {
           taskId,
           versions: rawVersion.versions,
+          currentVersion: rawVersion.current_version,
         };
       }
       setVersions(parsedVersions);

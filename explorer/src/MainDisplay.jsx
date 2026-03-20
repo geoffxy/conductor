@@ -20,11 +20,14 @@ function taskGraphToNodesAndEdges(taskGraph, receiveNodeDimensions, versions) {
     const versionInfo = versions[task.taskId.toString()];
     let versionsForTask = [];
     if (versionInfo != null) {
-      versionsForTask = versionInfo.versions;
+      versionsForTask = {
+        versions: versionInfo.versions,
+        currentVersion: versionInfo.currentVersion,
+      };
     }
     nodes.push({
       id: task.taskId.toString(),
-      data: { task, receiveNodeDimensions, versions: versionsForTask },
+      data: { task, receiveNodeDimensions, versionInfo: versionsForTask },
       type: "taskNode",
       // N.B. This is a placeholder position. We use Dagre to compute the actual
       // layout.
@@ -95,7 +98,13 @@ const MainDisplayImpl = ({ taskGraph, versions }) => {
     <div
       style={{ height: "calc(100vh - 70px)", marginTop: "70px", zIndex: "1" }}
     >
-      <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        fitView
+        zIndex="0"
+      >
         <Controls />
       </ReactFlow>
     </div>

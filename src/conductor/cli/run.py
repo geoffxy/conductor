@@ -17,7 +17,6 @@ from conductor.execution.planning.planner import ExecutionPlanner
 from conductor.utils.user_code import cli_command
 from conductor.utils.colored_output import print_bold
 
-
 # Value used to indicate when Conductor should select the maximum number of
 # parallel tasks.
 _AUTOFILL_JOBS = -1

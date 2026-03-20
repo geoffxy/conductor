@@ -109,6 +109,9 @@ class Context:
     def env_task_versions(self) -> Dict[TaskIdentifier, Version]:
         return self._env_task_versions
 
+    def use_cloned_version_index(self) -> None:
+        self._version_index = self._version_index.clone()
+
     def _ensure_output_dir_exists(self) -> None:
         self.output_path.mkdir(exist_ok=True)
         if not self.output_path.is_dir():

@@ -15,12 +15,14 @@
   },
   "dependencies": {
     "@dagrejs/dagre": "^1.1.4",
-    "@xyflow/react": "^12.3.5",
+    "@xyflow/react": "^12.10.1",
     "axios": "^1.7.8",
     "bootstrap": "^5.3.3",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.6",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.6.0",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
