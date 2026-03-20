@@ -196,6 +196,15 @@ function TaskVersionInfo({ versionInfo }) {
         <div>No versions available.</div>
       </div>
     );
+  } else if (currentVersion == null) {
+    // This means there are versions, but none are "relevant" based on the
+    // current git commit.
+    return (
+      <div className="task-version-info">
+        <div>No relevant version available.</div>
+        <TaskVersionButton numVersions={numVersions} />
+      </div>
+    );
   } else {
     return (
       <div className="task-version-info">
