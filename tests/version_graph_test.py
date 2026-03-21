@@ -1,7 +1,9 @@
+import pathlib
 from typing import List
 
 from conductor.execution.version_index import Version
 from conductor.explorer.version_graph import compute_version_graph
+from conductor.task_identifier import TaskIdentifier
 
 
 class _FakeGit:
@@ -27,7 +29,10 @@ def test_empty_when_all_versions_have_no_commit():
         Version(timestamp=200, commit_hash=None, has_uncommitted_changes=True),
     ]
 
-    graph = compute_version_graph(versions=versions, git=_FakeGit("unused", []))
+    task_id = TaskIdentifier(path=pathlib.Path("testing"), name="task")
+    graph = compute_version_graph(
+        task_id=task_id, versions=versions, git=_FakeGit("unused", [])
+    )
 
     assert graph.nodes == []
     assert graph.edges == []
@@ -47,7 +52,9 @@ def test_condenses_linear_path_and_records_skipped_commits():
         "-ccc ddd",
     ]
 
+    task_id = TaskIdentifier(path=pathlib.Path("testing"), name="task")
     graph = compute_version_graph(
+        task_id=task_id,
         versions=versions,
         git=_FakeGit(common_ancestor="ddd", raw_graph_lines=raw_graph_lines),
     )
@@ -73,7 +80,9 @@ def test_keeps_non_referenced_fork_or_join_nodes():
         ">f d",
     ]
 
+    task_id = TaskIdentifier(path=pathlib.Path("testing"), name="task")
     graph = compute_version_graph(
+        task_id=task_id,
         versions=versions,
         git=_FakeGit(common_ancestor="z", raw_graph_lines=raw_graph_lines),
     )

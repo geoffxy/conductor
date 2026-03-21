@@ -51,9 +51,9 @@ def get_all_versions() -> List[m.TaskResults]:
         current_version = None
         task = ctx.task_index.get_task(task_id)
         if isinstance(task, RunExperiment):
-            version = task.get_output_version(ctx)
-            if version is not None:
-                current_version = m.ResultVersion.from_version(version)
+            maybe_version = task.get_output_version(ctx)
+            if maybe_version is not None:
+                current_version = m.ResultVersion.from_version(maybe_version)
         list_results.append(
             m.TaskResults(
                 identifier=m.TaskIdentifier.from_cond(task_id),

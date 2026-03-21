@@ -2,7 +2,7 @@ from string import hexdigits
 from typing import Dict, List, Optional, Set, Tuple
 
 from conductor.execution.version_index import Version
-from conductor.explorer.models import VersionGraph, VersionGraphEdge, VersionGraphNode
+import conductor.explorer.models as m
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.git import Git
 
@@ -46,9 +46,21 @@ def _parse_raw_graph_edges(
     return commits, edges
 
 
+def _to_version_node(commit_hash: str, versions: List[Version]) -> m.VersionGraphNode:
+    result_versions = [m.ResultVersion.from_version(version) for version in versions]
+    return m.VersionGraphNode(
+        commit_hash=commit_hash,
+        versions=sorted(
+            result_versions,
+            # Sort in descending order so that the most recent version for this commit is first.
+            key=lambda v: -v.timestamp,
+        ),
+    )
+
+
 def compute_version_graph(
     task_id: TaskIdentifier, versions: List[Version], git: Git
-) -> VersionGraph:
+) -> m.VersionGraph:
     commit_to_versions: Dict[str, List[Version]] = {}
     for version in versions:
         if version.commit_hash is None:
@@ -58,26 +70,22 @@ def compute_version_graph(
         commit_to_versions[version.commit_hash].append(version)
 
     if len(commit_to_versions) == 0:
-        return VersionGraph(nodes=[], edges=[])
+        return m.VersionGraph(
+            task_id=m.TaskIdentifier.from_cond(task_id), nodes=[], edges=[]
+        )
 
     referenced_commits: Set[str] = set(commit_to_versions.keys())
     common_ancestor = git.get_common_ancestor(list(referenced_commits))
 
     # Special case: All disconnected commits.
     if common_ancestor is None:
-        nodes = [
-            VersionGraphNode(
-                commit_hash=commit_hash,
-                versions=sorted(
-                    commit_to_versions[commit_hash],
-                    key=lambda v: v.timestamp,
-                ),
-                is_referenced=True,
-                is_fork_or_join=False,
-            )
-            for commit_hash in sorted(referenced_commits)
-        ]
-        return VersionGraph(nodes=nodes, edges=[])
+        nodes = []
+        for commit_hash in referenced_commits:
+            versions = commit_to_versions.get(commit_hash, [])
+            nodes.append(_to_version_node(commit_hash, versions))
+        return m.VersionGraph(
+            task_id=m.TaskIdentifier.from_cond(task_id), nodes=nodes, edges=[]
+        )
 
     raw_graph_out = git.get_raw_version_graph(
         commit_hashes=list(referenced_commits),
@@ -119,24 +127,19 @@ def compute_version_graph(
     finalized_edges = []
 
     for node in all_commits:
-        finalized_nodes.append(
-            VersionGraphNode(
-                commit_hash=node,
-                versions=sorted(
-                    commit_to_versions.get(node, []),
-                    # Sort in descending order so that the most recent version for
-                    # this commit is first.
-                    key=lambda v: -v.timestamp,
-                ),
-            )
-        )
+        versions = commit_to_versions.get(node, [])
+        finalized_nodes.append(_to_version_node(node, versions))
         next_commits = adjacency.get(node, set())
         for next_commit in next_commits:
             finalized_edges.append(
-                VersionGraphEdge(
+                m.VersionGraphEdge(
                     from_commit_hash=node,
                     to_commit_hash=next_commit,
                 )
             )
 
-    return VersionGraph(task_id=task_id, nodes=finalized_nodes, edges=finalized_edges)
+    return m.VersionGraph(
+        task_id=m.TaskIdentifier.from_cond(task_id),
+        nodes=finalized_nodes,
+        edges=finalized_edges,
+    )
