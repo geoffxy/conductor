@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { VscInfo, VscSearch } from "react-icons/vsc";
 import { format, formatDistanceToNow } from "date-fns";
 import "./TaskNode.css";
+import { getVersionsForTask } from "./api";
 
 function taskTypeClass(taskType) {
   if (taskType === "run_command") {
@@ -41,12 +42,23 @@ function TaskInfoButton({
   );
 }
 
-function TaskVersionButton({ numVersions }) {
+function TaskVersionButton({ taskId, numVersions, setViewTaskVersions }) {
   return (
     <button
       type="button"
       className="task-version-button"
       aria-label={`View versions (${numVersions})`}
+      onClick={async () => {
+        const versions = await getVersionsForTask(taskId);
+        const parsed = {
+          taskId,
+          versionGraph: {
+            nodes: versions.nodes,
+            edges: versions.edges,
+          },
+        };
+        setViewTaskVersions(parsed);
+      }}
     >
       <VscSearch />
       <span className="task-version-count">{numVersions}</span>
@@ -188,7 +200,7 @@ function VersionBadge({ commitHash, timestamp }) {
   );
 }
 
-function TaskVersionInfo({ versionInfo }) {
+function TaskVersionInfo({ taskId, versionInfo, setViewTaskVersions }) {
   const { versions, currentVersion } = versionInfo;
   const numVersions = versions?.length ?? 0;
   if (numVersions === 0) {
@@ -203,7 +215,11 @@ function TaskVersionInfo({ versionInfo }) {
     return (
       <div className="task-version-info">
         <div>No relevant version available.</div>
-        <TaskVersionButton numVersions={numVersions} />
+        <TaskVersionButton
+          taskId={taskId}
+          numVersions={numVersions}
+          setViewTaskVersions={setViewTaskVersions}
+        />
       </div>
     );
   } else {
@@ -213,7 +229,11 @@ function TaskVersionInfo({ versionInfo }) {
           commitHash={currentVersion.commit_hash}
           timestamp={currentVersion.timestamp}
         />
-        <TaskVersionButton numVersions={numVersions} />
+        <TaskVersionButton
+          taskId={taskId}
+          numVersions={numVersions}
+          setViewTaskVersions={setViewTaskVersions}
+        />
       </div>
     );
   }
@@ -223,7 +243,8 @@ const TaskNode = ({ data }) => {
   const nodeRef = useRef();
   const infoButtonRef = useRef(null);
   const [showTooltip, setShowTooltip] = useState(false);
-  const { task, receiveNodeDimensions, versionInfo } = data;
+  const { task, receiveNodeDimensions, versionInfo, setViewTaskVersions } =
+    data;
   const taskTypeClassName = taskTypeClass(task.taskType);
   const hasRunnableDetails = task.runnableDetails != null;
   const shouldHaveVersions = task.taskType === "run_experiment";
@@ -280,7 +301,13 @@ const TaskNode = ({ data }) => {
             <p className="task-type">{task.taskType}</p>
           </div>
         </div>
-        {shouldHaveVersions && <TaskVersionInfo versionInfo={versionInfo} />}
+        {shouldHaveVersions && (
+          <TaskVersionInfo
+            taskId={task.taskId}
+            versionInfo={versionInfo}
+            setViewTaskVersions={setViewTaskVersions}
+          />
+        )}
       </div>
       <Handle
         type="target"

@@ -9,7 +9,12 @@ import TaskNode from "./TaskNode";
 import Dagre from "@dagrejs/dagre";
 import "@xyflow/react/dist/style.css";
 
-function taskGraphToNodesAndEdges(taskGraph, receiveNodeDimensions, versions) {
+function taskGraphToNodesAndEdges(
+  taskGraph,
+  receiveNodeDimensions,
+  versions,
+  otherProps,
+) {
   const nodes = [];
   const edges = [];
   if (taskGraph == null) {
@@ -27,7 +32,12 @@ function taskGraphToNodesAndEdges(taskGraph, receiveNodeDimensions, versions) {
     }
     nodes.push({
       id: task.taskId.toString(),
-      data: { task, receiveNodeDimensions, versionInfo: versionsForTask },
+      data: {
+        task,
+        receiveNodeDimensions,
+        versionInfo: versionsForTask,
+        ...otherProps,
+      },
       type: "taskNode",
       // N.B. This is a placeholder position. We use Dagre to compute the actual
       // layout.
@@ -75,7 +85,7 @@ function computeGraphLayout({ nodes, edges }, nodeDimensions) {
   };
 }
 
-const MainDisplayImpl = ({ taskGraph, versions }) => {
+const MainDisplayImpl = ({ taskGraph, versions, setViewTaskVersions }) => {
   const nodeTypes = useMemo(() => ({ taskNode: TaskNode }), []);
   const [nodeDimensions, setNodeDimensions] = useState({});
   const receiveNodeDimensions = useCallback(
@@ -91,6 +101,7 @@ const MainDisplayImpl = ({ taskGraph, versions }) => {
     taskGraph,
     receiveNodeDimensions,
     versions,
+    { setViewTaskVersions },
   );
   const { nodes, edges } = computeGraphLayout(out, nodeDimensions);
 
