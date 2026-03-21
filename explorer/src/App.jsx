@@ -2,7 +2,7 @@ import { getTaskGraph, getAllVersions } from "./api";
 import Header from "./Header";
 import MainDisplay from "./MainDisplay";
 import VersionGraphDisplay from "./VersionGraphDisplay";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TaskIdentifier from "./models/identifier";
 
 function parseRawTaskId({ path, name }) {
@@ -59,6 +59,10 @@ const App = () => {
     fetchData();
   }, []);
 
+  const clearViewTaskVersions = useCallback(() => {
+    setViewTaskVersions(null);
+  }, [setViewTaskVersions]);
+
   return (
     <div id="conductor-explorer">
       <Header />
@@ -68,7 +72,10 @@ const App = () => {
         setViewTaskVersions={setViewTaskVersions}
       />
       {viewTaskVersions != null && (
-        <VersionGraphDisplay {...viewTaskVersions} />
+        <VersionGraphDisplay
+          {...viewTaskVersions}
+          clearViewTaskVersions={clearViewTaskVersions}
+        />
       )}
     </div>
   );

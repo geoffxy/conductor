@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -6,6 +6,7 @@ import {
   MarkerType,
 } from "@xyflow/react";
 import Dagre from "@dagrejs/dagre";
+import { VscClose } from "react-icons/vsc";
 import VersionNode from "./VersionNode";
 import "@xyflow/react/dist/style.css";
 import "./VersionGraphDisplay.css";
@@ -90,8 +91,11 @@ function computeGraphLayout({ nodes, edges }, nodeDimensions) {
   };
 }
 
-const VersionGraphDisplayImpl = ({ versionGraph }) => {
-  console.log(versionGraph);
+const VersionGraphDisplayImpl = ({
+  taskId,
+  versionGraph,
+  clearViewTaskVersions,
+}) => {
   const nodeTypes = useMemo(() => ({ versionNode: VersionNode }), []);
   const [nodeDimensions, setNodeDimensions] = useState({});
   const receiveNodeDimensions = useCallback(
@@ -107,21 +111,47 @@ const VersionGraphDisplayImpl = ({ versionGraph }) => {
   const out = versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions);
   const { nodes, edges } = computeGraphLayout(out, nodeDimensions);
 
+  useEffect(() => {
+    const handleKeyUp = (event) => {
+      if (event.key === "Escape") {
+        clearViewTaskVersions();
+      }
+    };
+
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [clearViewTaskVersions]);
+
   return (
     <div className="version-graph-overlay">
       <div
         className="version-graph-display"
         style={{ height: "80%", width: "80%" }}
       >
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          fitView
-          zIndex="0"
-        >
-          <Controls />
-        </ReactFlow>
+        <div className="version-graph-header">
+          <div className="version-graph-task-id">{taskId.toString()}</div>
+          <button
+            type="button"
+            className="version-graph-close-button"
+            aria-label="Close version graph"
+            onClick={clearViewTaskVersions}
+          >
+            <VscClose />
+          </button>
+        </div>
+        <div className="version-graph-body">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            zIndex="0"
+          >
+            <Controls />
+          </ReactFlow>
+        </div>
       </div>
     </div>
   );

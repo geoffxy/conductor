@@ -6,7 +6,7 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(3px);
-  z-index: 10;
+  z-index: 20000;
 }
 
 .version-graph-display {
@@ -14,6 +14,57 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 20;
+  z-index: 20001;
   background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  border-radius: 25px;
+}
+
+.version-graph-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  height: 40px;
+}
+
+.version-graph-header .version-graph-task-id {
+  font-weight: 600;
+  font-size: 1.5em;
+  display: flex;
+  align-items: center;
+}
+
+.version-graph-close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #666;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.version-graph-close-button svg {
+  width: 25px;
+  height: 25px;
+}
+
+.version-graph-close-button:hover {
+  color: #333;
+}
+
+.version-graph-close-button:focus-visible {
+  outline: 2px solid #2d6cdf;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.version-graph-body {
+  flex: 1;
+  padding: 20px;
 }
