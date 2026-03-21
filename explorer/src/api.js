@@ -15,7 +15,7 @@ async function getAllVersions() {
 async function getVersionsForTask(taskId) {
   const encodedTaskId = encodeURIComponent(taskId.toString());
   const results = await axios.get(
-    `${API}/version_graph?task_id=${encodedTaskId}`
+    `${API}/version_graph?task_id=${encodedTaskId}`,
   );
   return results.data;
 }
