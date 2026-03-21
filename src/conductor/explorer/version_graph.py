@@ -75,7 +75,11 @@ def compute_version_graph(
         )
 
     referenced_commits: Set[str] = set(commit_to_versions.keys())
-    common_ancestor = git.get_common_ancestor(list(referenced_commits))
+
+    # Want to include HEAD to help with the visualization.
+    referenced_commits_list = list(referenced_commits)
+    referenced_commits_list.append("HEAD")
+    common_ancestor = git.get_common_ancestor(referenced_commits_list)
 
     # Special case: All disconnected commits.
     if common_ancestor is None:
@@ -88,7 +92,7 @@ def compute_version_graph(
         )
 
     raw_graph_out = git.get_raw_version_graph(
-        commit_hashes=list(referenced_commits),
+        commit_hashes=referenced_commits_list,
         terminate_hash=common_ancestor,
     )
     raw_commits, raw_edges = _parse_raw_graph_edges(raw_graph_out)
