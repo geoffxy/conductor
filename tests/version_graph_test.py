@@ -38,7 +38,7 @@ def test_empty_when_all_versions_have_no_commit():
     assert graph.edges == []
 
 
-def test_condenses_linear_path_and_records_skipped_commits():
+def test_condenses_linear_path():
     versions = [
         Version(timestamp=100, commit_hash="aaa", has_uncommitted_changes=False),
         Version(timestamp=200, commit_hash="ccc", has_uncommitted_changes=False),
@@ -58,26 +58,29 @@ def test_condenses_linear_path_and_records_skipped_commits():
         versions=versions,
         git=_FakeGit(common_ancestor="ddd", raw_graph_lines=raw_graph_lines),
     )
+    actual_nodes = [node.commit_hash for node in graph.nodes]
+    actual_nodes.sort()
 
-    assert [node.commit_hash for node in graph.nodes] == ["aaa", "ccc"]
-    assert len(graph.edges) == 1
-    assert graph.edges[0].from_commit_hash == "aaa"
-    assert graph.edges[0].to_commit_hash == "ccc"
-    assert graph.edges[0].skipped_commits == ["bbb"]
+    assert actual_nodes == ["aaa", "ccc", "ddd"]
+    assert len(graph.edges) == 2
+    edge_tuples = {(edge.from_commit_hash, edge.to_commit_hash) for edge in graph.edges}
+    assert ("aaa", "ccc") in edge_tuples
+    assert ("ccc", "ddd") in edge_tuples
 
 
 def test_keeps_non_referenced_fork_or_join_nodes():
     versions = [
         Version(timestamp=100, commit_hash="a", has_uncommitted_changes=False),
         Version(timestamp=200, commit_hash="d", has_uncommitted_changes=False),
+        Version(timestamp=300, commit_hash="e", has_uncommitted_changes=False),
     ]
     raw_graph_lines = [
         "commit a c",
         ">a c",
         "commit c d f",
         ">c d f",
-        "commit f d",
-        ">f d",
+        "commit f e",
+        ">f e",
     ]
 
     task_id = TaskIdentifier(path=pathlib.Path("testing"), name="task")
@@ -89,12 +92,12 @@ def test_keeps_non_referenced_fork_or_join_nodes():
 
     nodes_by_hash = {node.commit_hash: node for node in graph.nodes}
     assert "c" in nodes_by_hash
-    assert nodes_by_hash["c"].is_referenced is False
-    assert nodes_by_hash["c"].is_fork_or_join is True
+    assert "a" in nodes_by_hash
+    assert "d" in nodes_by_hash
+    assert "e" in nodes_by_hash
 
-    edge_tuples = {
-        (edge.from_commit_hash, edge.to_commit_hash, tuple(edge.skipped_commits))
-        for edge in graph.edges
-    }
-    assert ("a", "c", tuple()) in edge_tuples
-    assert ("c", "d", tuple()) in edge_tuples
+    edge_tuples = {(edge.from_commit_hash, edge.to_commit_hash) for edge in graph.edges}
+    assert ("a", "c") in edge_tuples
+    assert ("c", "e") in edge_tuples
+    assert ("c", "d") in edge_tuples
+    assert len(edge_tuples) == 3

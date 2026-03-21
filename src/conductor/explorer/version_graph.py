@@ -42,6 +42,7 @@ def _parse_raw_graph_edges(
             if parent is None:
                 continue
             edges.append((child, parent))
+            commits.add(parent)
 
     return commits, edges
 
@@ -111,13 +112,16 @@ def compute_version_graph(
 
     # Condense the graph by skipping over non-referenced linear paths, while
     # keeping track of skipped commits.
+    commits_to_keep = set()
     for commit in all_commits:
         if commit in referenced_commits:
+            commits_to_keep.add(commit)
             continue
 
         out_nodes = adjacency.get(commit, set())
         in_nodes = reverse_adjacency.get(commit, set())
         if not (len(out_nodes) == 1 and len(in_nodes) == 1):
+            commits_to_keep.add(commit)
             continue
 
         parent = next(iter(out_nodes))
@@ -129,8 +133,7 @@ def compute_version_graph(
 
     finalized_nodes = []
     finalized_edges = []
-
-    for node in all_commits:
+    for node in commits_to_keep:
         versions = commit_to_versions.get(node, [])
         finalized_nodes.append(_to_version_node(node, versions))
         next_commits = adjacency.get(node, set())
