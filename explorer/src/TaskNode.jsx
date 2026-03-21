@@ -170,6 +170,7 @@ function TaskInfoTooltipContent({ runnableDetails }) {
 }
 
 function VersionBadge({ commitHash, timestamp }) {
+  // Heuristic way to compute a short hash.
   const shortHash = commitHash.slice(0, 7);
   const timestampDate = new Date(timestamp * 1000);
   const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
@@ -194,6 +195,15 @@ function TaskVersionInfo({ versionInfo }) {
     return (
       <div className="task-version-info">
         <div>No versions available.</div>
+      </div>
+    );
+  } else if (currentVersion == null) {
+    // This means there are versions, but none are "relevant" based on the
+    // current git commit.
+    return (
+      <div className="task-version-info">
+        <div>No relevant version available.</div>
+        <TaskVersionButton numVersions={numVersions} />
       </div>
     );
   } else {

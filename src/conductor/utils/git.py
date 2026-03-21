@@ -165,3 +165,49 @@ class Git:
         if result.returncode != 0:
             return []
         return result.stdout.strip().splitlines()
+
+    def get_common_ancestor(self, commit_hashes: List[str]) -> Optional[str]:
+        """
+        Returns the hash of the most recent common ancestor of the specified
+        commits. If there is no common ancestor, or if any of the specified
+        commits do not exist, then this method returns `None`.
+        """
+        result = subprocess.run(
+            ["git", "merge-base", "--octopus", *commit_hashes],
+            cwd=self._project_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return None
+        return result.stdout.strip()
+
+    def get_raw_version_graph(
+        self, commit_hashes: List[str], terminate_hash: str
+    ) -> List[str]:
+        """
+        Returns a list of lines representing the raw version graph of the
+        specified commits, starting from the commits in `commit_hashes` and
+        going back in history until reaching `terminate_hash`.
+
+        The output will need to be parsed.
+        """
+        result = subprocess.run(
+            [
+                "git",
+                "rev-list",
+                "--parents",
+                "--boundary",
+                "--format=%m%H %P",
+                *commit_hashes,
+                f"^{terminate_hash}",
+            ],
+            cwd=self._project_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            return []
+        return result.stdout.strip().splitlines()

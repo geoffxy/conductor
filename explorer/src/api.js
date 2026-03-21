@@ -12,4 +12,12 @@ async function getAllVersions() {
   return results.data;
 }
 
-export { getTaskGraph, getAllVersions };
+async function getVersionsForTask(taskId) {
+  const encodedTaskId = encodeURIComponent(taskId.toString());
+  const results = await axios.get(
+    `${API}/version_graph?task_id=${encodedTaskId}`,
+  );
+  return results.data;
+}
+
+export { getTaskGraph, getAllVersions, getVersionsForTask };

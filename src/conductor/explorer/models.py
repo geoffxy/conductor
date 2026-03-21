@@ -80,3 +80,22 @@ class TaskGraph(BaseModel):
     tasks: List[Task]
     # These are tasks that have no dependees.
     root_tasks: List[TaskIdentifier]
+
+
+class VersionGraphNode(BaseModel):
+    commit_hash: str
+    # If this is empty, it means we've kept the commit to provide
+    # structure/context in the graph (e.g., it's an ancestor or fork point), but
+    # there are no versions that directly reference this commit.
+    versions: List[ResultVersion]
+
+
+class VersionGraphEdge(BaseModel):
+    from_commit_hash: str
+    to_commit_hash: str
+
+
+class VersionGraph(BaseModel):
+    task_id: TaskIdentifier
+    nodes: List[VersionGraphNode]
+    edges: List[VersionGraphEdge]
