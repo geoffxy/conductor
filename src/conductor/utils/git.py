@@ -1,5 +1,6 @@
 import pathlib
 import subprocess
+import datetime
 from typing import Optional, List
 
 
@@ -20,6 +21,41 @@ class Git:
         @property
         def has_changes(self) -> bool:
             return self._has_changes
+
+    class DetailedCommit:
+        def __init__(
+            self,
+            commit_hash: str,
+            date: datetime.datetime,
+            message: str,
+            lines_added: int,
+            lines_removed: int,
+        ):
+            self._hash = commit_hash
+            self._date = date
+            self._message = message
+            self._lines_added = lines_added
+            self._lines_removed = lines_removed
+
+        @property
+        def hash(self) -> str:
+            return self._hash
+
+        @property
+        def date(self) -> datetime.datetime:
+            return self._date
+
+        @property
+        def message(self) -> str:
+            return self._message
+
+        @property
+        def lines_added(self) -> int:
+            return self._lines_added
+
+        @property
+        def lines_removed(self) -> int:
+            return self._lines_removed
 
     def __init__(self, project_root: pathlib.Path):
         self._project_root = project_root
@@ -211,3 +247,46 @@ class Git:
         if result.returncode != 0:
             return []
         return result.stdout.strip().splitlines()
+
+    def get_commit_info(self, commit_hash: str) -> DetailedCommit:
+        result = subprocess.run(
+            [
+                "git",
+                "show",
+                commit_hash,
+                "--quiet",
+                "--date=iso-strict",
+                "--format=%aI%n%B",
+                "--numstat",
+            ],
+            cwd=self._project_root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"Git command failed: {result.stdout}")
+
+        # Parse output (lines, commit message, changes).
+        lines = result.stdout.strip().splitlines()
+        commit_date = datetime.datetime.fromisoformat(lines[0])
+
+        message_parts = []
+        added = 0
+        removed = 0
+        for line in lines[1:]:
+            parts = line.split("\t")
+            # numstat format is: added \t removed \t filename
+            if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit():
+                added += int(parts[0])
+                removed += int(parts[1])
+            elif line.strip():
+                message_parts.append(line)
+
+        return self.DetailedCommit(
+            commit_hash=commit_hash,
+            date=commit_date,
+            message="\n".join(message_parts).strip(),
+            lines_added=added,
+            lines_removed=removed,
+        )

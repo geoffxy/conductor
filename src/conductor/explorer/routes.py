@@ -132,6 +132,20 @@ def get_version_graph(task_id: str) -> m.VersionGraph:
     )
 
 
+@app.get("/api/1/commit_info")
+def get_commit_info(commit_hash: str) -> m.CommitInfo:
+    """
+    Retrieves detailed information for a specific git commit.
+    """
+    assert ctx is not None
+    try:
+        commit = ctx.git.get_commit_info(commit_hash)
+    except RuntimeError as ex:
+        raise HTTPException(status_code=400, detail=str(ex)) from ex
+
+    return m.CommitInfo.from_cond(commit)
+
+
 # Serve the static pages.
 # Note that this should go last as a "catch all" route.
 explorer_module_pkg = pkg_resources.files(explorer_module)
