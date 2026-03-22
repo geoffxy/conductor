@@ -1,4 +1,4 @@
-import { getTaskGraph, getAllVersions } from "./api";
+import { getTaskGraph, getAllVersions, getVersionsForTask } from "./api";
 import Header from "./Header";
 import MainDisplay from "./MainDisplay";
 import VersionGraphDisplay from "./VersionGraphDisplay";
@@ -12,7 +12,32 @@ function parseRawTaskId({ path, name }) {
 const App = () => {
   const [taskGraph, setTaskGraph] = useState(null);
   const [versions, setVersions] = useState({});
-  const [viewTaskVersions, setViewTaskVersions] = useState(null);
+  const [viewVersions, setViewVersions] = useState(null);
+
+  const clearViewVersions = useCallback(() => {
+    setViewVersions(null);
+  }, [setViewVersions]);
+  const showVersionsForTask = useCallback(
+    async (taskId) => {
+      const versions = await getVersionsForTask(taskId);
+      const parsed = {
+        taskId,
+        // This represents the current location in the Git repository (i.e., the
+        // HEAD commit).
+        currentCommit: versions.current_commit,
+        // The version of this task being used (it's either the most relevant
+        // version, or the overridden version if the user has selected one).
+        selectedVersion: versions.selected_version,
+        // The full version graph for display.
+        versionGraph: {
+          nodes: versions.nodes,
+          edges: versions.edges,
+        },
+      };
+      setViewVersions(parsed);
+    },
+    [setViewVersions],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,22 +84,18 @@ const App = () => {
     fetchData();
   }, []);
 
-  const clearViewTaskVersions = useCallback(() => {
-    setViewTaskVersions(null);
-  }, [setViewTaskVersions]);
-
   return (
     <div id="conductor-explorer">
       <Header />
       <MainDisplay
         taskGraph={taskGraph}
         versions={versions}
-        setViewTaskVersions={setViewTaskVersions}
+        showVersionsForTask={showVersionsForTask}
       />
-      {viewTaskVersions != null && (
+      {viewVersions != null && (
         <VersionGraphDisplay
-          {...viewTaskVersions}
-          clearViewTaskVersions={clearViewTaskVersions}
+          {...viewVersions}
+          clearViewVersions={clearViewVersions}
         />
       )}
     </div>

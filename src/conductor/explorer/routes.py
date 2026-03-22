@@ -127,9 +127,21 @@ def get_version_graph(task_id: str) -> m.VersionGraph:
         )
     ]
 
-    return compute_version_graph(
+    graph = compute_version_graph(
         task_id=cond_task_id, versions=task_versions, git=ctx.git
     )
+
+    # Compute the selected version for this task, if relevant. The UI
+    # displays this information.
+    task_identifier = TaskIdentifier.from_str(task_id)
+    task = ctx.task_index.get_task(task_identifier)
+    if isinstance(task, RunExperiment):
+        maybe_version = task.get_output_version(ctx)
+        if maybe_version is not None:
+            selected_version = m.ResultVersion.from_version(maybe_version)
+            graph.selected_version = selected_version
+
+    return graph
 
 
 @app.get("/api/1/commit_info")

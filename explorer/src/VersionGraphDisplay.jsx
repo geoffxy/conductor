@@ -96,8 +96,9 @@ function computeGraphLayout({ nodes, edges }, nodeDimensions) {
 const VersionGraphDisplayImpl = ({
   taskId,
   currentCommit,
+  selectedVersion,
   versionGraph,
-  clearViewTaskVersions,
+  clearViewVersions,
 }) => {
   const nodeTypes = useMemo(() => ({ versionNode: VersionNode }), []);
   const [nodeDimensions, setNodeDimensions] = useState({});
@@ -119,7 +120,7 @@ const VersionGraphDisplayImpl = ({
   useEffect(() => {
     const handleKeyUp = (event) => {
       if (event.key === "Escape") {
-        clearViewTaskVersions();
+        clearViewVersions();
       }
     };
 
@@ -127,13 +128,10 @@ const VersionGraphDisplayImpl = ({
     return () => {
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [clearViewTaskVersions]);
+  }, [clearViewVersions]);
 
   return (
-    <div
-      className="version-graph-overlay"
-      onClick={() => clearViewTaskVersions()}
-    >
+    <div className="version-graph-overlay" onClick={() => clearViewVersions()}>
       <div
         className="version-graph-display"
         style={{ height: "80%", width: "80%" }}
@@ -145,7 +143,7 @@ const VersionGraphDisplayImpl = ({
             type="button"
             className="version-graph-close-button"
             aria-label="Close version graph"
-            onClick={clearViewTaskVersions}
+            onClick={clearViewVersions}
           >
             <VscClose />
           </button>
@@ -163,7 +161,7 @@ const VersionGraphDisplayImpl = ({
             </ReactFlow>
           </div>
           <div className="version-graph-sidebar-wrap">
-            <VersionGraphSidebar />
+            <VersionGraphSidebar selectedVersion={selectedVersion} />
           </div>
         </div>
       </div>

@@ -75,6 +75,7 @@ def compute_version_graph(
         return m.VersionGraph(
             task_id=m.TaskIdentifier.from_cond(task_id),
             current_commit=current_commit.hash if current_commit else None,
+            selected_version=None,
             nodes=[],
             edges=[],
         )
@@ -98,6 +99,7 @@ def compute_version_graph(
         return m.VersionGraph(
             task_id=m.TaskIdentifier.from_cond(task_id),
             current_commit=current_commit.hash if current_commit else None,
+            selected_version=None,
             nodes=nodes,
             edges=[],
         )
@@ -175,6 +177,7 @@ def compute_version_graph(
     return m.VersionGraph(
         task_id=m.TaskIdentifier.from_cond(task_id),
         current_commit=current_commit.hash if current_commit else None,
+        selected_version=None,
         nodes=finalized_nodes,
         edges=finalized_edges,
     )

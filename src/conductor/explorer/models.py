@@ -100,6 +100,7 @@ class VersionGraphEdge(BaseModel):
 class VersionGraph(BaseModel):
     task_id: TaskIdentifier
     current_commit: Optional[str]
+    selected_version: Optional[ResultVersion]
     nodes: List[VersionGraphNode]
     edges: List[VersionGraphEdge]
 

@@ -4,7 +4,6 @@ import { createPortal } from "react-dom";
 import { VscInfo, VscSearch } from "react-icons/vsc";
 import { format, formatDistanceToNow } from "date-fns";
 import "./TaskNode.css";
-import { getVersionsForTask } from "./api";
 
 function taskTypeClass(taskType) {
   if (taskType === "run_command") {
@@ -42,24 +41,13 @@ function TaskInfoButton({
   );
 }
 
-function TaskVersionButton({ taskId, numVersions, setViewTaskVersions }) {
+function TaskVersionButton({ taskId, numVersions, showVersionsForTask }) {
   return (
     <button
       type="button"
       className="task-version-button"
       aria-label={`View versions (${numVersions})`}
-      onClick={async () => {
-        const versions = await getVersionsForTask(taskId);
-        const parsed = {
-          taskId,
-          currentCommit: versions.current_commit,
-          versionGraph: {
-            nodes: versions.nodes,
-            edges: versions.edges,
-          },
-        };
-        setViewTaskVersions(parsed);
-      }}
+      onClick={async () => await showVersionsForTask(taskId)}
     >
       <VscSearch />
       <span className="task-version-count">{numVersions}</span>
@@ -201,7 +189,7 @@ function VersionBadge({ commitHash, timestamp }) {
   );
 }
 
-function TaskVersionInfo({ taskId, versionInfo, setViewTaskVersions }) {
+function TaskVersionInfo({ taskId, versionInfo, showVersionsForTask }) {
   const { versions, currentVersion } = versionInfo;
   const numVersions = versions?.length ?? 0;
   if (numVersions === 0) {
@@ -219,7 +207,7 @@ function TaskVersionInfo({ taskId, versionInfo, setViewTaskVersions }) {
         <TaskVersionButton
           taskId={taskId}
           numVersions={numVersions}
-          setViewTaskVersions={setViewTaskVersions}
+          showVersionsForTask={showVersionsForTask}
         />
       </div>
     );
@@ -233,7 +221,7 @@ function TaskVersionInfo({ taskId, versionInfo, setViewTaskVersions }) {
         <TaskVersionButton
           taskId={taskId}
           numVersions={numVersions}
-          setViewTaskVersions={setViewTaskVersions}
+          showVersionsForTask={showVersionsForTask}
         />
       </div>
     );
@@ -244,7 +232,7 @@ const TaskNode = ({ data }) => {
   const nodeRef = useRef();
   const infoButtonRef = useRef(null);
   const [showTooltip, setShowTooltip] = useState(false);
-  const { task, receiveNodeDimensions, versionInfo, setViewTaskVersions } =
+  const { task, receiveNodeDimensions, versionInfo, showVersionsForTask } =
     data;
   const taskTypeClassName = taskTypeClass(task.taskType);
   const hasRunnableDetails = task.runnableDetails != null;
@@ -306,7 +294,7 @@ const TaskNode = ({ data }) => {
           <TaskVersionInfo
             taskId={task.taskId}
             versionInfo={versionInfo}
-            setViewTaskVersions={setViewTaskVersions}
+            showVersionsForTask={showVersionsForTask}
           />
         )}
       </div>

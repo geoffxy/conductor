@@ -85,7 +85,7 @@ function computeGraphLayout({ nodes, edges }, nodeDimensions) {
   };
 }
 
-const MainDisplayImpl = ({ taskGraph, versions, setViewTaskVersions }) => {
+const MainDisplayImpl = ({ taskGraph, versions, showVersionsForTask }) => {
   const nodeTypes = useMemo(() => ({ taskNode: TaskNode }), []);
   const [nodeDimensions, setNodeDimensions] = useState({});
   const receiveNodeDimensions = useCallback(
@@ -101,7 +101,7 @@ const MainDisplayImpl = ({ taskGraph, versions, setViewTaskVersions }) => {
     taskGraph,
     receiveNodeDimensions,
     versions,
-    { setViewTaskVersions },
+    { showVersionsForTask },
   );
   const { nodes, edges } = computeGraphLayout(out, nodeDimensions);
 
