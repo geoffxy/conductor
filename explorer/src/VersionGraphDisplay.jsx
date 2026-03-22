@@ -8,6 +8,7 @@ import {
 import Dagre from "@dagrejs/dagre";
 import { VscClose } from "react-icons/vsc";
 import VersionNode from "./VersionNode";
+import VersionGraphSidebar from "./VersionGraphSidebar";
 import "@xyflow/react/dist/style.css";
 import "./VersionGraphDisplay.css";
 
@@ -150,15 +151,20 @@ const VersionGraphDisplayImpl = ({
           </button>
         </div>
         <div className="version-graph-body">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            fitView
-            zIndex="0"
-          >
-            <Controls />
-          </ReactFlow>
+          <div className="version-graph-flow-wrap">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              fitView
+              zIndex="0"
+            >
+              <Controls />
+            </ReactFlow>
+          </div>
+          <div className="version-graph-sidebar-wrap">
+            <VersionGraphSidebar />
+          </div>
         </div>
       </div>
     </div>
