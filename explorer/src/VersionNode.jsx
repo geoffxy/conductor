@@ -17,6 +17,7 @@ const VersionNode = ({ data }) => {
     setFocusedCommitHash,
     isFocused,
     isSelected,
+    commitShortMessage,
   } = data;
   const hasVersions = versions.length > 0;
 
@@ -72,6 +73,7 @@ const VersionNode = ({ data }) => {
         <div className="version-node-label">
           <span>{shortHash(commitHash)}</span>
           {isCurrentCommit && <span>(HEAD)</span>}
+          <span>{commitShortMessage}</span>
         </div>
       </div>
       <Handle

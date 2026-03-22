@@ -235,7 +235,7 @@ class Git:
                 "rev-list",
                 "--parents",
                 "--boundary",
-                "--format=%m%H %P",
+                "--format=%m%H %P | %s",
                 *commit_hashes,
                 f"^{terminate_hash}",
             ],

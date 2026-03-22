@@ -26,6 +26,7 @@ function versionGraphToNodesAndEdges(
 
   for (const versionNode of versionGraph.nodes ?? []) {
     const commitHash = versionNode.commit_hash;
+    const commitShortMessage = versionNode.commit_short_message;
     const versions = Array.isArray(versionNode.versions)
       ? versionNode.versions
       : [];
@@ -43,6 +44,7 @@ function versionGraphToNodesAndEdges(
         receiveNodeDimensions,
         commitHash,
         versions,
+        commitShortMessage,
         isCurrentCommit: commitHash === currentCommit,
         isFocused: commitHash === focusedCommitHash,
         isSelected: commitHash === selectedVersion?.commit_hash,

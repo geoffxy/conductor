@@ -86,6 +86,7 @@ class TaskGraph(BaseModel):
 
 class VersionGraphNode(BaseModel):
     commit_hash: str
+    commit_short_message: Optional[str] = None
     # If this is empty, it means we've kept the commit to provide
     # structure/context in the graph (e.g., it's an ancestor or fork point), but
     # there are no versions that directly reference this commit.

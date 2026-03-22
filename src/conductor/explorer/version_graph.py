@@ -19,9 +19,10 @@ def _normalize_commit_token(token: str) -> Optional[str]:
 
 def _parse_raw_graph_edges(
     raw_lines: List[str],
-) -> Tuple[Set[str], List[Tuple[str, str]]]:
+) -> Tuple[Set[str], List[Tuple[str, str]], Dict[str, str]]:
     edges = []
     commits = set()
+    commit_messages = {}
 
     for line in raw_lines:
         stripped = line.strip()
@@ -38,19 +39,32 @@ def _parse_raw_graph_edges(
         commits.add(child)
 
         for parent_raw in parts[1:]:
+            if parent_raw.startswith("|"):
+                break
+
             parent = _normalize_commit_token(parent_raw)
             if parent is None:
                 continue
             edges.append((child, parent))
             commits.add(parent)
 
-    return commits, edges
+        # Find commit message, which is everything after the first "|" character.
+        if "|" in stripped:
+            commit_message = stripped[stripped.index("|") + 1 :].strip()
+        else:
+            commit_message = ""
+        commit_messages[child] = commit_message
+
+    return commits, edges, commit_messages
 
 
-def _to_version_node(commit_hash: str, versions: List[Version]) -> m.VersionGraphNode:
+def _to_version_node(
+    commit_hash: str, versions: List[Version], commit_short_message: Optional[str]
+) -> m.VersionGraphNode:
     result_versions = [m.ResultVersion.from_version(version) for version in versions]
     return m.VersionGraphNode(
         commit_hash=commit_hash,
+        commit_short_message=commit_short_message,
         versions=sorted(
             result_versions,
             # Sort in descending order so that the most recent version for this commit is first.
@@ -95,7 +109,7 @@ def compute_version_graph(
         nodes = []
         for commit_hash in referenced_commits:
             versions = commit_to_versions.get(commit_hash, [])
-            nodes.append(_to_version_node(commit_hash, versions))
+            nodes.append(_to_version_node(commit_hash, versions, None))
         return m.VersionGraph(
             task_id=m.TaskIdentifier.from_cond(task_id),
             current_commit=current_commit.hash if current_commit else None,
@@ -110,7 +124,7 @@ def compute_version_graph(
         commit_hashes=referenced_commits_list,
         terminate_hash=common_ancestor,
     )
-    raw_commits, raw_edges = _parse_raw_graph_edges(raw_graph_out)
+    raw_commits, raw_edges, commit_messages = _parse_raw_graph_edges(raw_graph_out)
 
     # Construct adjacency lists to prepare for condensing
     adjacency: Dict[str, Set[str]] = {}
@@ -164,7 +178,8 @@ def compute_version_graph(
     finalized_edges = []
     for node in commits_to_keep:
         versions = commit_to_versions.get(node, [])
-        finalized_nodes.append(_to_version_node(node, versions))
+        commit_short_message = commit_messages.get(node)
+        finalized_nodes.append(_to_version_node(node, versions, commit_short_message))
         next_commits = adjacency.get(node, set())
         for next_commit in next_commits:
             finalized_edges.append(
