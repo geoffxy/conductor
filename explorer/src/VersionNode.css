@@ -1,22 +1,56 @@
 .version-node {
-  width: 78px;
-  height: 78px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.version-node-circle {
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   border: 2px solid #1f2937;
   background-color: #f8fafc;
   color: #111827;
-  font-size: 12px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  transition: box-shadow 0.2s ease;
+}
+
+.version-node.selected .version-node-circle {
+  background-color: #a9dbb4;
+  border: 2px solid #6c9074;
+}
+
+.version-node.has-versions .version-node-circle {
+  background-color: #eaf3fd;
+  border: 2px solid #798ba0;
+}
+
+.version-node.has-versions .version-node-circle:hover {
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
 }
 
 .version-node.no-versions {
   background-color: #e5e7eb;
 }
 
+.version-node-circle svg {
+  width: 25px;
+  height: 25px;
+}
+
 .version-node-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.8em;
+  font-weight: 600;
   letter-spacing: 0.02em;
 }

@@ -52,6 +52,7 @@ function TaskVersionButton({ taskId, numVersions, setViewTaskVersions }) {
         const versions = await getVersionsForTask(taskId);
         const parsed = {
           taskId,
+          currentCommit: versions.current_commit,
           versionGraph: {
             nodes: versions.nodes,
             edges: versions.edges,

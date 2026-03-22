@@ -11,7 +11,11 @@ import VersionNode from "./VersionNode";
 import "@xyflow/react/dist/style.css";
 import "./VersionGraphDisplay.css";
 
-function versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions) {
+function versionGraphToNodesAndEdges(
+  versionGraph,
+  receiveNodeDimensions,
+  { currentCommit },
+) {
   const nodes = [];
   const edges = [];
 
@@ -24,18 +28,14 @@ function versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions) {
     const versions = Array.isArray(versionNode.versions)
       ? versionNode.versions
       : [];
-    const hasUncommittedChanges = versions.some(
-      (version) => version.has_uncommitted_changes,
-    );
-    const hasVersions = versions.length > 0;
 
     nodes.push({
       id: commitHash,
       data: {
         receiveNodeDimensions,
         commitHash,
-        hasVersions,
-        hasUncommittedChanges,
+        versions,
+        isCurrentCommit: commitHash === currentCommit,
       },
       type: "versionNode",
       // N.B. This is a placeholder position. We use Dagre to compute the actual
@@ -55,6 +55,7 @@ function versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions) {
       source: edge.to_commit_hash,
       target: edge.from_commit_hash,
       markerEnd: { type: MarkerType.ArrowClosed },
+      type: "smoothstep",
     });
   }
 
@@ -93,6 +94,7 @@ function computeGraphLayout({ nodes, edges }, nodeDimensions) {
 
 const VersionGraphDisplayImpl = ({
   taskId,
+  currentCommit,
   versionGraph,
   clearViewTaskVersions,
 }) => {
@@ -108,7 +110,9 @@ const VersionGraphDisplayImpl = ({
     [setNodeDimensions],
   );
 
-  const out = versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions);
+  const out = versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions, {
+    currentCommit,
+  });
   const { nodes, edges } = computeGraphLayout(out, nodeDimensions);
 
   useEffect(() => {
@@ -125,10 +129,14 @@ const VersionGraphDisplayImpl = ({
   }, [clearViewTaskVersions]);
 
   return (
-    <div className="version-graph-overlay">
+    <div
+      className="version-graph-overlay"
+      onClick={() => clearViewTaskVersions()}
+    >
       <div
         className="version-graph-display"
         style={{ height: "80%", width: "80%" }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="version-graph-header">
           <div className="version-graph-task-id">{taskId.toString()}</div>

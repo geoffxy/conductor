@@ -62,6 +62,7 @@ def _to_version_node(commit_hash: str, versions: List[Version]) -> m.VersionGrap
 def compute_version_graph(
     task_id: TaskIdentifier, versions: List[Version], git: Git
 ) -> m.VersionGraph:
+    current_commit = git.current_commit()
     commit_to_versions: Dict[str, List[Version]] = {}
     for version in versions:
         if version.commit_hash is None:
@@ -72,14 +73,20 @@ def compute_version_graph(
 
     if len(commit_to_versions) == 0:
         return m.VersionGraph(
-            task_id=m.TaskIdentifier.from_cond(task_id), nodes=[], edges=[]
+            task_id=m.TaskIdentifier.from_cond(task_id),
+            current_commit=current_commit.hash if current_commit else None,
+            nodes=[],
+            edges=[],
         )
 
     referenced_commits: Set[str] = set(commit_to_versions.keys())
-
-    # Want to include HEAD to help with the visualization.
     referenced_commits_list = list(referenced_commits)
-    referenced_commits_list.append("HEAD")
+
+    if current_commit is not None:
+        referenced_commits.add(current_commit.hash)
+        # Want to include HEAD to help with the visualization.
+        referenced_commits_list.append(current_commit.hash)
+
     common_ancestor = git.get_common_ancestor(referenced_commits_list)
 
     # Special case: All disconnected commits.
@@ -89,9 +96,14 @@ def compute_version_graph(
             versions = commit_to_versions.get(commit_hash, [])
             nodes.append(_to_version_node(commit_hash, versions))
         return m.VersionGraph(
-            task_id=m.TaskIdentifier.from_cond(task_id), nodes=nodes, edges=[]
+            task_id=m.TaskIdentifier.from_cond(task_id),
+            current_commit=current_commit.hash if current_commit else None,
+            nodes=nodes,
+            edges=[],
         )
 
+    referenced_commits.add(common_ancestor)
+    referenced_commits_list.append(common_ancestor)
     raw_graph_out = git.get_raw_version_graph(
         commit_hashes=referenced_commits_list,
         terminate_hash=common_ancestor,
@@ -120,16 +132,31 @@ def compute_version_graph(
 
         out_nodes = adjacency.get(commit, set())
         in_nodes = reverse_adjacency.get(commit, set())
-        if not (len(out_nodes) == 1 and len(in_nodes) == 1):
+
+        is_middle = len(out_nodes) == 1 and len(in_nodes) == 1
+        is_end = len(out_nodes) == 0 and len(in_nodes) == 1
+        is_start = len(out_nodes) == 1 and len(in_nodes) == 0
+        should_remove = is_middle or is_end or is_start
+
+        if not should_remove:
             commits_to_keep.add(commit)
             continue
 
-        parent = next(iter(out_nodes))
-        child = next(iter(in_nodes))
-        adjacency[child].remove(commit)
-        adjacency[child].add(parent)
-        reverse_adjacency[parent].remove(commit)
-        reverse_adjacency[parent].add(child)
+        if is_middle:
+            parent = next(iter(out_nodes))
+            child = next(iter(in_nodes))
+            adjacency[child].remove(commit)
+            adjacency[child].add(parent)
+            reverse_adjacency[parent].remove(commit)
+            reverse_adjacency[parent].add(child)
+        elif is_end:
+            parent = next(iter(in_nodes))
+            adjacency[parent].remove(commit)
+            del reverse_adjacency[commit]
+        elif is_start:
+            child = next(iter(out_nodes))
+            del adjacency[commit]
+            reverse_adjacency[child].remove(commit)
 
     finalized_nodes = []
     finalized_edges = []
@@ -147,6 +174,7 @@ def compute_version_graph(
 
     return m.VersionGraph(
         task_id=m.TaskIdentifier.from_cond(task_id),
+        current_commit=current_commit.hash if current_commit else None,
         nodes=finalized_nodes,
         edges=finalized_edges,
     )

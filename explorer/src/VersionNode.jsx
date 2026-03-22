@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Handle, Position } from "@xyflow/react";
+import { VscLocation } from "react-icons/vsc";
 import "./VersionNode.css";
 
 function shortHash(commitHash) {
@@ -8,7 +9,8 @@ function shortHash(commitHash) {
 
 const VersionNode = ({ data }) => {
   const nodeRef = useRef();
-  const { receiveNodeDimensions, commitHash, hasVersions } = data;
+  const { receiveNodeDimensions, commitHash, versions, isCurrentCommit } = data;
+  const hasVersions = versions.length > 0;
 
   useEffect(() => {
     if (nodeRef.current) {
@@ -18,11 +20,6 @@ const VersionNode = ({ data }) => {
     }
   }, [commitHash, receiveNodeDimensions]);
 
-  const classNames = ["version-node"];
-  if (!hasVersions) {
-    classNames.push("no-versions");
-  }
-
   return (
     <>
       <Handle
@@ -30,8 +27,17 @@ const VersionNode = ({ data }) => {
         position={Position.Left}
         style={{ visibility: "hidden" }}
       />
-      <div className={classNames.join(" ")} title={commitHash} ref={nodeRef}>
-        <span className="version-node-label">{shortHash(commitHash)}</span>
+      <div
+        className={`version-node ${isCurrentCommit ? "current" : ""} ${hasVersions ? "has-versions" : ""}`}
+        ref={nodeRef}
+      >
+        <div className="version-node-circle">
+          {isCurrentCommit && <VscLocation />}
+        </div>
+        <div className="version-node-label">
+          <span>{shortHash(commitHash)}</span>
+          {isCurrentCommit && <span>(HEAD)</span>}
+        </div>
       </div>
       <Handle
         type="source"
