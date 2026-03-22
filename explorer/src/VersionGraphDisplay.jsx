@@ -15,7 +15,7 @@ import "./VersionGraphDisplay.css";
 function versionGraphToNodesAndEdges(
   versionGraph,
   receiveNodeDimensions,
-  { currentCommit },
+  { currentCommit, selectedVersion, focusedCommitHash, setFocusedCommitHash },
 ) {
   const nodes = [];
   const edges = [];
@@ -30,6 +30,13 @@ function versionGraphToNodesAndEdges(
       ? versionNode.versions
       : [];
 
+    // Current commit: Git repository HEAD.
+    // Focused commit: The version node that is currently focused/selected in
+    //                 the UI. This may be null (no version node is focused).
+    // Selected commit: The commit corresponding to the version that is
+    //                  currently selected in Conductor (either the relevant version or
+    //                  overridden commit).
+    // Note that these are not mutually exclusive - all three can be the same commit.
     nodes.push({
       id: commitHash,
       data: {
@@ -37,6 +44,9 @@ function versionGraphToNodesAndEdges(
         commitHash,
         versions,
         isCurrentCommit: commitHash === currentCommit,
+        isFocused: commitHash === focusedCommitHash,
+        isSelected: commitHash === selectedVersion?.commit_hash,
+        setFocusedCommitHash,
       },
       type: "versionNode",
       // N.B. This is a placeholder position. We use Dagre to compute the actual
@@ -102,6 +112,10 @@ const VersionGraphDisplayImpl = ({
 }) => {
   const nodeTypes = useMemo(() => ({ versionNode: VersionNode }), []);
   const [nodeDimensions, setNodeDimensions] = useState({});
+  // Represents the commit hash of the version node that is currently
+  // focused/selected in the graph.
+  const [focusedCommitHash, setFocusedCommitHash] = useState(null);
+
   const receiveNodeDimensions = useCallback(
     ({ commitHash, dimensions }) => {
       setNodeDimensions((prev) => ({
@@ -114,6 +128,9 @@ const VersionGraphDisplayImpl = ({
 
   const out = versionGraphToNodesAndEdges(versionGraph, receiveNodeDimensions, {
     currentCommit,
+    selectedVersion,
+    focusedCommitHash,
+    setFocusedCommitHash,
   });
   const { nodes, edges } = computeGraphLayout(out, nodeDimensions);
 
@@ -161,7 +178,10 @@ const VersionGraphDisplayImpl = ({
             </ReactFlow>
           </div>
           <div className="version-graph-sidebar-wrap">
-            <VersionGraphSidebar selectedVersion={selectedVersion} />
+            <VersionGraphSidebar
+              selectedVersion={selectedVersion}
+              focusedCommitHash={focusedCommitHash}
+            />
           </div>
         </div>
       </div>
