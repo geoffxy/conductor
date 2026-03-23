@@ -24,13 +24,22 @@ function VersionNodeLabel({
         {commitShortMessage}
       </div>
       <div className="version-node-label-info">
+        {isCurrentCommit && (
+          <div
+            className="version-node-label-current version-node-label-badge"
+            title="Current commit (HEAD)"
+          >
+            <VscLocation />
+          </div>
+        )}
         {numVersions > 0 && (
-          <div className="version-node-label-count">{numVersions}</div>
+          <div className="version-node-label-count version-node-label-badge">
+            {numVersions}
+          </div>
         )}
         <div className="version-node-label-hash">
           <VscGitCommit />
           <span>{shortHash(commitHash)}</span>
-          {isCurrentCommit && <span>(HEAD)</span>}
         </div>
       </div>
     </div>
@@ -47,6 +56,7 @@ const VersionNode = ({ data }) => {
     setFocusedCommitHash,
     isFocused,
     isSelected,
+    someNodeFocused,
     commitShortMessage,
   } = data;
   const hasVersions = versions.length > 0;
@@ -70,13 +80,15 @@ const VersionNode = ({ data }) => {
     classNames.push("has-versions");
   }
 
+  if (someNodeFocused && !isFocused) {
+    classNames.push("not-focused");
+  }
+
   let icon = null;
   if (isSelected) {
     icon = <VscCheck />;
   } else if (isFocused) {
     icon = <VscSearch />;
-  } else if (isCurrentCommit) {
-    icon = <VscLocation />;
   }
 
   return (

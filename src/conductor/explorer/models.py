@@ -109,7 +109,7 @@ class VersionGraph(BaseModel):
 class CommitInfo(BaseModel):
     commit_hash: str
     date: datetime.datetime
-    message: str
+    message: List[str]
     lines_added: int
     lines_removed: int
 

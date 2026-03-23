@@ -27,7 +27,7 @@ class Git:
             self,
             commit_hash: str,
             date: datetime.datetime,
-            message: str,
+            message: List[str],
             lines_added: int,
             lines_removed: int,
         ):
@@ -46,7 +46,7 @@ class Git:
             return self._date
 
         @property
-        def message(self) -> str:
+        def message(self) -> List[str]:
             return self._message
 
         @property
@@ -254,7 +254,6 @@ class Git:
                 "git",
                 "show",
                 commit_hash,
-                "--quiet",
                 "--date=iso-strict",
                 "--format=%aI%n%B",
                 "--numstat",
@@ -286,7 +285,7 @@ class Git:
         return self.DetailedCommit(
             commit_hash=commit_hash,
             date=commit_date,
-            message="\n".join(message_parts).strip(),
+            message=message_parts,
             lines_added=added,
             lines_removed=removed,
         )

@@ -48,6 +48,7 @@ function versionGraphToNodesAndEdges(
         isCurrentCommit: commitHash === currentCommit,
         isFocused: commitHash === focusedCommitHash,
         isSelected: commitHash === selectedVersion?.commit_hash,
+        someNodeFocused: focusedCommitHash != null,
         setFocusedCommitHash,
       },
       type: "versionNode",
@@ -149,6 +150,19 @@ const VersionGraphDisplayImpl = ({
     };
   }, [clearViewVersions]);
 
+  const versionList = [];
+  for (const node of versionGraph?.nodes ?? []) {
+    if (focusedCommitHash != null) {
+      if (node.commit_hash === focusedCommitHash) {
+        versionList.push(...node.versions);
+      }
+    } else if (selectedVersion != null) {
+      if (node.commit_hash === selectedVersion.commit_hash) {
+        versionList.push(...node.versions);
+      }
+    }
+  }
+
   return (
     <div className="version-graph-overlay" onClick={() => clearViewVersions()}>
       <div
@@ -182,7 +196,9 @@ const VersionGraphDisplayImpl = ({
           <div className="version-graph-sidebar-wrap">
             <VersionGraphSidebar
               selectedVersion={selectedVersion}
+              versionList={versionList}
               focusedCommitHash={focusedCommitHash}
+              onClose={clearViewVersions}
             />
           </div>
         </div>

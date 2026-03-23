@@ -23,6 +23,15 @@
 .version-node.selected .version-node-circle {
   background-color: #a9dbb4;
   border: 2px solid #6c9074;
+
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
+    rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.version-node.selected.not-focused .version-node-circle {
+  opacity: 0.3;
+  box-shadow: none;
 }
 
 .version-node.has-versions .version-node-circle {
@@ -64,7 +73,7 @@
   gap: 2px;
 }
 
-.version-node-label-count {
+.version-node-label-badge {
   height: 10px;
   width: 10px;
   line-height: 10px;
@@ -72,9 +81,17 @@
   padding: 3px;
   border-radius: 3px;
   font-size: 0.8em;
+}
+
+.version-node-label-count {
   background-color: #eaf3fd;
   border: 1px solid #667d98;
   font-weight: 600;
+}
+
+.version-node-label-current {
+  background-color: #a9dbb4;
+  border: 1px solid #6c9074;
 }
 
 .version-node-label-message {

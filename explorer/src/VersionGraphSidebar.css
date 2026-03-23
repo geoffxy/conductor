@@ -2,8 +2,82 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  text-align: center;
+}
+
+.version-graph-sidebar-no-info {
+  flex: 1;
   font-size: 1.2em;
+  color: #000;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.version-graph-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.version-graph-sidebar-commit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.version-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.version-graph-sidebar-commit-info-message,
+.version-selector-heading {
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.version-graph-sidebar-commit-info-details {
+  display: flex;
+  gap: 10px;
+  font-size: 1.2em;
+  color: #000;
+}
+
+.version-graph-sidebar-commit-info-details .added {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.version-graph-sidebar-commit-info-details .removed {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.version-graph-sidebar-commit-info-details .commit-hash {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background-color: #eaf3fd;
+  color: #000;
+  padding: 0 4px;
+  border-radius: 4px;
+  line-height: 5px;
+}
+
+.version-graph-sidebar-commit-info-detailed {
+  font-size: 1em;
+  color: #000;
+  text-align: left;
+}
+
+.version-selector-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.version-selector-buttons {
+  display: flex;
+  gap: 10px;
 }
