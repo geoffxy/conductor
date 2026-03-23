@@ -161,13 +161,26 @@
 }
 
 .version-badge .version-badge-hash {
+  flex: 1;
   background-color: #3a445d;
   color: #fff;
   padding: 0 4px;
   border-radius: 3px 0 0 3px;
+
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.version-badge .version-badge-hash span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .version-badge .version-badge-time {
+  flex: 1;
   background-color: #717a90;
   color: #fff;
   padding: 0 4px;
