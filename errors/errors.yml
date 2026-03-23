@@ -141,6 +141,13 @@
     All extra files must be declared using relative paths (relative to the COND
     file containing the environment() directive).
 
+2011:
+  name: CorruptedVersionIndex
+  message: >-
+    Detected a corrupted version index: task '{task_identifier}' references
+    timestamp '{timestamp}' in version_overrides, but the corresponding
+    version metadata is missing.
+
 
 # Execution errors (error code 3xxx)
 3001:

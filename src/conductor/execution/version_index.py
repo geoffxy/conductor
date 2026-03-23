@@ -5,7 +5,7 @@ import time
 from typing import Any, Iterable, List, Optional, Tuple, Sequence
 
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE
-from conductor.errors import UnsupportedVersionIndexFormat
+from conductor.errors import UnsupportedVersionIndexFormat, CorruptedVersionIndex
 from conductor.task_identifier import TaskIdentifier
 from conductor.utils.git import Git
 import conductor.execution.version_index_queries as q
@@ -208,23 +208,37 @@ class VersionIndex:
 
     def set_version_override(
         self, task_identifier: TaskIdentifier, timestamp: int
-    ) -> int:
+    ) -> None:
         cursor = self._conn.cursor()
         cursor.execute(q.upsert_version_override, (str(task_identifier), timestamp))
-        return cursor.rowcount
 
-    def clear_version_override(self, task_identifier: TaskIdentifier) -> int:
+    def clear_version_override(self, task_identifier: TaskIdentifier) -> None:
         cursor = self._conn.cursor()
         cursor.execute(q.delete_version_override, (str(task_identifier),))
-        return cursor.rowcount
 
-    def get_version_override(self, task_identifier: TaskIdentifier) -> Optional[int]:
+    def get_version_override(
+        self, task_identifier: TaskIdentifier
+    ) -> Optional[Version]:
         cursor = self._conn.cursor()
         cursor.execute(q.get_version_override, (str(task_identifier),))
         row = cursor.fetchone()
         if row is None:
             return None
-        return int(row[0])
+
+        timestamp = int(row[0])
+        # A missing row in version_index indicates a broken reference from
+        # version_overrides, which is a corruption of the version index state.
+        if row[2] is None:
+            raise CorruptedVersionIndex(
+                task_identifier=str(task_identifier),
+                timestamp=timestamp,
+            )
+
+        return Version(
+            timestamp=timestamp,
+            commit_hash=row[1],
+            has_uncommitted_changes=(False if row[2] == 0 else True),
+        )
 
     def get_versioned_tasks(
         self, tasks: Optional[List[TaskIdentifier]], latest_only: bool

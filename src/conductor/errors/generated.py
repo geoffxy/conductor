@@ -412,6 +412,22 @@ class EnvExtraFilesNotRelative(ConductorError):
         )
 
 
+class CorruptedVersionIndex(ConductorError):
+    error_code = 2011
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.kwargs = kwargs
+        self.task_identifier = kwargs["task_identifier"]
+        self.timestamp = kwargs["timestamp"]
+
+    def _message(self):
+        return "Detected a corrupted version index: task '{task_identifier}' references timestamp '{timestamp}' in version_overrides, but the corresponding version metadata is missing.".format(
+            task_identifier=self.task_identifier,
+            timestamp=self.timestamp,
+        )
+
+
 class TaskNonZeroExit(ConductorError):
     error_code = 3001
 
@@ -923,6 +939,7 @@ ERRORS_BY_CODE = {
     2008: DuplicateEnvName,
     2009: EnvNotEnv,
     2010: EnvExtraFilesNotRelative,
+    2011: CorruptedVersionIndex,
     3001: TaskNonZeroExit,
     3002: TaskFailed,
     3003: OutputDirTaken,
@@ -989,6 +1006,7 @@ __all__ = [
     "DuplicateEnvName",
     "EnvNotEnv",
     "EnvExtraFilesNotRelative",
+    "CorruptedVersionIndex",
     "TaskNonZeroExit",
     "TaskFailed",
     "OutputDirTaken",

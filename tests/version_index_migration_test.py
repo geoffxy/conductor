@@ -4,7 +4,9 @@ from typing import Iterable, Tuple, Optional
 import conductor.execution.version_index_queries as q
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE, VERSION_INDEX_NAME
 from conductor.execution.version_index import VersionIndex
+from conductor.errors import CorruptedVersionIndex
 from conductor.task_identifier import TaskIdentifier
+import pytest
 
 # pylint: disable=protected-access
 
@@ -103,15 +105,17 @@ def test_v2_to_v3_upgrade(tmp_path: pathlib.Path):
 
     # The new overrides table should exist and be writable.
     conn.execute(q.upsert_version_override, ("//:test1", 1234))
-    assert conn.execute(q.get_version_override, ("//:test1",)).fetchone()[0] == 1234
+    row = conn.execute(q.get_version_override, ("//:test1",)).fetchone()
+    assert row is not None
+    assert row[0] == 1234
     conn.close()
 
 
 def test_v2_to_v3_upgrade_e2e(tmp_path: pathlib.Path):
     test_versions = [
-        ("//:test1", 1, "abc123", 0),
-        ("//:test2", 2, "def456", 1),
-        ("//:test3", 3, None, 0),
+        ("//:test1", 100, None, 0),
+        ("//:test1", 200, "def456", 1),
+        ("//:test2", 300, "abc123", 0),
     ]
     version_index_path = tmp_path / VERSION_INDEX_NAME
 
@@ -136,12 +140,38 @@ def test_v2_to_v3_upgrade_e2e(tmp_path: pathlib.Path):
     # Should be able to insert and read version overrides.
     task_id = TaskIdentifier.from_str("//:test1")
     assert vindex.get_version_override(task_id) is None
-    assert vindex.set_version_override(task_id, 100) == 1
-    assert vindex.get_version_override(task_id) == 100
-    assert vindex.set_version_override(task_id, 200) == 1
-    assert vindex.get_version_override(task_id) == 200
-    assert vindex.clear_version_override(task_id) == 1
+    vindex.set_version_override(task_id, 100)
+    override = vindex.get_version_override(task_id)
+    assert override is not None
+    assert override.timestamp == 100
+    assert override.commit_hash is None
+    assert override.has_uncommitted_changes is False
+
+    vindex.set_version_override(task_id, 200)
+    override = vindex.get_version_override(task_id)
+    assert override is not None
+    assert override.timestamp == 200
+    assert override.commit_hash == "def456"
+    assert override.has_uncommitted_changes is True
+
+    vindex.clear_version_override(task_id)
     assert vindex.get_version_override(task_id) is None
+
+
+def test_get_version_override_raises_for_corrupt_reference(tmp_path: pathlib.Path):
+    test_versions = [
+        ("//:test1", 1, "abc123", 0),
+    ]
+    version_index_path = tmp_path / VERSION_INDEX_NAME
+
+    create_v2_version_index(version_index_path, test_versions)
+    vindex = VersionIndex.create_or_load(version_index_path)
+
+    task_id = TaskIdentifier.from_str("//:test1")
+    # Override points to a timestamp that has no corresponding version row.
+    vindex.set_version_override(task_id, 999)
+    with pytest.raises(CorruptedVersionIndex):
+        vindex.get_version_override(task_id)
 
 
 def create_v1_version_index(

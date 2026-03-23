@@ -148,7 +148,19 @@ delete_version_override = """
 """
 
 get_version_override = """
-  SELECT timestamp FROM version_overrides WHERE task_identifier = ?
+  SELECT
+    o.timestamp,
+    v.git_commit_hash,
+    v.has_uncommitted_changes
+  FROM
+    version_overrides AS o
+  LEFT JOIN
+    version_index AS v
+  ON
+    o.task_identifier = v.task_identifier
+    AND o.timestamp = v.timestamp
+  WHERE
+    o.task_identifier = ?
 """
 
 
