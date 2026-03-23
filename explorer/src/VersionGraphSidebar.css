@@ -16,7 +16,7 @@
 .version-graph-sidebar-body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 40px;
 }
 
 .version-graph-sidebar-commit-info {
@@ -25,7 +25,14 @@
   gap: 8px;
 }
 
-.version-graph-sidebar-commit-info-message {
+.version-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.version-graph-sidebar-commit-info-message,
+.version-selector-heading {
   font-size: 1.3em;
   font-weight: 600;
 }
