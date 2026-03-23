@@ -56,6 +56,7 @@ const VersionNode = ({ data }) => {
     setFocusedCommitHash,
     isFocused,
     isSelected,
+    someNodeFocused,
     commitShortMessage,
   } = data;
   const hasVersions = versions.length > 0;
@@ -77,6 +78,10 @@ const VersionNode = ({ data }) => {
     classNames.push("focused");
   } else if (hasVersions) {
     classNames.push("has-versions");
+  }
+
+  if (someNodeFocused && !isFocused) {
+    classNames.push("not-focused");
   }
 
   let icon = null;

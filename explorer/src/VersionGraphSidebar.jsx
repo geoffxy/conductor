@@ -61,7 +61,12 @@ function CommitInfo({ commitInfo }) {
   );
 }
 
-function VersionSelector({ commitInfo, existingCheckedVersion, versionList }) {
+function VersionSelector({
+  commitInfo,
+  existingCheckedVersion,
+  versionList,
+  onCancel,
+}) {
   const [currCheckedVersion, setCurrCheckedVersion] = useState(null);
 
   // Handle external changes to the existing checked version.
@@ -136,7 +141,7 @@ function VersionSelector({ commitInfo, existingCheckedVersion, versionList }) {
           <Button color="primary" variant="soft" disabled={!enableSubmit}>
             Use this version
           </Button>
-          <Button color="neutral" variant="soft">
+          <Button color="neutral" variant="soft" onClick={onCancel}>
             Cancel
           </Button>
         </div>
@@ -145,7 +150,12 @@ function VersionSelector({ commitInfo, existingCheckedVersion, versionList }) {
   );
 }
 
-function SidebarBody({ commitInfo, existingCheckedVersion, versionList }) {
+function SidebarBody({
+  commitInfo,
+  existingCheckedVersion,
+  versionList,
+  onCancel,
+}) {
   return (
     <div className="version-graph-sidebar-body">
       <CommitInfo commitInfo={commitInfo} />
@@ -153,6 +163,7 @@ function SidebarBody({ commitInfo, existingCheckedVersion, versionList }) {
         commitInfo={commitInfo}
         existingCheckedVersion={existingCheckedVersion}
         versionList={versionList}
+        onCancel={onCancel}
       />
     </div>
   );
@@ -162,6 +173,7 @@ function VersionGraphSidebar({
   selectedVersion,
   versionList,
   focusedCommitHash,
+  onClose,
 }) {
   const [displayInfo, setDisplayInfo] = useState({
     commitInfo: null,
@@ -202,6 +214,7 @@ function VersionGraphSidebar({
           commitInfo={displayInfo.commitInfo}
           existingCheckedVersion={displayInfo.existingCheckedVersion}
           versionList={versionList}
+          onCancel={onClose}
         />
       )}
     </div>

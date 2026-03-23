@@ -48,6 +48,7 @@ function versionGraphToNodesAndEdges(
         isCurrentCommit: commitHash === currentCommit,
         isFocused: commitHash === focusedCommitHash,
         isSelected: commitHash === selectedVersion?.commit_hash,
+        someNodeFocused: focusedCommitHash != null,
         setFocusedCommitHash,
       },
       type: "versionNode",
@@ -197,6 +198,7 @@ const VersionGraphDisplayImpl = ({
               selectedVersion={selectedVersion}
               versionList={versionList}
               focusedCommitHash={focusedCommitHash}
+              onClose={clearViewVersions}
             />
           </div>
         </div>
