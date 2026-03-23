@@ -332,7 +332,7 @@ class RunExperiment(_RunSubprocess):
                 ):
                     selected_version = v
             assert selected_version is not None
-            return (selected_version, True)
+            return (selected_version, False)
 
         # There are no ancestor commits and all existing versions do not have a
         # commit hash. We select the newest version. This maintains the same
