@@ -20,4 +20,11 @@ async function getVersionsForTask(taskId) {
   return results.data;
 }
 
-export { getTaskGraph, getAllVersions, getVersionsForTask };
+async function getCommitInfo(commitHash) {
+  const results = await axios.get(
+    `${API}/commit_info?commit_hash=${commitHash}`,
+  );
+  return results.data;
+}
+
+export { getTaskGraph, getAllVersions, getVersionsForTask, getCommitInfo };
