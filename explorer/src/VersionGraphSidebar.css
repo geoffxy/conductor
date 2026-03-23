@@ -70,3 +70,14 @@
   color: #000;
   text-align: left;
 }
+
+.version-selector-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.version-selector-buttons {
+  display: flex;
+  gap: 10px;
+}

@@ -2,17 +2,21 @@ import "./VersionGraphSidebar.css";
 import { useEffect, useState } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { VscGitCommit } from "react-icons/vsc";
+import Button from "@mui/joy/Button";
+import Radio from "@mui/joy/Radio";
+import RadioGroup from "@mui/joy/RadioGroup";
 import { getCommitInfo } from "./api";
 
 function humanReadableTimestamp(date) {
   const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
   const isOlderThanOneWeek = Date.now() - date.getTime() > oneWeekInMs;
 
+  const fullTime = format(date, "yyyy-MM-dd 'at' HH:mm");
   const formattedTime = isOlderThanOneWeek
-    ? format(date, "yyyy-MM-dd 'at' HH:mm")
+    ? fullTime
     : formatDistanceToNow(date, { addSuffix: true });
 
-  return formattedTime;
+  return { formattedTime, fullTime };
 }
 
 function NoInfoMessage() {
@@ -25,7 +29,7 @@ function NoInfoMessage() {
 
 function CommitInfo({ commitInfo }) {
   const timestampDate = new Date(commitInfo.date);
-  const formattedTime = humanReadableTimestamp(timestampDate);
+  const { formattedTime, fullTime } = humanReadableTimestamp(timestampDate);
 
   const headingMessage = commitInfo.message[0];
   const detailedMessage = commitInfo.message.slice(1).join("\n").trim();
@@ -42,7 +46,9 @@ function CommitInfo({ commitInfo }) {
           </span>
           <span>{commitInfo.commit_hash.slice(0, 7)}</span>
         </div>
-        <div className="timestamp">Committed {formattedTime}</div>
+        <div className="timestamp" title={`Committed ${fullTime}`}>
+          Committed {formattedTime}
+        </div>
         <div className="added">+{commitInfo.lines_added}</div>
         <div className="removed">-{commitInfo.lines_removed}</div>
       </div>
@@ -98,34 +104,42 @@ function VersionSelector({ commitInfo, existingCheckedVersion, versionList }) {
 
   return (
     <div className="version-selector">
-      <div className="version-selector-heading">Experiment versions</div>
+      <div className="version-selector-heading">
+        {versionList.length > 1
+          ? "Experiment result versions"
+          : "Experiment result version"}
+      </div>
       <form className="version-selector-form">
-        {versionList.map((version) => {
-          const formattedTime = humanReadableTimestamp(
-            new Date(version.timestamp * 1000),
-          );
-          return (
-            <label key={version.timestamp} className="version-selector-option">
-              <input
-                type="radio"
-                name="version"
-                value={version.timestamp}
-                checked={
-                  currCheckedVersion &&
-                  currCheckedVersion.timestamp === version.timestamp
-                }
-                onChange={() => setCurrCheckedVersion(version)}
-              />
-              <span className="version-selector-option-message">
-                From {formattedTime}
-              </span>
-            </label>
-          );
-        })}
-        <button type="submit" disabled={!enableSubmit}>
-          Use this version
-        </button>
-        <button type="reset">Cancel</button>
+        <div className="version-selector-wrap">
+          <RadioGroup name="version-selector">
+            {versionList.map((version) => {
+              const { formattedTime } = humanReadableTimestamp(
+                new Date(version.timestamp * 1000),
+              );
+              return (
+                <Radio
+                  key={version.timestamp}
+                  name="version"
+                  value={version.timestamp}
+                  checked={
+                    currCheckedVersion &&
+                    currCheckedVersion.timestamp === version.timestamp
+                  }
+                  onChange={() => setCurrCheckedVersion(version)}
+                  label={`From ${formattedTime}`}
+                />
+              );
+            })}
+          </RadioGroup>
+        </div>
+        <div className="version-selector-buttons">
+          <Button color="primary" variant="soft" disabled={!enableSubmit}>
+            Use this version
+          </Button>
+          <Button color="neutral" variant="soft">
+            Cancel
+          </Button>
+        </div>
       </form>
     </div>
   );
