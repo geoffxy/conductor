@@ -1,7 +1,8 @@
-import { getTaskGraph, getAllVersions } from "./api";
+import { getTaskGraph, getAllVersions, getVersionsForTask } from "./api";
 import Header from "./Header";
 import MainDisplay from "./MainDisplay";
-import { useEffect, useState } from "react";
+import VersionGraphDisplay from "./VersionGraphDisplay";
+import { useCallback, useEffect, useState } from "react";
 import TaskIdentifier from "./models/identifier";
 
 function parseRawTaskId({ path, name }) {
@@ -11,6 +12,32 @@ function parseRawTaskId({ path, name }) {
 const App = () => {
   const [taskGraph, setTaskGraph] = useState(null);
   const [versions, setVersions] = useState({});
+  const [viewVersions, setViewVersions] = useState(null);
+
+  const clearViewVersions = useCallback(() => {
+    setViewVersions(null);
+  }, [setViewVersions]);
+  const showVersionsForTask = useCallback(
+    async (taskId) => {
+      const versions = await getVersionsForTask(taskId);
+      const parsed = {
+        taskId,
+        // This represents the current location in the Git repository (i.e., the
+        // HEAD commit).
+        currentCommit: versions.current_commit,
+        // The version of this task being used (it's either the most relevant
+        // version, or the overridden version if the user has selected one).
+        selectedVersion: versions.selected_version,
+        // The full version graph for display.
+        versionGraph: {
+          nodes: versions.nodes,
+          edges: versions.edges,
+        },
+      };
+      setViewVersions(parsed);
+    },
+    [setViewVersions],
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,7 +87,17 @@ const App = () => {
   return (
     <div id="conductor-explorer">
       <Header />
-      <MainDisplay taskGraph={taskGraph} versions={versions} />
+      <MainDisplay
+        taskGraph={taskGraph}
+        versions={versions}
+        showVersionsForTask={showVersionsForTask}
+      />
+      {viewVersions != null && (
+        <VersionGraphDisplay
+          {...viewVersions}
+          clearViewVersions={clearViewVersions}
+        />
+      )}
     </div>
   );
 };

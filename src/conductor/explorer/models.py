@@ -1,4 +1,5 @@
 import enum
+import datetime
 from typing import Optional, List, Dict
 from pydantic import BaseModel
 
@@ -8,6 +9,7 @@ from conductor.task_types.combine import Combine
 from conductor.task_types.group import Group
 from conductor.task_types.run import RunExperiment, RunCommand
 from conductor.execution.version_index import Version
+from conductor.utils.git import Git
 
 
 class TaskType(enum.Enum):
@@ -84,6 +86,7 @@ class TaskGraph(BaseModel):
 
 class VersionGraphNode(BaseModel):
     commit_hash: str
+    commit_short_message: Optional[str] = None
     # If this is empty, it means we've kept the commit to provide
     # structure/context in the graph (e.g., it's an ancestor or fork point), but
     # there are no versions that directly reference this commit.
@@ -97,5 +100,25 @@ class VersionGraphEdge(BaseModel):
 
 class VersionGraph(BaseModel):
     task_id: TaskIdentifier
+    current_commit: Optional[str]
+    selected_version: Optional[ResultVersion]
     nodes: List[VersionGraphNode]
     edges: List[VersionGraphEdge]
+
+
+class CommitInfo(BaseModel):
+    commit_hash: str
+    date: datetime.datetime
+    message: str
+    lines_added: int
+    lines_removed: int
+
+    @classmethod
+    def from_cond(cls, commit: "Git.DetailedCommit") -> "CommitInfo":
+        return cls(
+            commit_hash=commit.hash,
+            date=commit.date,
+            message=commit.message,
+            lines_added=commit.lines_added,
+            lines_removed=commit.lines_removed,
+        )
