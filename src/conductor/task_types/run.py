@@ -164,6 +164,7 @@ class RunExperiment(_RunSubprocess):
             env=env,
         )
         self._did_retrieve_version = False
+        # (most_relevant_version, is_override)
         self._most_relevant_version: Tuple[Optional[Version], bool] = (None, False)
 
     @property
@@ -180,13 +181,14 @@ class RunExperiment(_RunSubprocess):
 
     def get_output_path(self, ctx: "c.Context") -> Optional[pathlib.Path]:
         self._ensure_most_relevant_existing_version_computed(ctx)
-        if self._most_relevant_version is None:
+        most_relevant_version, _ = self._most_relevant_version
+        if most_relevant_version is None:
             return None
 
         unversioned_path = super().get_output_path(ctx)
         assert unversioned_path is not None
         return unversioned_path.with_name(
-            f.task_output_dir(self.identifier, version=self._most_relevant_version[0])
+            f.task_output_dir(self.identifier, version=most_relevant_version)
         )
 
     def get_specific_output_path(
