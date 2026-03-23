@@ -64,7 +64,8 @@ class VersionIndex:
     """
 
     # v0.4.0 and older: FormatVersion = 1
-    FormatVersion = 2
+    # v0.7.0 and older: FormatVersion = 2
+    FormatVersion = 3
 
     def __init__(
         self,
@@ -84,7 +85,14 @@ class VersionIndex:
             if format_version == 1:
                 # Upgrade the version index to format 2.
                 cls._run_v1_to_v2_migration(conn, path)
-            elif format_version != cls.FormatVersion:
+                format_version = 2
+
+            if format_version == 2:
+                # Upgrade the version index to format 3.
+                cls._run_v2_to_v3_migration(conn, path)
+                format_version = 3
+
+            if format_version != cls.FormatVersion:
                 raise UnsupportedVersionIndexFormat(version=format_version)
 
             # Need to restore the last timestamp used.
@@ -102,6 +110,7 @@ class VersionIndex:
         conn = sqlite3.connect(path)
         conn.execute(q.set_format_version.format(version=cls.FormatVersion))
         conn.execute(q.create_table)
+        conn.execute(q.create_version_overrides_table)
         conn.commit()
         return VersionIndex(conn, 0, path)
 
@@ -196,6 +205,26 @@ class VersionIndex:
             # The unversioned table does not exist, so there are no unversioned tasks.
             # We create the unversioned table only when we add unversioned tasks.
             return []
+
+    def set_version_override(
+        self, task_identifier: TaskIdentifier, timestamp: int
+    ) -> int:
+        cursor = self._conn.cursor()
+        cursor.execute(q.upsert_version_override, (str(task_identifier), timestamp))
+        return cursor.rowcount
+
+    def clear_version_override(self, task_identifier: TaskIdentifier) -> int:
+        cursor = self._conn.cursor()
+        cursor.execute(q.delete_version_override, (str(task_identifier),))
+        return cursor.rowcount
+
+    def get_version_override(self, task_identifier: TaskIdentifier) -> Optional[int]:
+        cursor = self._conn.cursor()
+        cursor.execute(q.get_version_override, (str(task_identifier),))
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return int(row[0])
 
     def get_versioned_tasks(
         self, tasks: Optional[List[TaskIdentifier]], latest_only: bool
@@ -314,6 +343,26 @@ class VersionIndex:
             conn.execute(q.v1_to_v2_drop_old_table)
             conn.execute(q.v1_to_v2_rename_new_table)
             conn.execute(q.set_format_version.format(version=2))
+            conn.commit()
+        except RuntimeError:
+            conn.rollback()
+            raise
+
+    @staticmethod
+    def _run_v2_to_v3_migration(conn: sqlite3.Connection, path: pathlib.Path):
+        # Upgrades the version index's persistent format from version 2 to 3.
+        # This adds the `version_overrides` table.
+        backup_copy_path = path.with_name(
+            VERSION_INDEX_BACKUP_NAME_TEMPLATE.format(vfrom=2, vto=3)
+        )
+        if not backup_copy_path.exists():
+            # Back up the version index file first.
+            shutil.copy2(src=path, dst=backup_copy_path)
+
+        # Run the migration.
+        try:
+            conn.execute(q.v2_to_v3_create_version_overrides_table)
+            conn.execute(q.set_format_version.format(version=3))
             conn.commit()
         except RuntimeError:
             conn.rollback()

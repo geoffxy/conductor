@@ -17,6 +17,14 @@ create_unversioned_table = """
   )
 """
 
+create_version_overrides_table = """
+  CREATE TABLE IF NOT EXISTS version_overrides (
+    task_identifier TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    PRIMARY KEY (task_identifier)
+  )
+"""
+
 set_format_version = "PRAGMA user_version = {version:d}"
 
 get_format_version = "PRAGMA user_version"
@@ -128,6 +136,21 @@ get_unversioned_tasks = """
   SELECT task_identifier FROM unversioned
 """
 
+upsert_version_override = """
+  INSERT INTO version_overrides (task_identifier, timestamp)
+  VALUES (?, ?)
+  ON CONFLICT(task_identifier)
+  DO UPDATE SET timestamp=excluded.timestamp
+"""
+
+delete_version_override = """
+  DELETE FROM version_overrides WHERE task_identifier = ?
+"""
+
+get_version_override = """
+  SELECT timestamp FROM version_overrides WHERE task_identifier = ?
+"""
+
 
 # Queries used in format 1 (retained for testing purposes)
 
@@ -160,3 +183,9 @@ v1_to_v2_migrate_tmp_table = """
 v1_to_v2_drop_old_table = "DROP TABLE version_index"
 
 v1_to_v2_rename_new_table = "ALTER TABLE version_index_new RENAME TO version_index"
+
+
+# Queries used for migrating from format 2 to format 3
+# - Add the `version_overrides` table
+
+v2_to_v3_create_version_overrides_table = create_version_overrides_table

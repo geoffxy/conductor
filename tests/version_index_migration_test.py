@@ -1,9 +1,10 @@
 import pathlib
 import sqlite3
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Optional
 import conductor.execution.version_index_queries as q
 from conductor.config import VERSION_INDEX_BACKUP_NAME_TEMPLATE, VERSION_INDEX_NAME
 from conductor.execution.version_index import VersionIndex
+from conductor.task_identifier import TaskIdentifier
 
 # pylint: disable=protected-access
 
@@ -68,6 +69,81 @@ def test_v1_to_v2_upgrade_e2e(tmp_path: pathlib.Path):
         assert expected[1] == actual[1].timestamp
 
 
+def test_v2_to_v3_upgrade(tmp_path: pathlib.Path):
+    test_versions = [
+        ("//:test1", 1, "abc123", 0),
+        ("//:test2", 2, "def456", 1),
+        ("//:test3", 3, None, 0),
+    ]
+    version_index_path = tmp_path / VERSION_INDEX_NAME
+
+    # Create an existing version index (format 2).
+    create_v2_version_index(version_index_path, test_versions)
+
+    # Run the upgrade.
+    conn = sqlite3.connect(version_index_path)
+    VersionIndex._run_v2_to_v3_migration(conn, version_index_path)
+
+    # The backup version index should still exist.
+    assert (
+        tmp_path / VERSION_INDEX_BACKUP_NAME_TEMPLATE.format(vfrom=2, vto=3)
+    ).is_file()
+
+    # The version number should have changed to 3.
+    conn.close()
+    conn = sqlite3.connect(version_index_path)
+    assert conn.execute(q.get_format_version).fetchone()[0] == 3
+
+    # The existing versions should still be readable.
+    for i, row in enumerate(conn.execute(q.all_entries)):
+        assert row[0] == test_versions[i][0]
+        assert row[1] == test_versions[i][1]
+        assert row[2] == test_versions[i][2]
+        assert row[3] == test_versions[i][3]
+
+    # The new overrides table should exist and be writable.
+    conn.execute(q.upsert_version_override, ("//:test1", 1234))
+    assert conn.execute(q.get_version_override, ("//:test1",)).fetchone()[0] == 1234
+    conn.close()
+
+
+def test_v2_to_v3_upgrade_e2e(tmp_path: pathlib.Path):
+    test_versions = [
+        ("//:test1", 1, "abc123", 0),
+        ("//:test2", 2, "def456", 1),
+        ("//:test3", 3, None, 0),
+    ]
+    version_index_path = tmp_path / VERSION_INDEX_NAME
+
+    # Create an existing version index (format 2).
+    create_v2_version_index(version_index_path, test_versions)
+
+    # Migration should automatically run.
+    vindex = VersionIndex.create_or_load(version_index_path)
+
+    # The backup version index should still exist.
+    assert (
+        tmp_path / VERSION_INDEX_BACKUP_NAME_TEMPLATE.format(vfrom=2, vto=3)
+    ).is_file()
+
+    # Should be able to read all the versions from the upgraded index.
+    all_versions = vindex.get_all_versions()
+    assert len(test_versions) == len(all_versions)
+    for expected, actual in zip(test_versions, all_versions):
+        assert expected[0] == str(actual[0])
+        assert expected[1] == actual[1].timestamp
+
+    # Should be able to insert and read version overrides.
+    task_id = TaskIdentifier.from_str("//:test1")
+    assert vindex.get_version_override(task_id) is None
+    assert vindex.set_version_override(task_id, 100) == 1
+    assert vindex.get_version_override(task_id) == 100
+    assert vindex.set_version_override(task_id, 200) == 1
+    assert vindex.get_version_override(task_id) == 200
+    assert vindex.clear_version_override(task_id) == 1
+    assert vindex.get_version_override(task_id) is None
+
+
 def create_v1_version_index(
     filepath: pathlib.Path, entries: Iterable[Tuple[str, int, str]]
 ):
@@ -75,4 +151,14 @@ def create_v1_version_index(
     conn.execute(q.v1_create_table)
     conn.execute(q.set_format_version.format(version=1))
     conn.executemany(q.v1_insert_new_version, entries)
+    conn.commit()
+
+
+def create_v2_version_index(
+    filepath: pathlib.Path, entries: Iterable[Tuple[str, int, Optional[str], int]]
+):
+    conn = sqlite3.connect(filepath)
+    conn.execute(q.create_table)
+    conn.execute(q.set_format_version.format(version=2))
+    conn.executemany(q.insert_new_version, entries)
     conn.commit()
