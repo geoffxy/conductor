@@ -13,11 +13,16 @@ import conductor.execution.version_index_queries as q
 
 class Version:
     def __init__(
-        self, timestamp: int, commit_hash: Optional[str], has_uncommitted_changes: bool
+        self,
+        timestamp: int,
+        commit_hash: Optional[str],
+        has_uncommitted_changes: bool,
+        is_override: bool = False,
     ):
         self._timestamp = timestamp
         self._commit_hash = commit_hash
         self._has_uncommitted_changes = has_uncommitted_changes
+        self._is_override = is_override
 
     @property
     def timestamp(self) -> int:
@@ -31,13 +36,16 @@ class Version:
     def has_uncommitted_changes(self) -> bool:
         return self._has_uncommitted_changes
 
+    @property
+    def is_override(self) -> bool:
+        return self._is_override
+
     def __repr__(self) -> str:
-        return (
-            "Version(timestamp={}, commit_hash={}, has_uncommitted_changes={})".format(
-                self._timestamp,
-                str(self._commit_hash),
-                str(self._has_uncommitted_changes),
-            )
+        return "Version(timestamp={}, commit_hash={}, has_uncommitted_changes={}, is_override={})".format(
+            self._timestamp,
+            str(self._commit_hash),
+            str(self._has_uncommitted_changes),
+            str(self._is_override),
         )
 
     def __str__(self) -> str:
@@ -51,10 +59,18 @@ class Version:
             self.timestamp == other.timestamp
             and self.commit_hash == other.commit_hash
             and self.has_uncommitted_changes == other.has_uncommitted_changes
+            and self.is_override == other.is_override
         )
 
     def __hash__(self) -> int:
-        return hash((self._timestamp, self._commit_hash, self._has_uncommitted_changes))
+        return hash(
+            (
+                self._timestamp,
+                self._commit_hash,
+                self._has_uncommitted_changes,
+                self._is_override,
+            )
+        )
 
 
 class VersionIndex:
@@ -238,6 +254,7 @@ class VersionIndex:
             timestamp=timestamp,
             commit_hash=row[1],
             has_uncommitted_changes=(False if row[2] == 0 else True),
+            is_override=True,
         )
 
     def get_versioned_tasks(

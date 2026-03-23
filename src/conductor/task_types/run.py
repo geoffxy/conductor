@@ -1,5 +1,5 @@
 import pathlib
-from typing import Sequence, Optional, Tuple, TYPE_CHECKING
+from typing import Sequence, Optional, TYPE_CHECKING
 
 import conductor.filename as f
 from conductor.errors import InternalError
@@ -164,8 +164,7 @@ class RunExperiment(_RunSubprocess):
             env=env,
         )
         self._did_retrieve_version = False
-        # (most_relevant_version, is_override)
-        self._most_relevant_version: Tuple[Optional[Version], bool] = (None, False)
+        self._most_relevant_version: Optional[Version] = None
 
     @property
     def archivable(self) -> bool:
@@ -177,11 +176,11 @@ class RunExperiment(_RunSubprocess):
 
     def get_output_version(self, ctx: "c.Context") -> Optional[Version]:
         self._ensure_most_relevant_existing_version_computed(ctx)
-        return self._most_relevant_version[0]
+        return self._most_relevant_version
 
     def get_output_path(self, ctx: "c.Context") -> Optional[pathlib.Path]:
         self._ensure_most_relevant_existing_version_computed(ctx)
-        most_relevant_version, _ = self._most_relevant_version
+        most_relevant_version = self._most_relevant_version
         if most_relevant_version is None:
             return None
 
@@ -211,11 +210,11 @@ class RunExperiment(_RunSubprocess):
         whether or not this task needs to execute.
         """
         self._ensure_most_relevant_existing_version_computed(ctx)
-        most_relevant_version, is_override = self._most_relevant_version
+        most_relevant_version = self._most_relevant_version
         if most_relevant_version is None:
             # Must run because no relevant version exists.
             return True
-        if at_least_commit is None or is_override:
+        if at_least_commit is None or most_relevant_version.is_override:
             # There already is a most relevant version and we are not asked to
             # run for at least some commit. (Or this is an override, in which
             # case we should not compare commit hashes.)
@@ -247,8 +246,8 @@ class RunExperiment(_RunSubprocess):
 
     def create_new_version(self, ctx: "c.Context") -> Version:
         self._create_new_version(ctx)
-        assert self._most_relevant_version[0] is not None
-        return self._most_relevant_version[0]
+        assert self._most_relevant_version is not None
+        return self._most_relevant_version
 
     def recompute_most_relevant_version(self, ctx: "c.Context") -> None:
         """
@@ -264,9 +263,8 @@ class RunExperiment(_RunSubprocess):
         # be skipped, so no incorrectness will occur. The new version will not
         # be committed into the version index.
         self._did_retrieve_version = True
-        self._most_relevant_version = (
-            ctx.version_index.generate_new_output_version(commit=ctx.current_commit),
-            False,
+        self._most_relevant_version = ctx.version_index.generate_new_output_version(
+            commit=ctx.current_commit
         )
 
     def _ensure_most_relevant_existing_version_computed(self, ctx: "c.Context"):
@@ -278,7 +276,7 @@ class RunExperiment(_RunSubprocess):
 
     def _retrieve_most_relevant_existing_version(
         self, ctx: "c.Context"
-    ) -> Tuple[Optional[Version], bool]:
+    ) -> Optional[Version]:
         """
         Finds the "most relevant" existing version of this task's outputs, if
         one exists. The definition of "most relevant" depends on whether git is
@@ -290,13 +288,13 @@ class RunExperiment(_RunSubprocess):
         # First check if there is a version override for this task.
         override = ctx.version_index.get_version_override(self._identifier)
         if override is not None:
-            return (override, True)
+            return override
 
         # Simple case. If the project does not use git, the most relevant
         # existing version is the latest (newest) version (if it exists).
         if not ctx.uses_git:
             res = ctx.version_index.get_latest_output_version(self._identifier)
-            return (res, False)
+            return res
 
         # Retrieve the commit hash associated with `HEAD`.
         curr_commit = ctx.current_commit
@@ -304,10 +302,7 @@ class RunExperiment(_RunSubprocess):
         # This case happens if the repository is bare (no commits). Then the
         # most relevant existing version is the latest version, if it exists.
         if curr_commit is None:
-            return (
-                ctx.version_index.get_latest_output_version(self._identifier),
-                False,
-            )
+            return ctx.version_index.get_latest_output_version(self._identifier)
 
         # Retrieve all existing versions for this task. Filter them into tasks
         # with null commit hashes and ones that are ancestors.
@@ -342,7 +337,7 @@ class RunExperiment(_RunSubprocess):
                 ):
                     selected_version = v
             assert selected_version is not None
-            return (selected_version, False)
+            return selected_version
 
         # There are no ancestor commits and all existing versions do not have a
         # commit hash. We select the newest version. This maintains the same
@@ -351,9 +346,9 @@ class RunExperiment(_RunSubprocess):
             len(null_commit_versions) == len(existing_versions)
             and len(null_commit_versions) > 0
         ):
-            return (max(null_commit_versions, key=lambda v: v.timestamp), False)
+            return max(null_commit_versions, key=lambda v: v.timestamp)
 
         # Otherwise, this means there may exist versions with commits that are
         # not ancestors of the current commit. For correctness, we should not
         # depend on the results from any previous version.
-        return (None, False)
+        return None

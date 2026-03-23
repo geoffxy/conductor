@@ -49,6 +49,7 @@ class ResultVersion(BaseModel):
     timestamp: int
     commit_hash: Optional[str]
     has_uncommitted_changes: bool
+    is_override: bool
 
     @classmethod
     def from_version(cls, version: Version) -> "ResultVersion":
@@ -56,6 +57,7 @@ class ResultVersion(BaseModel):
             timestamp=version.timestamp,
             commit_hash=version.commit_hash,
             has_uncommitted_changes=version.has_uncommitted_changes,
+            is_override=version.is_override,
         )
 
 
