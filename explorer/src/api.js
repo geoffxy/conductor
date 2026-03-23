@@ -27,4 +27,18 @@ async function getCommitInfo(commitHash) {
   return results.data;
 }
 
-export { getTaskGraph, getAllVersions, getVersionsForTask, getCommitInfo };
+async function setVersionOverride(taskId, timestamp) {
+  const results = await axios.post(`${API}/set_version_override`, {
+    task_id: taskId.toString(),
+    timestamp,
+  });
+  return results.data;
+}
+
+export {
+  getTaskGraph,
+  getAllVersions,
+  getVersionsForTask,
+  getCommitInfo,
+  setVersionOverride,
+};

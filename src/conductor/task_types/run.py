@@ -250,6 +250,14 @@ class RunExperiment(_RunSubprocess):
         assert self._most_relevant_version[0] is not None
         return self._most_relevant_version[0]
 
+    def recompute_most_relevant_version(self, ctx: "c.Context") -> None:
+        """
+        For internal use only. Used by the explorer when the user changes the
+        version override for this task.
+        """
+        self._did_retrieve_version = False
+        self._ensure_most_relevant_existing_version_computed(ctx)
+
     def _create_new_version(self, ctx: "c.Context") -> None:
         # N.B. If this task fails, the value of `most_relevant_version` will be
         # incorrect. However, any tasks that have this task as a dependency will
