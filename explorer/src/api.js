@@ -28,9 +28,16 @@ async function getCommitInfo(commitHash) {
 }
 
 async function setVersionOverride(taskId, timestamp) {
-  const results = await axios.post(`${API}/set_version_override`, {
+  const results = await axios.post(`${API}/version_override`, {
     task_id: taskId.toString(),
     timestamp,
+  });
+  return results.data;
+}
+
+async function clearVersionOverride(taskId) {
+  const results = await axios.delete(`${API}/version_override`, {
+    params: { task_id: taskId.toString() },
   });
   return results.data;
 }
@@ -41,4 +48,5 @@ export {
   getVersionsForTask,
   getCommitInfo,
   setVersionOverride,
+  clearVersionOverride,
 };

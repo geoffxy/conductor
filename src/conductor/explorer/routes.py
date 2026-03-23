@@ -165,7 +165,7 @@ class SetVersionOverrideArgs(BaseModel):
     timestamp: int
 
 
-@app.post("/api/1/set_version_override")
+@app.post("/api/1/version_override")
 def set_version_override(args: SetVersionOverrideArgs) -> None:
     """
     Sets a version override for a specific task. This is used by the UI to
@@ -176,6 +176,20 @@ def set_version_override(args: SetVersionOverrideArgs) -> None:
     try:
         task_id = TaskIdentifier.from_str(args.task_id)
         ctx.version_index.set_version_override(task_id, args.timestamp)
+        ctx.version_index.commit_changes()
+    except ConductorError as ex:
+        raise HTTPException(status_code=400, detail=ex.printable_message()) from ex
+
+
+@app.delete("/api/1/version_override")
+def clear_version_override(task_id: str) -> None:
+    """
+    Clears the version override for a specific task.
+    """
+    assert ctx is not None
+    try:
+        cond_task_id = TaskIdentifier.from_str(task_id)
+        ctx.version_index.clear_version_override(cond_task_id)
         ctx.version_index.commit_changes()
     except ConductorError as ex:
         raise HTTPException(status_code=400, detail=ex.printable_message()) from ex
