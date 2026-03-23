@@ -3,6 +3,7 @@ from typing import Optional, List, Dict
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from conductor.context import Context
 from conductor.errors import ConductorError
@@ -51,6 +52,7 @@ def get_all_versions() -> List[m.TaskResults]:
         current_version = None
         task = ctx.task_index.get_task(task_id)
         if isinstance(task, RunExperiment):
+            task.recompute_most_relevant_version(ctx)
             maybe_version = task.get_output_version(ctx)
             if maybe_version is not None:
                 current_version = m.ResultVersion.from_version(maybe_version)
@@ -156,6 +158,41 @@ def get_commit_info(commit_hash: str) -> m.CommitInfo:
         raise HTTPException(status_code=400, detail=str(ex)) from ex
 
     return m.CommitInfo.from_cond(commit)
+
+
+class SetVersionOverrideArgs(BaseModel):
+    task_id: str
+    timestamp: int
+
+
+@app.post("/api/1/version_override")
+def set_version_override(args: SetVersionOverrideArgs) -> None:
+    """
+    Sets a version override for a specific task. This is used by the UI to
+    allow users to "select" a specific version for a task, which will cause the
+    UI to display that version's metadata and its position in the version graph.
+    """
+    assert ctx is not None
+    try:
+        task_id = TaskIdentifier.from_str(args.task_id)
+        ctx.version_index.set_version_override(task_id, args.timestamp)
+        ctx.version_index.commit_changes()
+    except ConductorError as ex:
+        raise HTTPException(status_code=400, detail=ex.printable_message()) from ex
+
+
+@app.delete("/api/1/version_override")
+def clear_version_override(task_id: str) -> None:
+    """
+    Clears the version override for a specific task.
+    """
+    assert ctx is not None
+    try:
+        cond_task_id = TaskIdentifier.from_str(task_id)
+        ctx.version_index.clear_version_override(cond_task_id)
+        ctx.version_index.commit_changes()
+    except ConductorError as ex:
+        raise HTTPException(status_code=400, detail=ex.printable_message()) from ex
 
 
 # Serve the static pages.

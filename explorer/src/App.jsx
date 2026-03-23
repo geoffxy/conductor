@@ -9,6 +9,21 @@ function parseRawTaskId({ path, name }) {
   return new TaskIdentifier(path, name);
 }
 
+async function fetchAndParseVersions() {
+  const versions = await getAllVersions();
+  // Versions: light parsing.
+  const parsedVersions = {};
+  for (const rawVersion of versions) {
+    const taskId = parseRawTaskId(rawVersion.identifier);
+    parsedVersions[taskId.toString()] = {
+      taskId,
+      versions: rawVersion.versions,
+      currentVersion: rawVersion.current_version,
+    };
+  }
+  return parsedVersions;
+}
+
 const App = () => {
   const [taskGraph, setTaskGraph] = useState(null);
   const [versions, setVersions] = useState({});
@@ -42,8 +57,8 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       const taskGraphFuture = getTaskGraph();
-      const versionsFuture = getAllVersions();
-      const [taskGraph, versions] = await Promise.all([
+      const versionsFuture = fetchAndParseVersions();
+      const [taskGraph, parsedVersions] = await Promise.all([
         taskGraphFuture,
         versionsFuture,
       ]);
@@ -69,20 +84,15 @@ const App = () => {
         tasks,
       });
 
-      // Versions: light parsing.
-      const parsedVersions = {};
-      for (const rawVersion of versions) {
-        const taskId = parseRawTaskId(rawVersion.identifier);
-        parsedVersions[taskId.toString()] = {
-          taskId,
-          versions: rawVersion.versions,
-          currentVersion: rawVersion.current_version,
-        };
-      }
       setVersions(parsedVersions);
     };
     fetchData();
   }, []);
+
+  const refreshVersions = useCallback(async () => {
+    const parsedVersions = await fetchAndParseVersions();
+    setVersions(parsedVersions);
+  }, [setVersions]);
 
   return (
     <div id="conductor-explorer">
@@ -96,6 +106,7 @@ const App = () => {
         <VersionGraphDisplay
           {...viewVersions}
           clearViewVersions={clearViewVersions}
+          refreshVersions={refreshVersions}
         />
       )}
     </div>

@@ -112,6 +112,7 @@ const VersionGraphDisplayImpl = ({
   selectedVersion,
   versionGraph,
   clearViewVersions,
+  refreshVersions,
 }) => {
   const nodeTypes = useMemo(() => ({ versionNode: VersionNode }), []);
   const [nodeDimensions, setNodeDimensions] = useState({});
@@ -195,10 +196,12 @@ const VersionGraphDisplayImpl = ({
           </div>
           <div className="version-graph-sidebar-wrap">
             <VersionGraphSidebar
+              taskId={taskId}
               selectedVersion={selectedVersion}
               versionList={versionList}
               focusedCommitHash={focusedCommitHash}
-              onClose={clearViewVersions}
+              closeModal={clearViewVersions}
+              refreshVersions={refreshVersions}
             />
           </div>
         </div>

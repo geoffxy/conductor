@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import { createPortal } from "react-dom";
-import { VscInfo, VscSearch } from "react-icons/vsc";
+import { VscGitCommit, VscInfo, VscSearch } from "react-icons/vsc";
 import { format, formatDistanceToNow } from "date-fns";
 import "./TaskNode.css";
 
@@ -183,7 +183,12 @@ function VersionBadge({ commitHash, timestamp }) {
 
   return (
     <div className="version-badge">
-      <div className="version-badge-hash">{shortHash}</div>
+      <div className="version-badge-hash">
+        <span>
+          <VscGitCommit />
+        </span>
+        <span>{shortHash}</span>
+      </div>
       <div className="version-badge-time">{formattedTime}</div>
     </div>
   );

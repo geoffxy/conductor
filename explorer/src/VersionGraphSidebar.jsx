@@ -1,11 +1,11 @@
 import "./VersionGraphSidebar.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { format, formatDistanceToNow } from "date-fns";
 import { VscGitCommit } from "react-icons/vsc";
 import Button from "@mui/joy/Button";
 import Radio from "@mui/joy/Radio";
 import RadioGroup from "@mui/joy/RadioGroup";
-import { getCommitInfo } from "./api";
+import { clearVersionOverride, getCommitInfo, setVersionOverride } from "./api";
 
 function humanReadableTimestamp(date) {
   const oneWeekInMs = 7 * 24 * 60 * 60 * 1000;
@@ -62,12 +62,52 @@ function CommitInfo({ commitInfo }) {
 }
 
 function VersionSelector({
+  taskId,
   commitInfo,
   existingCheckedVersion,
   versionList,
-  onCancel,
+  closeModal,
+  refreshVersions,
 }) {
   const [currCheckedVersion, setCurrCheckedVersion] = useState(null);
+  const [updateInProgress, setUpdateInProgress] = useState(false);
+  const [clearInProgress, setClearInProgress] = useState(false);
+
+  const onSetVersionOverride = useCallback(async () => {
+    if (currCheckedVersion == null) return;
+    setUpdateInProgress(true);
+    try {
+      await setVersionOverride(taskId, currCheckedVersion.timestamp);
+      await refreshVersions();
+      closeModal();
+    } finally {
+      setUpdateInProgress(false);
+    }
+  }, [
+    currCheckedVersion,
+    taskId,
+    setUpdateInProgress,
+    refreshVersions,
+    closeModal,
+  ]);
+
+  const onClearVersionOverride = useCallback(async () => {
+    if (currCheckedVersion == null) return;
+    setClearInProgress(true);
+    try {
+      await clearVersionOverride(taskId);
+      await refreshVersions();
+      closeModal();
+    } finally {
+      setClearInProgress(false);
+    }
+  }, [
+    currCheckedVersion,
+    taskId,
+    setClearInProgress,
+    refreshVersions,
+    closeModal,
+  ]);
 
   // Handle external changes to the existing checked version.
   useEffect(() => {
@@ -107,6 +147,12 @@ function VersionSelector({
     }
   }
 
+  const showClearOverride =
+    existingCheckedVersion != null &&
+    currCheckedVersion != null &&
+    currCheckedVersion?.commit_hash === existingCheckedVersion?.commit_hash &&
+    existingCheckedVersion.is_override;
+
   return (
     <div className="version-selector">
       <div className="version-selector-heading">
@@ -138,10 +184,26 @@ function VersionSelector({
           </RadioGroup>
         </div>
         <div className="version-selector-buttons">
-          <Button color="primary" variant="soft" disabled={!enableSubmit}>
+          <Button
+            color="primary"
+            variant="soft"
+            disabled={!enableSubmit}
+            loading={updateInProgress}
+            onClick={onSetVersionOverride}
+          >
             Use this version
           </Button>
-          <Button color="neutral" variant="soft" onClick={onCancel}>
+          {showClearOverride && (
+            <Button
+              color="warning"
+              variant="soft"
+              loading={clearInProgress}
+              onClick={onClearVersionOverride}
+            >
+              Clear overridden version
+            </Button>
+          )}
+          <Button color="neutral" variant="soft" onClick={closeModal}>
             Cancel
           </Button>
         </div>
@@ -151,29 +213,35 @@ function VersionSelector({
 }
 
 function SidebarBody({
+  taskId,
   commitInfo,
   existingCheckedVersion,
   versionList,
-  onCancel,
+  closeModal,
+  refreshVersions,
 }) {
   return (
     <div className="version-graph-sidebar-body">
       <CommitInfo commitInfo={commitInfo} />
       <VersionSelector
+        taskId={taskId}
         commitInfo={commitInfo}
         existingCheckedVersion={existingCheckedVersion}
         versionList={versionList}
-        onCancel={onCancel}
+        closeModal={closeModal}
+        refreshVersions={refreshVersions}
       />
     </div>
   );
 }
 
 function VersionGraphSidebar({
+  taskId,
   selectedVersion,
   versionList,
   focusedCommitHash,
-  onClose,
+  closeModal,
+  refreshVersions,
 }) {
   const [displayInfo, setDisplayInfo] = useState({
     commitInfo: null,
@@ -195,6 +263,7 @@ function VersionGraphSidebar({
       setDisplayInfo({
         commitInfo,
         existingCheckedVersion:
+          selectedVersion != null &&
           selectedVersion.commit_hash === commitHashToFetch
             ? selectedVersion
             : null,
@@ -211,10 +280,12 @@ function VersionGraphSidebar({
         <NoInfoMessage />
       ) : (
         <SidebarBody
+          taskId={taskId}
           commitInfo={displayInfo.commitInfo}
           existingCheckedVersion={displayInfo.existingCheckedVersion}
           versionList={versionList}
-          onCancel={onClose}
+          closeModal={closeModal}
+          refreshVersions={refreshVersions}
         />
       )}
     </div>

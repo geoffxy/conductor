@@ -136,6 +136,7 @@ def test_v2_to_v3_upgrade_e2e(tmp_path: pathlib.Path):
     for expected, actual in zip(test_versions, all_versions):
         assert expected[0] == str(actual[0])
         assert expected[1] == actual[1].timestamp
+        assert actual[1].is_override is False
 
     # Should be able to insert and read version overrides.
     task_id = TaskIdentifier.from_str("//:test1")
@@ -146,6 +147,7 @@ def test_v2_to_v3_upgrade_e2e(tmp_path: pathlib.Path):
     assert override.timestamp == 100
     assert override.commit_hash is None
     assert override.has_uncommitted_changes is False
+    assert override.is_override is True
 
     vindex.set_version_override(task_id, 200)
     override = vindex.get_version_override(task_id)
@@ -153,6 +155,7 @@ def test_v2_to_v3_upgrade_e2e(tmp_path: pathlib.Path):
     assert override.timestamp == 200
     assert override.commit_hash == "def456"
     assert override.has_uncommitted_changes is True
+    assert override.is_override is True
 
     vindex.clear_version_override(task_id)
     assert vindex.get_version_override(task_id) is None
