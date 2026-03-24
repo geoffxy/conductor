@@ -270,15 +270,26 @@ class Git:
         lines = result.stdout.strip().splitlines()
         commit_date = datetime.datetime.fromisoformat(lines[0])
 
+        def _is_numstat_line(line: str) -> bool:
+            # numstat format is: added \t removed \t filename
+            parts = line.split("\t")
+            if len(parts) != 3:
+                return False
+            stat1 = parts[0]
+            stat2 = parts[1]
+            return (stat1.isdigit() or stat1 == "-") and (
+                stat2.isdigit() or stat2 == "-"
+            )
+
         message_parts = []
         added = 0
         removed = 0
         for line in lines[1:]:
             parts = line.split("\t")
-            # numstat format is: added \t removed \t filename
-            if len(parts) == 3 and parts[0].isdigit() and parts[1].isdigit():
-                added += int(parts[0])
-                removed += int(parts[1])
+            if _is_numstat_line(line):
+                # "-" is used with binary files.
+                added += int(parts[0]) if parts[0] != "-" else 0
+                removed += int(parts[1]) if parts[1] != "-" else 0
             elif line.strip():
                 message_parts.append(line)
 
